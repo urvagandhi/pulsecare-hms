@@ -9,6 +9,8 @@ const envSchema = z.object({
   AWS_SECRET_NAME: z.string().default('hms/app-secrets'),
   // Log level
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
+  // Redis toggle
+  REDIS_ENABLED: z.string().optional().transform(v => v !== 'false').default('true'),
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -63,8 +63,8 @@
 | Task | Status | Files Touched | Commit | Notes |
 |---|---|---|---|---|
 | **0.0 Preflight** | DONE | `CHANGES.md` | - | Baseline tests recorded; Q1–Q9 answered |
-| **1.1 Seed script** | DONE | `backend/src/scripts/seed.ts`, `backend/package.json`, `backend/src/models/User.ts`, `backend/src/migrations/001-consolidate-auth.ts` | `0694db6` | Idempotent dummy seeder created with 1 Admin, 1 Receptionist, 3 Doctors, 3 Departments, 5 Patients, 8 Appointments, 3 Invoices. Verified login for all seeded accounts. |
-| **1.2 Redis optional** | PENDING | | | |
+| **1.1 Seed script** | DONE | `backend/src/scripts/seed.ts`, `backend/package.json`, `backend/src/models/User.ts`, `backend/src/migrations/001-consolidate-auth.ts` | `f750c33` | Idempotent dummy seeder created with 1 Admin, 1 Receptionist, 3 Doctors, 3 Departments, 5 Patients, 8 Appointments, 3 Invoices. Verified login for all seeded accounts. |
+| **1.2 Redis optional** | DONE | `backend/src/config/env.ts`, `backend/src/db/redis.ts`, `backend/src/middleware/rateLimiter.ts`, `backend/src/middleware/rateLimiter.test.ts`, `backend/src/socket/index.ts` | `6ad671e` | Added REDIS_ENABLED env toggle (default true). Graceful in-memory rate limiter and Socket.IO fallback when Redis is unreachable or disabled. Added unit tests for fallback and 429 response. |
 | **1.3 Lock down registration** | PENDING | | | |
 | **1.4 Timezone-safe availability** | PENDING | | | |
 | **1.5 Test config & secrets guard** | PENDING | | | |

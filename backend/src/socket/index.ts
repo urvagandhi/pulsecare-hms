@@ -1,7 +1,7 @@
 import { Server as HttpServer } from 'http';
 import { Server as SocketServer } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
-import { getRedisClient } from '../db/redis';
+import { getRedisClient, isRedisAvailable } from '../db/redis';
 import { logger } from '../middleware/requestLogger';
 import { env } from '../config/env';
 import jwt from 'jsonwebtoken';
@@ -22,10 +22,19 @@ export function initSocket(httpServer: HttpServer, jwtSecret: string): SocketSer
     transports: ['websocket', 'polling'],
   });
 
-  // Redis pub/sub adapter for horizontal scaling
-  const pubClient = getRedisClient().duplicate();
-  const subClient = getRedisClient().duplicate();
-  io.adapter(createAdapter(pubClient, subClient));
+  // Redis pub/sub adapter for horizontal scaling (if Redis is available)
+  if (isRedisAvailable()) {
+    try {
+      const pubClient = getRedisClient().duplicate();
+      const subClient = getRedisClient().duplicate();
+      io.adapter(createAdapter(pubClient, subClient));
+      logger.info('Socket.io connected with Redis adapter');
+    } catch (err) {
+      logger.warn('Socket.io Redis adapter setup failed — running in memory', { error: (err as Error).message });
+    }
+  } else {
+    logger.info('Socket.io running with default in-memory adapter');
+  }
 
   // JWT auth middleware for socket connections
   io.use((socket, next) => {
