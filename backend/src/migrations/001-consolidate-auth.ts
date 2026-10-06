@@ -189,7 +189,7 @@ async function migrateDoctors(
   const doctors = await Doctor.find({}).session(session).lean();
 
   for (const doctor of doctors) {
-    const doc = doctor as IDoctor & { _id: Types.ObjectId };
+    const doc = doctor as unknown as IDoctor & { _id: Types.ObjectId };
 
     // Idempotency: skip if userId already set
     if (doc.userId) {
@@ -205,7 +205,7 @@ async function migrateDoctors(
       if (!dryRun) {
         await Doctor.updateOne(
           { _id: doc._id },
-          { $set: { userId: (existing as IUser & { _id: Types.ObjectId })._id } },
+          { $set: { userId: (existing as unknown as IUser & { _id: Types.ObjectId })._id } },
           { session }
         );
       }
@@ -276,7 +276,7 @@ async function migrateNurses(
   const nurses = await Nurse.find({}).session(session).lean();
 
   for (const nurse of nurses) {
-    const doc = nurse as INurse & { _id: Types.ObjectId };
+    const doc = nurse as unknown as INurse & { _id: Types.ObjectId };
 
     // Idempotency: skip if userId already set
     if (doc.userId) {
@@ -291,7 +291,7 @@ async function migrateNurses(
       if (!dryRun) {
         await Nurse.updateOne(
           { _id: doc._id },
-          { $set: { userId: (existing as IUser & { _id: Types.ObjectId })._id } },
+          { $set: { userId: (existing as unknown as IUser & { _id: Types.ObjectId })._id } },
           { session }
         );
       }

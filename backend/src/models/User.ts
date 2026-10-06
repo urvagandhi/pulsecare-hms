@@ -81,7 +81,7 @@ UserSchema.methods.isLocked = function (): boolean {
 
 // Never return password in JSON
 UserSchema.set('toJSON', {
-  transform: (_doc, ret) => {
+  transform: (_doc, ret: Record<string, any>) => {
     delete ret.password;
     delete ret.failedLoginAttempts;
     delete ret.lockedUntil;
