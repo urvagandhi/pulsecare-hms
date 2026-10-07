@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Logo } from '@/components/Shared/Logo';
+import { APP_NAME } from '@/lib/brand';
 
 const signUpSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -44,11 +46,11 @@ export function SignUp() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="w-12 h-12 rounded-xl bg-primary mx-auto mb-4 flex items-center justify-center">
-            <span className="text-white font-bold text-xl">H</span>
+          <div className="flex justify-center mb-4">
+            <Logo size="lg" />
           </div>
-          <CardTitle className="text-2xl">Create account</CardTitle>
-          <p className="text-muted-foreground text-sm">Register as a patient</p>
+          <CardTitle className="text-2xl font-bold">Create account</CardTitle>
+          <p className="text-muted-foreground text-sm">Register as a patient on {APP_NAME}</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

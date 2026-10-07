@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useState } from 'react';
+import { Logo } from '@/components/Shared/Logo';
 
 interface NavItem {
   label: string;
@@ -43,17 +44,15 @@ export function Sidebar() {
     )}>
       {/* Logo area */}
       <div className="flex items-center justify-between p-4 border-b border-border">
-        {!collapsed && (
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-white font-bold text-sm">H</span>
-            </div>
-            <span className="font-semibold text-gray-900 dark:text-white">HMS</span>
-          </div>
+        {collapsed ? (
+          <Logo iconOnly size="sm" />
+        ) : (
+          <Logo size="md" />
         )}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ml-auto"
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
         </button>
