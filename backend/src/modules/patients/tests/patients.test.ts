@@ -226,4 +226,106 @@ describe('Patient Routes', () => {
     expect(res.body.data.bloodGroup).toBe('A+');
     expect(res.body.data.allergies).toContain('Penicillin');
   });
+
+  describe('7. Patient Search [Task 3.2 / F7]', () => {
+    let adminToken: string;
+    let p1Id: string;
+    let p2Id: string;
+
+    beforeEach(async () => {
+      await createUser({ email: 'admin_search@test.com', password: 'AdminPass1!', role: 'admin' });
+      adminToken = await loginAs('admin_search@test.com', 'AdminPass1!');
+
+      const u1 = await User.create({
+        firstName: 'Diana',
+        lastName: 'Prince',
+        email: 'diana@themyscira.test',
+        password: 'Password1!',
+        phone: '+1-555-0199',
+        role: 'patient',
+      });
+      const p1 = await Patient.create({
+        userId: u1._id,
+        patientId: 'PAT-0042',
+        allergies: [],
+        medicalHistory: [],
+      });
+      p1Id = p1._id.toString();
+
+      const u2 = await User.create({
+        firstName: 'Clark',
+        lastName: 'Kent',
+        email: 'clark@dailyplanet.test',
+        password: 'Password1!',
+        phone: '+1-555-0288',
+        role: 'patient',
+      });
+      const p2 = await Patient.create({
+        userId: u2._id,
+        patientId: 'PAT-0099',
+        allergies: [],
+        medicalHistory: [],
+        emergencyContact: {
+          name: 'Martha Kent',
+          relationship: 'Mother',
+          phone: '+1-555-9999',
+        },
+      });
+      p2Id = p2._id.toString();
+    });
+
+    it('searches by name', async () => {
+      const res = await request(app)
+        .get('/api/v1/patients?search=Diana')
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data).toHaveLength(1);
+      expect(res.body.data[0]._id).toBe(p1Id);
+    });
+
+    it('searches by patientId fragment', async () => {
+      const res = await request(app)
+        .get('/api/v1/patients?search=0042')
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data).toHaveLength(1);
+      expect(res.body.data[0].patientId).toBe('PAT-0042');
+    });
+
+    it('searches by primary phone or emergency contact phone', async () => {
+      const res1 = await request(app)
+        .get('/api/v1/patients?search=0199')
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res1.status).toBe(200);
+      expect(res1.body.data).toHaveLength(1);
+      expect(res1.body.data[0]._id).toBe(p1Id);
+
+      const res2 = await request(app)
+        .get('/api/v1/patients?search=9999')
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res2.status).toBe(200);
+      expect(res2.body.data).toHaveLength(1);
+      expect(res2.body.data[0]._id).toBe(p2Id);
+    });
+
+    it('safely handles regex metacharacters like ( and .* without 500 error', async () => {
+      const res1 = await request(app)
+        .get('/api/v1/patients?search=(')
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res1.status).toBe(200);
+      expect(res1.body.success).toBe(true);
+
+      const res2 = await request(app)
+        .get('/api/v1/patients?search=.*')
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res2.status).toBe(200);
+      expect(res2.body.success).toBe(true);
+    });
+  });
 });

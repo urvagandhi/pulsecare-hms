@@ -17,6 +17,7 @@ interface PatientUser {
   firstName: string;
   lastName: string;
   email: string;
+  phone?: string;
   isActive: boolean;
 }
 
@@ -60,6 +61,11 @@ const columns: ColumnDef<PatientRecord>[] = [
     header: 'Email',
     accessorKey: 'userId.email',
     cell: (row) => row.userId?.email ?? '—',
+  },
+  {
+    header: 'Phone',
+    accessorKey: 'userId.phone',
+    cell: (row) => row.userId?.phone ?? '—',
   },
   {
     header: 'Status',
@@ -191,13 +197,13 @@ export function AdminPatients() {
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
             <CardTitle className="text-base">Patient List</CardTitle>
             <Input
-              placeholder="Search by name or email..."
+              placeholder="Search by name, email, ID, or phone..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="w-full sm:w-64"
+              className="w-full sm:w-72"
             />
           </div>
         </CardHeader>

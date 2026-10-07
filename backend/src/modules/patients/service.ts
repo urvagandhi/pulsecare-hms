@@ -69,27 +69,44 @@ export async function createPatient(input: CreatePatientInput) {
   return { user, patient };
 }
 
+function escapeRegex(text: string): string {
+  return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+}
+
 export async function listPatients(filters: { search?: string; page?: number; limit?: number }) {
   const { search, page = 1, limit = 20 } = filters;
   const skip = (page - 1) * limit;
 
+  const patientUserIds = await User.find({ role: 'patient' }).distinct('_id');
   const query: Record<string, unknown> = {};
 
-  if (search) {
-    // Only users with patient role can appear in the patient directory
+  if (search && search.trim()) {
+    const safePattern = escapeRegex(search.trim());
+    const safeRegex = new RegExp(safePattern, 'i');
+
     const matchingUsers = await User.find({
-      role: 'patient',
+      _id: { $in: patientUserIds },
       $or: [
-        { firstName: new RegExp(search, 'i') },
-        { lastName: new RegExp(search, 'i') },
-        { email: new RegExp(search, 'i') },
+        { firstName: safeRegex },
+        { lastName: safeRegex },
+        { email: safeRegex },
+        { phone: safeRegex },
       ],
-    }).select('_id').limit(100).lean();
+    }).select('_id').lean();
 
     const userIds = matchingUsers.map(u => u._id);
-    query.userId = { $in: userIds };
+
+    query.$and = [
+      { userId: { $in: patientUserIds } },
+      {
+        $or: [
+          { userId: { $in: userIds } },
+          { patientId: safeRegex },
+          { 'emergencyContact.phone': safeRegex },
+        ],
+      },
+    ];
   } else {
-    const patientUserIds = await User.find({ role: 'patient' }).distinct('_id');
     query.userId = { $in: patientUserIds };
   }
 
