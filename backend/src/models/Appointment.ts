@@ -1,4 +1,5 @@
 import { Schema, model, Types } from 'mongoose';
+import { nextSequence, getHighestSuffix } from './Counter';
 
 export type AppointmentStatus = 'scheduled' | 'confirmed' | 'inProgress' | 'completed' | 'cancelled' | 'noShow';
 export type AppointmentType = 'consultation' | 'follow-up' | 'emergency' | 'procedure';
@@ -48,11 +49,11 @@ AppointmentSchema.index(
   { unique: true, partialFilterExpression: { status: { $nin: ['cancelled', 'noShow'] } } }
 );
 
-// Auto-generate appointmentId
+// Auto-generate appointmentId using atomic counter
 AppointmentSchema.pre('save', async function (next) {
   if (!this.appointmentId) {
-    const count = await (this.constructor as typeof Appointment).countDocuments();
-    this.appointmentId = `APT-${String(count + 1).padStart(4, '0')}`;
+    const seq = await nextSequence('appointment', () => getHighestSuffix(Appointment, 'appointmentId', 'APT-'));
+    this.appointmentId = `APT-${String(seq).padStart(4, '0')}`;
   }
   next();
 });

@@ -1,4 +1,5 @@
 import { Schema, model, Types } from 'mongoose';
+import { nextSequence, getHighestSuffix } from './Counter';
 
 export interface IReceptionist {
   _id: Types.ObjectId;
@@ -20,12 +21,11 @@ const ReceptionistSchema = new Schema<IReceptionist>(
   { timestamps: true }
 );
 
-// TODO: countDocuments-based ID generation is not race-condition safe under concurrent inserts.
-// For a production multi-instance deployment, use an atomic counter collection or MongoDB sequence pattern.
+// Auto-generate receptionistId using atomic counter
 ReceptionistSchema.pre('save', async function (next) {
   if (!this.receptionistId) {
-    const count = await (this.constructor as typeof Receptionist).countDocuments();
-    this.receptionistId = `REC-${String(count + 1).padStart(4, '0')}`;
+    const seq = await nextSequence('receptionist', () => getHighestSuffix(Receptionist, 'receptionistId', 'REC-'));
+    this.receptionistId = `REC-${String(seq).padStart(4, '0')}`;
   }
   next();
 });

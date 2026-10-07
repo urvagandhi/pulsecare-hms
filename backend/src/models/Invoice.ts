@@ -1,4 +1,5 @@
 import { Schema, model, Types } from 'mongoose';
+import { nextSequence, getHighestSuffix } from './Counter';
 
 export type InvoiceStatus = 'draft' | 'issued' | 'paid' | 'partial' | 'overdue' | 'void';
 
@@ -152,12 +153,10 @@ InvoiceSchema.pre('save', async function (next) {
   // 6. Compute balance
   doc.balance = doc.total - doc.amountPaid;
 
-  // 7. Auto-generate invoiceId if not set
-  // TODO: countDocuments-based ID generation is not race-condition safe under concurrent inserts.
-  // For a production multi-instance deployment, use an atomic counter collection or MongoDB sequence pattern.
+  // 7. Auto-generate invoiceId if not set using atomic counter
   if (!this.invoiceId) {
-    const count = await (this.constructor as typeof Invoice).countDocuments();
-    this.invoiceId = `INV-${String(count + 1).padStart(4, '0')}`;
+    const seq = await nextSequence('invoice', () => getHighestSuffix(Invoice, 'invoiceId', 'INV-'));
+    this.invoiceId = `INV-${String(seq).padStart(4, '0')}`;
   }
 
   // 8. Auto-update status (only if not 'draft' or 'void')

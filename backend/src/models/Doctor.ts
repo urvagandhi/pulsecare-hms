@@ -1,4 +1,5 @@
 import { Schema, model, Types } from 'mongoose';
+import { nextSequence, getHighestSuffix } from './Counter';
 
 export interface IAvailability {
   day: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
@@ -42,12 +43,11 @@ const DoctorSchema = new Schema<IDoctor>(
   { timestamps: true }
 );
 
-// TODO: countDocuments-based ID generation is not race-condition safe under concurrent inserts.
-// For a production multi-instance deployment, use an atomic counter collection or MongoDB sequence pattern.
+// Auto-generate doctorId before save using atomic counter
 DoctorSchema.pre('save', async function (next) {
   if (!this.doctorId) {
-    const count = await (this.constructor as typeof Doctor).countDocuments();
-    this.doctorId = `DOC-${String(count + 1).padStart(4, '0')}`;
+    const seq = await nextSequence('doctor', () => getHighestSuffix(Doctor, 'doctorId', 'DOC-'));
+    this.doctorId = `DOC-${String(seq).padStart(4, '0')}`;
   }
   next();
 });

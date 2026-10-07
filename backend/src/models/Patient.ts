@@ -1,4 +1,5 @@
 import { Schema, model, Types } from 'mongoose';
+import { nextSequence, getHighestSuffix } from './Counter';
 
 export interface IPatient {
   _id: Types.ObjectId;
@@ -52,13 +53,11 @@ const PatientSchema = new Schema<IPatient>(
   { timestamps: true }
 );
 
-// Auto-generate patientId before save
-// TODO: countDocuments-based ID generation is not race-condition safe under concurrent inserts.
-// For a production multi-instance deployment, use an atomic counter collection or MongoDB sequence pattern.
+// Auto-generate patientId before save using atomic counter
 PatientSchema.pre('save', async function (next) {
   if (!this.patientId) {
-    const count = await (this.constructor as typeof Patient).countDocuments();
-    this.patientId = `PAT-${String(count + 1).padStart(4, '0')}`;
+    const seq = await nextSequence('patient', () => getHighestSuffix(Patient, 'patientId', 'PAT-'));
+    this.patientId = `PAT-${String(seq).padStart(4, '0')}`;
   }
   next();
 });

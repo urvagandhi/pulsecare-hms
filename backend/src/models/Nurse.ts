@@ -1,4 +1,5 @@
 import { Schema, model, Types } from 'mongoose';
+import { nextSequence, getHighestSuffix } from './Counter';
 
 export interface INurse {
   _id: Types.ObjectId;
@@ -26,12 +27,11 @@ const NurseSchema = new Schema<INurse>(
   { timestamps: true }
 );
 
-// TODO: countDocuments-based ID generation is not race-condition safe under concurrent inserts.
-// For a production multi-instance deployment, use an atomic counter collection or MongoDB sequence pattern.
+// Auto-generate nurseId using atomic counter
 NurseSchema.pre('save', async function (next) {
   if (!this.nurseId) {
-    const count = await (this.constructor as typeof Nurse).countDocuments();
-    this.nurseId = `NUR-${String(count + 1).padStart(4, '0')}`;
+    const seq = await nextSequence('nurse', () => getHighestSuffix(Nurse, 'nurseId', 'NUR-'));
+    this.nurseId = `NUR-${String(seq).padStart(4, '0')}`;
   }
   next();
 });
