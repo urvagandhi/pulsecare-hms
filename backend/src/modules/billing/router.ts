@@ -11,6 +11,9 @@ router.post('/', authenticate, authorize('billing', 'write'), BillingController.
 // List invoices
 router.get('/', authenticate, authorize('billing', 'read'), BillingController.listInvoices);
 
+// Download invoice PDF
+router.get('/:id/pdf', authenticate, authorize('billing', 'read'), BillingController.getInvoicePdf);
+
 // Get single invoice
 router.get('/:id', authenticate, authorize('billing', 'read'), BillingController.getInvoice);
 

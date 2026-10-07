@@ -1,6 +1,7 @@
 import { StatusBadge } from '@/components/Shared/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { downloadPdf } from '@/lib/downloadPdf';
 
 export interface AppointmentRecord {
   _id: string;
@@ -101,9 +102,15 @@ export function AppointmentCard({
             )}
           </div>
 
-          {isUpcoming && (
-            <div className="flex flex-wrap gap-2 shrink-0">
-              {viewAs === 'doctor' && appointment.status === 'scheduled' && onConfirm && (
+          <div className="flex flex-wrap gap-2 shrink-0">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => downloadPdf(`/appointments/${appointment._id}/slip`, `appointment-slip-${appointment.appointmentId}.pdf`)}
+            >
+              Slip
+            </Button>
+            {isUpcoming && viewAs === 'doctor' && appointment.status === 'scheduled' && onConfirm && (
                 <Button size="sm" variant="outline" onClick={() => onConfirm(appointment._id)}>
                   Confirm
                 </Button>
@@ -126,7 +133,6 @@ export function AppointmentCard({
                   </Button>
                 )}
             </div>
-          )}
         </div>
       </CardContent>
     </Card>

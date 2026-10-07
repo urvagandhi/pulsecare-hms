@@ -142,8 +142,8 @@ export async function getInvoiceById(
   if (!invoice) throw new NotFoundError('Invoice');
 
   if (ownOnly) {
-    const patientDoc = invoice.patient as unknown as { userId: Types.ObjectId | { _id: Types.ObjectId; toString(): string } };
-    const patientUserId = patientDoc.userId?.toString();
+    const patientDoc = invoice.patient as any;
+    const patientUserId = patientDoc?.userId?._id?.toString() || patientDoc?.userId?.toString();
     if (!patientUserId || patientUserId !== requestingUserId) {
       throw new ForbiddenError('You can only view your own invoices');
     }

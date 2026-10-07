@@ -4,6 +4,7 @@ import { ValidationError, AuthError } from '../../middleware/errorHandler';
 import { successResponse } from '../../types/api';
 import { CreateInvoiceSchema, RecordPaymentSchema, VoidInvoiceSchema, ListInvoicesQuerySchema } from './schema';
 import * as BillingService from './service';
+import { generateInvoicePdf } from '../../services/pdfService';
 
 function parseZodError(err: ZodError): ValidationError {
   const details: Record<string, unknown> = {};
@@ -128,6 +129,26 @@ export async function removeLineItem(req: Request, res: Response, next: NextFunc
 
     const invoice = await BillingService.removeLineItem(req.params.id, itemIndex);
     res.json(successResponse(invoice));
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getInvoicePdf(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    if (!req.user) return next(new AuthError());
+
+    const invoice = await BillingService.getInvoiceById(
+      req.params.id,
+      req.user._id,
+      req.user.role,
+      req.ownOnly
+    );
+
+    const pdfBuffer = await generateInvoicePdf(invoice);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="invoice-${invoice.invoiceId}.pdf"`);
+    res.send(pdfBuffer);
   } catch (err) {
     next(err);
   }

@@ -4,6 +4,8 @@ import api from '@/lib/api';
 import { useAppSelector } from '@/store/hooks';
 import { KpiCard } from '@/components/Shared/KpiCard';
 import { AlertItem } from '@/components/Shared/AlertItem';
+import { Button } from '@/components/ui/button';
+import { downloadPdf } from '@/lib/downloadPdf';
 
 interface Appointment {
   _id: string; date?: string; timeSlot?: string; status?: string; reason?: string; tokenNumber?: number;
@@ -128,12 +130,22 @@ export function PatientDashboard() {
           </h1>
           <p className="text-[12px] text-slate-500 mt-0.5">{nextApptLabel}</p>
         </div>
-        <Link
-          to="/patient/book-appointment"
-          className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-2 rounded-lg transition-colors"
-        >
-          + Book Appointment
-        </Link>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => downloadPdf('/patients/me/id-card', 'patient-id-card.pdf')}
+            className="text-[11px] h-9"
+          >
+            Download ID Card
+          </Button>
+          <Link
+            to="/patient/book-appointment"
+            className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-2 rounded-lg transition-colors"
+          >
+            + Book Appointment
+          </Link>
+        </div>
       </div>
 
       {/* KPI Cards */}

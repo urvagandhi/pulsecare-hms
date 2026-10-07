@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { downloadPdf } from '@/lib/downloadPdf';
 import toast from 'react-hot-toast';
 
 interface PatientUser {
@@ -78,6 +79,19 @@ const columns: ColumnDef<PatientRecord>[] = [
     header: 'Registered',
     accessorKey: 'createdAt',
     cell: (row) => new Date(row.createdAt).toLocaleDateString(),
+  },
+  {
+    header: 'Actions',
+    accessorKey: '_id',
+    cell: (row) => (
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => downloadPdf(`/patients/${row._id}/id-card`, `patient-id-${row.patientId}.pdf`)}
+      >
+        ID Card
+      </Button>
+    ),
   },
 ];
 

@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Download } from 'lucide-react';
+import { downloadPdf } from '@/lib/downloadPdf';
 import toast from 'react-hot-toast';
 
 interface DoctorProfile {
@@ -62,6 +64,7 @@ export function BookAppointment() {
   const [appointmentType, setAppointmentType] = useState<'consultation' | 'follow-up' | 'procedure'>('consultation');
   const [reason, setReason] = useState('');
   const [confirmedBooking, setConfirmedBooking] = useState<{
+    _id: string;
     appointmentId: string;
     tokenNumber?: number;
     date: string;
@@ -124,6 +127,7 @@ export function BookAppointment() {
     onSuccess: (res) => {
       const appt = res.data;
       setConfirmedBooking({
+        _id: appt._id,
         appointmentId: appt.appointmentId,
         tokenNumber: appt.tokenNumber,
         date: selectedDate,
@@ -183,7 +187,15 @@ export function BookAppointment() {
             </div>
           </div>
 
-          <div className="flex gap-3 justify-center pt-2">
+          <div className="flex flex-wrap gap-3 justify-center pt-2">
+            <Button
+              variant="outline"
+              onClick={() => downloadPdf(`/appointments/${confirmedBooking._id}/slip`, `appointment-slip-${confirmedBooking.appointmentId}.pdf`)}
+              className="flex items-center gap-1.5"
+            >
+              <Download className="w-4 h-4" />
+              Download Slip (PDF)
+            </Button>
             <Button onClick={() => navigate('/patient/appointments')}>
               View My Appointments
             </Button>

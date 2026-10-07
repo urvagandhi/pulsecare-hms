@@ -328,4 +328,87 @@ describe('Patient Routes', () => {
       expect(res2.body.success).toBe(true);
     });
   });
+
+  describe('8. Patient ID Card PDF [Task 3.6 / F5]', () => {
+    it('returns 200 and application/pdf starting with %PDF for admin', async () => {
+      const u = await User.create({
+        firstName: 'Diana',
+        lastName: 'Prince',
+        email: 'diana_idcard@test.com',
+        password: 'Password1!',
+        role: 'patient',
+      });
+      const p = await Patient.create({
+        userId: u._id,
+        patientId: 'PAT-9999',
+        bloodGroup: 'O+',
+      });
+
+      await createUser({ email: 'admin_idcard@test.com', password: 'AdminPass1!', role: 'admin' });
+      const adminToken = await loginAs('admin_idcard@test.com', 'AdminPass1!');
+
+      const res = await request(app)
+        .get(`/api/v1/patients/${p._id}/id-card`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.headers['content-type']).toContain('application/pdf');
+      const textHeader = Buffer.isBuffer(res.body)
+        ? res.body.toString('utf-8', 0, 4)
+        : (res.text || '').substring(0, 4);
+      expect(textHeader).toBe('%PDF');
+    });
+
+    it('returns 200 when patient downloads their own ID card via /patients/me/id-card', async () => {
+      const u = await User.create({
+        firstName: 'Diana',
+        lastName: 'Prince',
+        email: 'diana_own_idcard@test.com',
+        password: 'Password1!',
+        role: 'patient',
+      });
+      await Patient.create({
+        userId: u._id,
+        patientId: 'PAT-8888',
+        bloodGroup: 'B+',
+      });
+      const patToken = await loginAs('diana_own_idcard@test.com', 'Password1!');
+
+      const res = await request(app)
+        .get('/api/v1/patients/me/id-card')
+        .set('Authorization', `Bearer ${patToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.headers['content-type']).toContain('application/pdf');
+    });
+
+    it('returns 403 Forbidden when patient attempts to download another patient ID card', async () => {
+      const u1 = await User.create({
+        firstName: 'Patient1',
+        lastName: 'User',
+        email: 'pat1_idcard@test.com',
+        password: 'Password1!',
+        role: 'patient',
+      });
+      const p1 = await Patient.create({
+        userId: u1._id,
+        patientId: 'PAT-0001',
+      });
+
+      await User.create({
+        firstName: 'Patient2',
+        lastName: 'User',
+        email: 'pat2_idcard@test.com',
+        password: 'Password1!',
+        role: 'patient',
+      });
+      const pat2Token = await loginAs('pat2_idcard@test.com', 'Password1!');
+
+      const res = await request(app)
+        .get(`/api/v1/patients/${p1._id}/id-card`)
+        .set('Authorization', `Bearer ${pat2Token}`);
+
+      expect(res.status).toBe(403);
+    });
+  });
 });

@@ -478,4 +478,45 @@ describe('Billing Routes', () => {
       expect(delRes.status).toBe(403);
     });
   });
+
+  describe('Task 3.6 — GET /api/v1/billing/:id/pdf tests', () => {
+    it('returns 200 and application/pdf starting with %PDF for admin', async () => {
+      const createRes = await createDraftInvoice(adminToken, patientProfileId);
+      const invId = createRes.body.data._id;
+
+      const res = await request(app)
+        .get(`/api/v1/billing/${invId}/pdf`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.headers['content-type']).toContain('application/pdf');
+      const textHeader = Buffer.isBuffer(res.body)
+        ? res.body.toString('utf-8', 0, 4)
+        : (res.text || '').substring(0, 4);
+      expect(textHeader).toBe('%PDF');
+    });
+
+    it('returns 200 for patient viewing their own invoice PDF', async () => {
+      const createRes = await createDraftInvoice(adminToken, patientProfileId);
+      const invId = createRes.body.data._id;
+
+      const res = await request(app)
+        .get(`/api/v1/billing/${invId}/pdf`)
+        .set('Authorization', `Bearer ${patientToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.headers['content-type']).toContain('application/pdf');
+    });
+
+    it('returns 403 Forbidden when patient tries to access another patient invoice PDF', async () => {
+      const createRes = await createDraftInvoice(adminToken, patientProfileId);
+      const invId = createRes.body.data._id;
+
+      const res = await request(app)
+        .get(`/api/v1/billing/${invId}/pdf`)
+        .set('Authorization', `Bearer ${secondPatientToken}`);
+
+      expect(res.status).toBe(403);
+    });
+  });
 });

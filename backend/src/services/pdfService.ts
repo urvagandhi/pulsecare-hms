@@ -167,3 +167,514 @@ export async function generateDocumentPdf(doc: IDocument): Promise<Buffer> {
   const pdfBytes = await pdfDoc.save();
   return Buffer.from(pdfBytes);
 }
+
+/**
+ * Generates an itemized Invoice PDF.
+ */
+export async function generateInvoicePdf(invoice: any): Promise<Buffer> {
+  const pdfDoc = await PDFDocument.create();
+  const page = pdfDoc.addPage([595.28, 841.89]); // A4
+  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+  const { width, height } = page.getSize();
+  const margin = 50;
+  let y = height - margin;
+
+  // Header / Brand
+  page.drawText('PULSECARE HOSPITAL MANAGEMENT SYSTEM', {
+    x: margin,
+    y,
+    size: 14,
+    font: boldFont,
+    color: rgb(0, 0.45, 0.45),
+  });
+
+  y -= 25;
+  page.drawLine({
+    start: { x: margin, y },
+    end: { x: width - margin, y },
+    thickness: 1.5,
+    color: rgb(0, 0.45, 0.45),
+  });
+
+  y -= 30;
+  page.drawText(`INVOICE: ${invoice.invoiceId || 'N/A'}`, {
+    x: margin,
+    y,
+    size: 16,
+    font: boldFont,
+    color: rgb(0.1, 0.1, 0.1),
+  });
+
+  page.drawText(`STATUS: ${(invoice.status || 'draft').toUpperCase()}`, {
+    x: width - margin - 150,
+    y,
+    size: 12,
+    font: boldFont,
+    color: invoice.status === 'paid' ? rgb(0.1, 0.6, 0.2) : rgb(0.3, 0.3, 0.3),
+  });
+
+  y -= 25;
+  const patientUser = invoice.patient?.userId || {};
+  const patientName = `${patientUser.firstName || ''} ${patientUser.lastName || ''}`.trim() || 'N/A';
+  const patientId = invoice.patient?.patientId || 'N/A';
+
+  page.drawText(`Patient: ${patientName} (${patientId})`, {
+    x: margin,
+    y,
+    size: 11,
+    font: boldFont,
+    color: rgb(0.2, 0.2, 0.2),
+  });
+
+  y -= 18;
+  const issuedDateStr = invoice.issuedDate ? new Date(invoice.issuedDate).toLocaleDateString() : '—';
+  const dueDateStr = invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : '—';
+  page.drawText(`Issued: ${issuedDateStr}    Due: ${dueDateStr}`, {
+    x: margin,
+    y,
+    size: 10,
+    font: regularFont,
+    color: rgb(0.4, 0.4, 0.4),
+  });
+
+  y -= 25;
+  // Table header
+  page.drawLine({
+    start: { x: margin, y },
+    end: { x: width - margin, y },
+    thickness: 1,
+    color: rgb(0.7, 0.7, 0.7),
+  });
+  y -= 15;
+  page.drawText('Description', { x: margin, y, size: 10, font: boldFont });
+  page.drawText('Category', { x: margin + 180, y, size: 10, font: boldFont });
+  page.drawText('Qty', { x: margin + 280, y, size: 10, font: boldFont });
+  page.drawText('Unit Price', { x: margin + 340, y, size: 10, font: boldFont });
+  page.drawText('Total', { x: width - margin - 60, y, size: 10, font: boldFont });
+  y -= 8;
+  page.drawLine({
+    start: { x: margin, y },
+    end: { x: width - margin, y },
+    thickness: 1,
+    color: rgb(0.7, 0.7, 0.7),
+  });
+  y -= 18;
+
+  // Line items
+  const items = invoice.lineItems || [];
+  for (const item of items) {
+    page.drawText(String(item.description || '—').substring(0, 30), {
+      x: margin,
+      y,
+      size: 9,
+      font: regularFont,
+    });
+    page.drawText(String(item.category || 'other'), {
+      x: margin + 180,
+      y,
+      size: 9,
+      font: regularFont,
+    });
+    page.drawText(String(item.quantity || 1), {
+      x: margin + 280,
+      y,
+      size: 9,
+      font: regularFont,
+    });
+    page.drawText(`$${Number(item.unitPrice || 0).toFixed(2)}`, {
+      x: margin + 340,
+      y,
+      size: 9,
+      font: regularFont,
+    });
+    page.drawText(`$${Number(item.total || 0).toFixed(2)}`, {
+      x: width - margin - 60,
+      y,
+      size: 9,
+      font: boldFont,
+    });
+    y -= 18;
+    if (y < margin + 140) break;
+  }
+
+  y -= 10;
+  page.drawLine({
+    start: { x: margin, y },
+    end: { x: width - margin, y },
+    thickness: 1,
+    color: rgb(0.7, 0.7, 0.7),
+  });
+  y -= 20;
+
+  // Totals
+  const subtotal = Number(invoice.subtotal || 0).toFixed(2);
+  const tax = Number(invoice.tax || 0).toFixed(2);
+  const taxRate = Number(invoice.taxRate || 0).toFixed(1);
+  const discount = Number(invoice.discount || 0).toFixed(2);
+  const total = Number(invoice.total || 0).toFixed(2);
+  const amountPaid = Number(invoice.amountPaid || 0).toFixed(2);
+  const balance = Number(invoice.balance || 0).toFixed(2);
+
+  const rightAlignX = width - margin - 150;
+  page.drawText(`Subtotal: $${subtotal}`, { x: rightAlignX, y, size: 10, font: regularFont });
+  y -= 16;
+  page.drawText(`Tax (${taxRate}%): $${tax}`, { x: rightAlignX, y, size: 10, font: regularFont });
+  y -= 16;
+  if (Number(discount) > 0) {
+    page.drawText(`Discount: -$${discount}`, { x: rightAlignX, y, size: 10, font: regularFont });
+    y -= 16;
+  }
+  page.drawText(`Total: $${total}`, { x: rightAlignX, y, size: 11, font: boldFont });
+  y -= 16;
+  page.drawText(`Paid: $${amountPaid}`, { x: rightAlignX, y, size: 10, font: regularFont });
+  y -= 16;
+  page.drawText(`Balance Due: $${balance}`, {
+    x: rightAlignX,
+    y,
+    size: 11,
+    font: boldFont,
+    color: Number(balance) > 0 ? rgb(0.8, 0.1, 0.1) : rgb(0.1, 0.6, 0.2),
+  });
+
+  // Footer
+  page.drawLine({
+    start: { x: margin, y: margin + 20 },
+    end: { x: width - margin, y: margin + 20 },
+    thickness: 0.5,
+    color: rgb(0.5, 0.5, 0.5),
+  });
+  page.drawText('Generated by PulseCare HMS', {
+    x: margin,
+    y: margin + 5,
+    size: 9,
+    font: regularFont,
+    color: rgb(0.5, 0.5, 0.5),
+  });
+
+  const pdfBytes = await pdfDoc.save();
+  return Buffer.from(pdfBytes);
+}
+
+/**
+ * Generates a Patient ID Card PDF (A4 format with ID card border & emergency contact info).
+ */
+export async function generatePatientIdCardPdf(patient: any): Promise<Buffer> {
+  const pdfDoc = await PDFDocument.create();
+  const page = pdfDoc.addPage([595.28, 841.89]); // A4
+  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+  const { width, height } = page.getSize();
+  const margin = 50;
+
+  // Draw ID Card Box
+  const cardX = margin;
+  const cardY = height - 280;
+  const cardWidth = width - margin * 2;
+  const cardHeight = 220;
+
+  page.drawRectangle({
+    x: cardX,
+    y: cardY,
+    width: cardWidth,
+    height: cardHeight,
+    borderColor: rgb(0, 0.45, 0.45),
+    borderWidth: 2,
+    color: rgb(0.97, 0.99, 0.99),
+  });
+
+  // Card Header Band
+  page.drawRectangle({
+    x: cardX,
+    y: cardY + cardHeight - 45,
+    width: cardWidth,
+    height: 45,
+    color: rgb(0, 0.45, 0.45),
+  });
+
+  page.drawText('PULSECARE HOSPITAL MANAGEMENT SYSTEM', {
+    x: cardX + 16,
+    y: cardY + cardHeight - 24,
+    size: 12,
+    font: boldFont,
+    color: rgb(1, 1, 1),
+  });
+
+  page.drawText('PATIENT IDENTIFICATION CARD', {
+    x: cardX + 16,
+    y: cardY + cardHeight - 38,
+    size: 9,
+    font: regularFont,
+    color: rgb(0.9, 0.95, 0.95),
+  });
+
+  let textY = cardY + cardHeight - 70;
+  const user = patient.userId || {};
+  const patientName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'N/A';
+  const patientId = patient.patientId || 'N/A';
+
+  page.drawText(`Name: ${patientName}`, {
+    x: cardX + 20,
+    y: textY,
+    size: 13,
+    font: boldFont,
+    color: rgb(0.1, 0.1, 0.1),
+  });
+
+  page.drawText(`Patient ID: ${patientId}`, {
+    x: cardX + cardWidth - 160,
+    y: textY,
+    size: 12,
+    font: boldFont,
+    color: rgb(0, 0.45, 0.45),
+  });
+
+  textY -= 25;
+  const dobStr = patient.dateOfBirth ? new Date(patient.dateOfBirth).toLocaleDateString() : 'N/A';
+  page.drawText(`DOB: ${dobStr}     Gender: ${patient.gender || 'N/A'}     Blood Group: ${patient.bloodGroup || 'N/A'}`, {
+    x: cardX + 20,
+    y: textY,
+    size: 10,
+    font: regularFont,
+    color: rgb(0.2, 0.2, 0.2),
+  });
+
+  textY -= 22;
+  page.drawText(`Email: ${user.email || 'N/A'}     Phone: ${user.phone || 'N/A'}`, {
+    x: cardX + 20,
+    y: textY,
+    size: 10,
+    font: regularFont,
+    color: rgb(0.2, 0.2, 0.2),
+  });
+
+  textY -= 25;
+  const ec = patient.emergencyContact || {};
+  const ecText = ec.name ? `${ec.name} (${ec.relationship || 'Emergency'}): ${ec.phone || '—'}` : 'None specified';
+  page.drawText(`Emergency Contact: ${ecText}`, {
+    x: cardX + 20,
+    y: textY,
+    size: 10,
+    font: boldFont,
+    color: rgb(0.8, 0.2, 0.2),
+  });
+
+  textY -= 22;
+  page.drawText('This card is official hospital identification for healthcare services.', {
+    x: cardX + 20,
+    y: textY,
+    size: 8,
+    font: regularFont,
+    color: rgb(0.5, 0.5, 0.5),
+  });
+
+  // Page Footer
+  page.drawLine({
+    start: { x: margin, y: margin + 20 },
+    end: { x: width - margin, y: margin + 20 },
+    thickness: 0.5,
+    color: rgb(0.5, 0.5, 0.5),
+  });
+  page.drawText('Generated by PulseCare HMS', {
+    x: margin,
+    y: margin + 5,
+    size: 9,
+    font: regularFont,
+    color: rgb(0.5, 0.5, 0.5),
+  });
+
+  const pdfBytes = await pdfDoc.save();
+  return Buffer.from(pdfBytes);
+}
+
+/**
+ * Generates an Appointment Slip PDF with Queue Token (A4 format).
+ */
+export async function generateAppointmentSlipPdf(appointment: any): Promise<Buffer> {
+  const pdfDoc = await PDFDocument.create();
+  const page = pdfDoc.addPage([595.28, 841.89]); // A4
+  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+  const { width, height } = page.getSize();
+  const margin = 50;
+  let y = height - margin;
+
+  // Header / Brand
+  page.drawText('PULSECARE HOSPITAL MANAGEMENT SYSTEM', {
+    x: margin,
+    y,
+    size: 14,
+    font: boldFont,
+    color: rgb(0, 0.45, 0.45),
+  });
+
+  y -= 25;
+  page.drawLine({
+    start: { x: margin, y },
+    end: { x: width - margin, y },
+    thickness: 1.5,
+    color: rgb(0, 0.45, 0.45),
+  });
+
+  y -= 30;
+  page.drawText('APPOINTMENT BOOKING SLIP', {
+    x: margin,
+    y,
+    size: 16,
+    font: boldFont,
+    color: rgb(0.1, 0.1, 0.1),
+  });
+
+  y -= 40;
+
+  // Prominent Queue Token Box
+  const tokenBoxWidth = width - margin * 2;
+  const tokenBoxHeight = 65;
+  page.drawRectangle({
+    x: margin,
+    y: y - 15,
+    width: tokenBoxWidth,
+    height: tokenBoxHeight,
+    color: rgb(0.9, 0.97, 0.97),
+    borderColor: rgb(0, 0.45, 0.45),
+    borderWidth: 1.5,
+  });
+
+  const tokenStr = appointment.tokenNumber ? `#${appointment.tokenNumber}` : '—';
+  page.drawText(`DAILY QUEUE TOKEN: ${tokenStr}`, {
+    x: margin + 20,
+    y: y + 20,
+    size: 18,
+    font: boldFont,
+    color: rgb(0, 0.45, 0.45),
+  });
+
+  page.drawText('Please retain this token number for the queue display and consultation calling.', {
+    x: margin + 20,
+    y: y,
+    size: 9,
+    font: regularFont,
+    color: rgb(0.3, 0.3, 0.3),
+  });
+
+  y -= 45;
+
+  // Appointment details
+  const patUser = appointment.patient?.userId || {};
+  const patientName = `${patUser.firstName || ''} ${patUser.lastName || ''}`.trim() || 'N/A';
+  const patientId = appointment.patient?.patientId || 'N/A';
+
+  const docUser = appointment.doctor?.userId || {};
+  const doctorName = `Dr. ${docUser.firstName || ''} ${docUser.lastName || ''}`.trim() || 'N/A';
+  const departmentName = appointment.department?.name || appointment.doctor?.specialization || 'General';
+
+  const dateStr = appointment.date ? new Date(appointment.date).toISOString().split('T')[0] : 'N/A';
+  const timeSlot = appointment.timeSlot || 'N/A';
+
+  page.drawText(`Appointment ID: ${appointment.appointmentId || 'N/A'}`, {
+    x: margin,
+    y,
+    size: 11,
+    font: boldFont,
+    color: rgb(0.2, 0.2, 0.2),
+  });
+  y -= 22;
+
+  page.drawText(`Patient: ${patientName} (${patientId})`, {
+    x: margin,
+    y,
+    size: 11,
+    font: regularFont,
+    color: rgb(0.2, 0.2, 0.2),
+  });
+  y -= 22;
+
+  page.drawText(`Doctor: ${doctorName}    Department: ${departmentName}`, {
+    x: margin,
+    y,
+    size: 11,
+    font: regularFont,
+    color: rgb(0.2, 0.2, 0.2),
+  });
+  y -= 22;
+
+  page.drawText(`Date: ${dateStr}    Time Slot: ${timeSlot}`, {
+    x: margin,
+    y,
+    size: 11,
+    font: boldFont,
+    color: rgb(0, 0.45, 0.45),
+  });
+  y -= 22;
+
+  page.drawText(`Status: ${(appointment.status || 'scheduled').toUpperCase()}`, {
+    x: margin,
+    y,
+    size: 10,
+    font: boldFont,
+    color: rgb(0.3, 0.3, 0.3),
+  });
+  y -= 35;
+
+  // Notice box
+  page.drawLine({
+    start: { x: margin, y },
+    end: { x: width - margin, y },
+    thickness: 0.5,
+    color: rgb(0.7, 0.7, 0.7),
+  });
+  y -= 20;
+
+  page.drawText('Important Instructions:', {
+    x: margin,
+    y,
+    size: 10,
+    font: boldFont,
+    color: rgb(0.2, 0.2, 0.2),
+  });
+  y -= 16;
+  page.drawText('1. Please arrive 15 minutes before your scheduled appointment slot.', {
+    x: margin + 10,
+    y,
+    size: 9,
+    font: regularFont,
+    color: rgb(0.3, 0.3, 0.3),
+  });
+  y -= 14;
+  page.drawText('2. Present this booking slip and your Token Number at the reception counter upon arrival.', {
+    x: margin + 10,
+    y,
+    size: 9,
+    font: regularFont,
+    color: rgb(0.3, 0.3, 0.3),
+  });
+  y -= 14;
+  page.drawText('3. For cancellations or rescheduling, please notify the hospital at least 2 hours in advance.', {
+    x: margin + 10,
+    y,
+    size: 9,
+    font: regularFont,
+    color: rgb(0.3, 0.3, 0.3),
+  });
+
+  // Footer
+  page.drawLine({
+    start: { x: margin, y: margin + 20 },
+    end: { x: width - margin, y: margin + 20 },
+    thickness: 0.5,
+    color: rgb(0.5, 0.5, 0.5),
+  });
+  page.drawText('Generated by PulseCare HMS', {
+    x: margin,
+    y: margin + 5,
+    size: 9,
+    font: regularFont,
+    color: rgb(0.5, 0.5, 0.5),
+  });
+
+  const pdfBytes = await pdfDoc.save();
+  return Buffer.from(pdfBytes);
+}

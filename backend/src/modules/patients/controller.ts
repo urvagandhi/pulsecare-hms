@@ -4,6 +4,7 @@ import { ValidationError, AuthError } from '../../middleware/errorHandler';
 import { successResponse } from '../../types/api';
 import { CreatePatientSchema, UpdatePatientSchema } from './schema';
 import * as PatientService from './service';
+import { generatePatientIdCardPdf } from '../../services/pdfService';
 
 function parseZodError(err: ZodError): ValidationError {
   const details: Record<string, unknown> = {};
@@ -91,6 +92,25 @@ export async function updateOwnProfile(req: Request, res: Response, next: NextFu
 
     const patient = await PatientService.updateOwnPatientProfile(req.user._id, parsed.data);
     res.json(successResponse(patient));
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getPatientIdCardPdf(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { id } = req.params;
+    if (!req.user) return next(new AuthError());
+
+    const isMe = !id || id === 'me';
+    const patient = isMe
+      ? await PatientService.getPatientByUserId(req.user._id)
+      : await PatientService.getPatient(id, req.user._id, req.user.role);
+
+    const pdfBuffer = await generatePatientIdCardPdf(patient);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="patient-id-${patient.patientId || id}.pdf"`);
+    res.send(pdfBuffer);
   } catch (err) {
     next(err);
   }

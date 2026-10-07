@@ -1,10 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Download } from 'lucide-react';
 import api from '@/lib/api';
 import { fmt } from '@/lib/format';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/Shared/StatusBadge';
+import { downloadPdf } from '@/lib/downloadPdf';
 import type { Invoice } from '@/types/billing';
 
 interface InvoiceDetailResponse {
@@ -84,7 +86,18 @@ export function PatientInvoiceDetail() {
                 )}
               </div>
             </div>
-            <StatusBadge status={inv.status} />
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => downloadPdf(`/billing/${inv._id}/pdf`, `invoice-${inv.invoiceId}.pdf`)}
+                className="flex items-center gap-1.5"
+              >
+                <Download className="w-4 h-4" />
+                Download PDF
+              </Button>
+              <StatusBadge status={inv.status} />
+            </div>
           </div>
         </CardHeader>
       </Card>

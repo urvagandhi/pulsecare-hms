@@ -590,6 +590,91 @@ describe('Appointment Routes', () => {
       expect(tokenNumbers.sort((a, b) => a - b)).toEqual([1, 2, 3, 4, 5]);
     });
   });
+
+  describe('Task 3.6 — GET /api/v1/appointments/:id/slip tests', () => {
+    it('returns 200 and application/pdf starting with %PDF for doctor/admin', async () => {
+      const bookRes = await request(app)
+        .post('/api/v1/appointments')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({
+          doctorId: doctorProfileId,
+          patientId: patientProfileId,
+          date: '2026-12-07',
+          timeSlot: '09:00',
+          type: 'consultation',
+        });
+
+      const aptId = bookRes.body.data._id;
+
+      const res = await request(app)
+        .get(`/api/v1/appointments/${aptId}/slip`)
+        .set('Authorization', `Bearer ${doctorToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.headers['content-type']).toContain('application/pdf');
+      const textHeader = Buffer.isBuffer(res.body)
+        ? res.body.toString('utf-8', 0, 4)
+        : (res.text || '').substring(0, 4);
+      expect(textHeader).toBe('%PDF');
+    });
+
+    it('returns 200 when patient downloads their own appointment slip', async () => {
+      const bookRes = await request(app)
+        .post('/api/v1/appointments')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({
+          doctorId: doctorProfileId,
+          patientId: patientProfileId,
+          date: '2026-12-07',
+          timeSlot: '09:30',
+          type: 'consultation',
+        });
+
+      const aptId = bookRes.body.data._id;
+
+      const res = await request(app)
+        .get(`/api/v1/appointments/${aptId}/slip`)
+        .set('Authorization', `Bearer ${patientToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.headers['content-type']).toContain('application/pdf');
+    });
+
+    it('returns 403 Forbidden when another patient tries to download appointment slip', async () => {
+      const otherUser = await User.create({
+        firstName: 'Other',
+        lastName: 'Patient',
+        email: 'other_pat_slip@test.com',
+        password: 'Password1!',
+        role: 'patient',
+      });
+      await Patient.create({ userId: otherUser._id });
+
+      const otherLoginRes = await request(app)
+        .post('/api/v1/auth/login')
+        .send({ email: 'other_pat_slip@test.com', password: 'Password1!' });
+      const otherPatientToken = otherLoginRes.body?.data?.accessToken;
+
+      const bookRes = await request(app)
+        .post('/api/v1/appointments')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({
+          doctorId: doctorProfileId,
+          patientId: patientProfileId,
+          date: '2026-12-07',
+          timeSlot: '10:00',
+          type: 'consultation',
+        });
+
+      const aptId = bookRes.body.data._id;
+
+      const res = await request(app)
+        .get(`/api/v1/appointments/${aptId}/slip`)
+        .set('Authorization', `Bearer ${otherPatientToken}`);
+
+      expect(res.status).toBe(403);
+    });
+  });
 });
 
 // Suppress unused variable warning for setup variable

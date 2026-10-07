@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppSelector } from '@/store/hooks';
 import { fmt } from '@/lib/format';
+import { downloadPdf } from '@/lib/downloadPdf';
 import type { Invoice } from '@/types/billing';
 import toast from 'react-hot-toast';
 
@@ -308,6 +309,13 @@ export function AdminBilling() {
         <div className="flex flex-wrap gap-1">
           <Button variant="outline" size="sm" onClick={() => setDetailInvoiceId(row._id)}>
             View
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => downloadPdf(`/billing/${row._id}/pdf`, `invoice-${row.invoiceId}.pdf`)}
+          >
+            PDF
           </Button>
           {isAdmin && row.status === 'draft' && (
             <Button
@@ -893,6 +901,14 @@ export function AdminBilling() {
           )}
 
           <DialogFooter>
+            {detailInv && (
+              <Button
+                variant="outline"
+                onClick={() => downloadPdf(`/billing/${detailInv._id}/pdf`, `invoice-${detailInv.invoiceId}.pdf`)}
+              >
+                Download PDF
+              </Button>
+            )}
             {isAdmin && detailInv && detailInv.status === 'draft' && (
               <Button
                 variant="outline"

@@ -14,6 +14,9 @@ router.post('/', authenticate, authorize('appointments', 'write'), AppointmentCo
 // List appointments (all authenticated, filtered by role at service level)
 router.get('/', authenticate, authorize('appointments', 'read'), AppointmentController.listAppointments);
 
+// Get appointment slip PDF
+router.get('/:id/slip', authenticate, authorize('appointments', 'read'), AppointmentController.getAppointmentSlipPdf);
+
 // Get single appointment
 router.get('/:id', authenticate, authorize('appointments', 'read'), AppointmentController.getAppointment);
 

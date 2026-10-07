@@ -9,6 +9,10 @@ const router = Router();
 router.get('/patients/me', authenticate, authorize('patients', 'read'), PatientController.getOwnProfile);
 router.patch('/patients/me', authenticate, authorize('patients', 'write'), PatientController.updateOwnProfile);
 
+// Patient ID card PDF download
+router.get('/patients/me/id-card', authenticate, authorize('patients', 'read'), PatientController.getPatientIdCardPdf);
+router.get('/patients/:id/id-card', authenticate, authorize('patients', 'read'), PatientController.getPatientIdCardPdf);
+
 // Admin/staff routes
 router.get('/patients', authenticate, authorize('patients', 'read'), PatientController.listPatients);
 router.post('/patients', authenticate, authorize('patients', 'write'), PatientController.createPatient);

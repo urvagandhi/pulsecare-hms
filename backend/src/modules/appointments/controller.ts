@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
-import { ValidationError, AuthError } from '../../middleware/errorHandler';
+import { ValidationError, AuthError, ForbiddenError } from '../../middleware/errorHandler';
 import { successResponse } from '../../types/api';
 import { CreateAppointmentSchema, UpdateStatusSchema, GetSlotsSchema } from './schema';
 import * as AppointmentService from './service';
+import { generateAppointmentSlipPdf } from '../../services/pdfService';
 
 function parseZodError(err: ZodError): ValidationError {
   const details: Record<string, unknown> = {};
@@ -87,7 +88,39 @@ export async function getAppointment(req: Request, res: Response, next: NextFunc
     if (!req.user) return next(new AuthError());
 
     const appointment = await AppointmentService.getAppointmentById(req.params.id);
+
+    if (req.user.role === 'patient') {
+      const patDoc = appointment.patient as any;
+      const patientUserId = patDoc?.userId?._id?.toString() || patDoc?.userId?.toString();
+      if (patientUserId && patientUserId !== req.user._id) {
+        throw new ForbiddenError('You can only access your own appointment');
+      }
+    }
+
     res.json(successResponse(appointment));
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getAppointmentSlipPdf(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    if (!req.user) return next(new AuthError());
+
+    const appointment = await AppointmentService.getAppointmentById(req.params.id);
+
+    if (req.user.role === 'patient') {
+      const patDoc = appointment.patient as any;
+      const patientUserId = patDoc?.userId?._id?.toString() || patDoc?.userId?.toString();
+      if (patientUserId && patientUserId !== req.user._id) {
+        throw new ForbiddenError('You can only access your own appointment');
+      }
+    }
+
+    const pdfBuffer = await generateAppointmentSlipPdf(appointment);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="appointment-slip-${appointment.appointmentId || req.params.id}.pdf"`);
+    res.send(pdfBuffer);
   } catch (err) {
     next(err);
   }
