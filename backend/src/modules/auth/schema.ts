@@ -11,6 +11,10 @@ export const RegisterSchema = z.object({
   phone: z.string().optional(),
   dob: z.string().datetime().optional(),
   gender: z.enum(['male', 'female', 'other']).optional(),
+  role: z.string().optional(),
+}).refine((data) => !data.role || data.role === 'patient', {
+  message: 'Privileged roles cannot be set via public registration',
+  path: ['role'],
 });
 
 export const LoginSchema = z.object({

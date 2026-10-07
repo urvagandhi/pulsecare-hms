@@ -108,6 +108,27 @@ describe('POST /api/v1/auth/register', () => {
     expect(res.body.success).toBe(false);
     expect(res.body.error.code).toBe('VALIDATION_ERROR');
   });
+
+  it('rejects registration with role "admin" with 400 VALIDATION_ERROR', async () => {
+    const res = await request(app)
+      .post('/api/v1/auth/register')
+      .send({ ...validUser, email: 'hacker@example.com', role: 'admin' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.error.code).toBe('VALIDATION_ERROR');
+    expect(res.body.error.details?.role).toBeDefined();
+  });
+
+  it('permits registration with role "patient" and creates user with role patient', async () => {
+    const res = await request(app)
+      .post('/api/v1/auth/register')
+      .send({ ...validUser, email: 'legit.patient@example.com', role: 'patient' });
+
+    expect(res.status).toBe(201);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.user.role).toBe('patient');
+  });
 });
 
 describe('POST /api/v1/auth/login', () => {

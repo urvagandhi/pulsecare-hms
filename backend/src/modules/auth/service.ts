@@ -29,14 +29,16 @@ function generateRefreshToken(): string {
 }
 
 export async function registerUser(
-  input: { firstName: string; lastName: string; email: string; password: string; phone?: string; dob?: string; gender?: string },
+  input: { firstName: string; lastName: string; email: string; password: string; phone?: string; dob?: string; gender?: string; role?: string },
   jwtSecret: string
 ): Promise<{ user: IUser; tokens: TokenPair }> {
   const existing = await User.findOne({ email: input.email });
   if (existing) throw new ConflictError('Email already registered');
 
+  const { role: _ignoredRole, ...userData } = input;
+
   const user = await User.create({
-    ...input,
+    ...userData,
     role: 'patient',
     dob: input.dob ? new Date(input.dob) : undefined,
   });
