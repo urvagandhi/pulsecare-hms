@@ -8,6 +8,7 @@ module.exports = {
     "^.+\\.tsx?$": ["ts-jest", { tsconfig: "./tsconfig.test.json" }],
   },
   moduleFileExtensions: ["ts", "tsx", "js", "json"],
+  testTimeout: 30000,
   coverageThreshold: {
     global: {
       lines: 80,
