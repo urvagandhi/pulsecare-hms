@@ -7,22 +7,33 @@ import { KpiCard } from '@/components/Shared/KpiCard';
 import { AppointmentRow } from '@/components/Shared/AppointmentRow';
 import { AlertItem } from '@/components/Shared/AlertItem';
 import { StatBar } from '@/components/Shared/StatBar';
+import { StatusBadge } from '@/components/Shared/StatusBadge';
 import { cn } from '@/lib/utils';
 
 // Minimal types for dashboard queries
-interface Patient { _id: string; }
-interface LabOrder {
-  _id: string; orderId?: string; testName?: string;
-  status?: string; priority?: string; createdAt?: string;
-  patient?: { patientId?: string; userId?: { firstName?: string; lastName?: string } };
-  doctor?: { userId?: { firstName?: string; lastName?: string } };
+interface Patient {
+  _id: string;
 }
+
 interface Appointment {
-  _id: string; timeSlot?: string; status?: string; type?: string; reason?: string;
+  _id: string;
+  timeSlot?: string;
+  status?: string;
+  type?: string;
+  reason?: string;
   patient?: { patientId?: string; userId?: { firstName?: string; lastName?: string } };
   doctor?: { specialization?: string; userId?: { firstName?: string; lastName?: string } };
 }
-interface InventoryItem { _id: string; name?: string; }
+
+interface DashboardInvoice {
+  _id: string;
+  invoiceId: string;
+  patient?: { userId?: { firstName?: string; lastName?: string } };
+  total: number;
+  balance: number;
+  status: 'draft' | 'issued' | 'paid' | 'partial' | 'overdue' | 'void';
+  createdAt: string;
+}
 
 const DEPT_STATS = [
   { label: 'Cardiology',   value: 82, color: '#6366f1' },
@@ -61,6 +72,7 @@ function getDoctorMeta(a: Appointment): string {
 
 export function AdminDashboard() {
   const user = useAppSelector(s => s.auth.user);
+  const isAdmin = user?.role === 'admin';
   const [apptTab, setApptTab] = useState<'today' | 'upcoming'>('today');
 
   const patientsQ = useQuery<{ success: boolean; data: Patient[] }>({
@@ -70,46 +82,63 @@ export function AdminDashboard() {
 
   const apptQ = useQuery<{ success: boolean; data: Appointment[] }>({
     queryKey: ['appointments', 'today'],
-    queryFn: () => api.get('/appointments?date=today&limit=5').then(r => r.data),
+    queryFn: () => api.get('/appointments?date=today&limit=10').then(r => r.data),
   });
 
   const upcomingQ = useQuery<{ success: boolean; data: Appointment[] }>({
     queryKey: ['appointments', 'upcoming'],
-    queryFn: () => api.get('/appointments?status=scheduled,confirmed&limit=5').then(r => r.data),
+    queryFn: () => api.get('/appointments?status=scheduled,confirmed&limit=10').then(r => r.data),
   });
 
-  const revenueQ = useQuery<{ revenue: number }>({
-    queryKey: ['billing-revenue-mtd'],
-    queryFn: () => api.get('/billing/revenue-mtd').then(r => r.data),
+  // Admin-only revenue analytics endpoint
+  const revenueQ = useQuery<{
+    success: boolean;
+    data: {
+      byMonth: { _id: string; revenue: number; count: number }[];
+      outstanding: number;
+    };
+  }>({
+    queryKey: ['analytics-revenue'],
+    queryFn: () => api.get('/analytics/revenue').then(r => r.data),
+    enabled: isAdmin,
   });
 
-  const labQ = useQuery<{ success: boolean; data: LabOrder[] }>({
-    queryKey: ['admin-dash', 'lab'],
-    queryFn: () => api.get('/lab/orders?status=pending,processing&limit=5').then(r => r.data),
+  // Billing list endpoint accessible to both admin and receptionist
+  const invoicesQ = useQuery<{
+    success: boolean;
+    data: DashboardInvoice[];
+    meta?: { total: number };
+  }>({
+    queryKey: ['admin-dash', 'invoices-attention'],
+    queryFn: () => api.get('/billing?status=issued,partial,draft&limit=5').then(r => r.data),
   });
 
-  const lowStockQ = useQuery<{ success: boolean; data: InventoryItem[] }>({
-    queryKey: ['inventory-low'],
-    queryFn: () => api.get('/inventory?belowReorder=true&limit=1').then(r => r.data),
-  });
-
-  const totalPatients = patientsQ.data?.data?.length ?? 0;
-  const todayAppts    = apptQ.data?.data ?? [];
-  const upcomingAppts = upcomingQ.data?.data ?? [];
-  const pendingLabs   = labQ.data?.data ?? [];
+  const totalPatients   = patientsQ.data?.data?.length ?? 0;
+  const todayAppts      = apptQ.data?.data ?? [];
+  const upcomingAppts   = upcomingQ.data?.data ?? [];
+  const pendingInvoices = invoicesQ.data?.data ?? [];
+  const mtdRevenue      = revenueQ.data?.data?.byMonth?.[0]?.revenue ?? 0;
 
   const dateLabel = new Date().toLocaleDateString('en-US', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   });
 
   const alerts = [
-    ...(pendingLabs.filter((l: LabOrder) => l.priority === 'urgent').slice(0, 1).map((l: LabOrder) => ({
-      dotColor: '#ef4444', text: `Critical lab result — Patient ${l.patient?.patientId || 'unknown'}`, time: new Date(l.createdAt ?? '').toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})
+    ...(todayAppts.slice(0, 1).map((a) => ({
+      dotColor: '#3b82f6',
+      text: `Appointment today: ${getPatientName(a)} (${a.timeSlot ?? 'scheduled'})`,
+      time: 'Today',
     }))),
-    ...(lowStockQ.data?.data?.slice(0, 1).map((item: InventoryItem) => ({
-      dotColor: '#f59e0b', text: `Low stock: ${item.name}`, time: 'Now'
-    })) || []),
-    { dotColor: '#22c55e', text: 'Invoice paid — INV-0108', time: '2h ago' },
+    ...(pendingInvoices.slice(0, 1).map((inv) => ({
+      dotColor: '#f59e0b',
+      text: `Invoice ${inv.invoiceId} awaiting settlement ($${inv.balance.toFixed(2)})`,
+      time: 'Attention',
+    }))),
+    {
+      dotColor: '#22c55e',
+      text: 'PulseCare HMS core modules active & operational',
+      time: 'Now',
+    },
   ].slice(0, 3);
 
   return (
@@ -124,42 +153,77 @@ export function AdminDashboard() {
             {dateLabel} · Hospital Overview
           </p>
         </div>
-        <Link
-          to="/admin/analytics"
-          className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-2 rounded-lg transition-colors"
-        >
-          📊 Analytics →
-        </Link>
+        {isAdmin ? (
+          <Link
+            to="/admin/analytics"
+            className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-2 rounded-lg transition-colors"
+          >
+            📊 Analytics →
+          </Link>
+        ) : (
+          <Link
+            to="/admin/billing"
+            className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-2 rounded-lg transition-colors"
+          >
+            💰 Billing Overview →
+          </Link>
+        )}
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
-          title="Total Patients"     value={patientsQ.isLoading ? '…' : patientsQ.isError ? '—' : totalPatients.toLocaleString()}
-          trend="12% this month"     trendDir="up"
-          color="blue"              icon="🏥"
+          title="Total Patients"
+          value={patientsQ.isLoading ? '…' : patientsQ.isError ? '—' : totalPatients.toLocaleString()}
+          trend="Active Records"
+          trendDir="up"
+          color="blue"
+          icon="🏥"
           sparklineData={PATIENT_SPARK}
           isLoading={patientsQ.isLoading}
         />
         <KpiCard
-          title="Appointments Today" value={apptQ.isLoading ? '…' : todayAppts.length}
-          trend={`${todayAppts.filter(a => a.status === 'scheduled').length} pending`} trendDir="neutral"
-          color="green"             icon="📅"
+          title="Appointments Today"
+          value={apptQ.isLoading ? '…' : todayAppts.length}
+          trend={`${todayAppts.filter(a => a.status === 'scheduled').length} pending`}
+          trendDir="neutral"
+          color="green"
+          icon="📅"
           sparklineData={APPT_SPARK}
           isLoading={apptQ.isLoading}
         />
+        {isAdmin ? (
+          <KpiCard
+            title="Revenue (MTD)"
+            value={revenueQ.isLoading ? '…' : revenueQ.isError ? '—' : `$${(mtdRevenue / 1000).toFixed(1)}K`}
+            trend={revenueQ.data?.data?.outstanding ? `$${revenueQ.data.data.outstanding.toLocaleString()} outstanding` : 'Up to date'}
+            trendDir="up"
+            color="amber"
+            icon="💰"
+            sparklineData={REVENUE_SPARK}
+            isLoading={revenueQ.isLoading}
+          />
+        ) : (
+          <KpiCard
+            title="Pending Invoices"
+            value={invoicesQ.isLoading ? '…' : (invoicesQ.data?.meta?.total ?? pendingInvoices.length)}
+            trend="Awaiting payment"
+            trendDir="neutral"
+            color="amber"
+            icon="💰"
+            sparklineData={REVENUE_SPARK}
+            isLoading={invoicesQ.isLoading}
+          />
+        )}
         <KpiCard
-          title="Revenue (MTD)"      value={revenueQ.isLoading ? '…' : revenueQ.isError ? '—' : `$${((revenueQ.data?.revenue || 0) / 1000).toFixed(1)}K`}
-          trend="8.2% vs last month" trendDir="up"
-          color="amber"             icon="💰"
-          sparklineData={REVENUE_SPARK}
-          isLoading={revenueQ.isLoading}
-        />
-        <KpiCard
-          title="Staff on Duty"      value="32"
-          trend="4 on leave"         trendDir="neutral"
-          color="purple"            icon="👥"
+          title="Upcoming Visits"
+          value={upcomingQ.isLoading ? '…' : upcomingAppts.length}
+          trend="Scheduled ahead"
+          trendDir="up"
+          color="purple"
+          icon="👥"
           sparklineData={STAFF_SPARK}
+          isLoading={upcomingQ.isLoading}
         />
       </div>
 
@@ -171,15 +235,20 @@ export function AdminDashboard() {
             <h2 className="text-[13px] font-bold text-slate-900">Appointments</h2>
             <div className="flex items-center gap-3">
               <div className="flex gap-1 bg-slate-100 rounded-lg p-0.5">
-                {(['today','upcoming'] as const).map(tab => (
-                  <button key={tab} onClick={() => setApptTab(tab)}
-                    className={cn('px-3 py-1 text-xs font-medium rounded-md transition-colors capitalize',
-                      apptTab === tab ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700')}>
+                {(['today', 'upcoming'] as const).map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => setApptTab(tab)}
+                    className={cn(
+                      'px-3 py-1 text-xs font-medium rounded-md transition-colors capitalize',
+                      apptTab === tab ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'
+                    )}
+                  >
                     {tab}
                   </button>
                 ))}
               </div>
-              <Link to="/admin/patients" className="text-[11px] font-semibold text-indigo-600 hover:underline">
+              <Link to="/admin/appointments" className="text-[11px] font-semibold text-indigo-600 hover:underline">
                 View all →
               </Link>
             </div>
@@ -189,7 +258,7 @@ export function AdminDashboard() {
               <>
                 {apptQ.isLoading && (
                   <div className="space-y-3 py-3">
-                    {[1,2,3].map(i => <div key={i} className="h-9 bg-slate-100 rounded-lg animate-pulse" />)}
+                    {[1, 2, 3].map(i => <div key={i} className="h-9 bg-slate-100 rounded-lg animate-pulse" />)}
                   </div>
                 )}
                 {!apptQ.isLoading && todayAppts.length === 0 && (
@@ -211,7 +280,7 @@ export function AdminDashboard() {
               <>
                 {upcomingQ.isLoading && (
                   <div className="space-y-3 py-3">
-                    {[1,2,3].map(i => <div key={i} className="h-9 bg-slate-100 rounded-lg animate-pulse" />)}
+                    {[1, 2, 3].map(i => <div key={i} className="h-9 bg-slate-100 rounded-lg animate-pulse" />)}
                   </div>
                 )}
                 {!upcomingQ.isLoading && upcomingAppts.length === 0 && (
@@ -239,13 +308,16 @@ export function AdminDashboard() {
             <h2 className="text-[13px] font-bold text-slate-900 mb-3">Quick Actions</h2>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { icon: '👤', label: 'New Patient',   sub: 'Register',      to: '/admin/patients' },
-                { icon: '📅', label: 'Book Appointment', sub: 'Schedule visit', to: '/admin/appointments' },
-                { icon: '💰', label: 'Billing',       sub: 'Manage bills',  to: '/admin/billing' },
-                { icon: '👥', label: 'Staff',         sub: 'Manage team',   to: '/admin/staff' },
+                { icon: '👤', label: 'New Patient',      sub: 'Register',       to: '/admin/patients' },
+                { icon: '📅', label: 'Appointments',     sub: 'Manage visits',  to: '/admin/appointments' },
+                { icon: '💰', label: 'Billing',          sub: 'Manage bills',   to: '/admin/billing' },
+                ...(isAdmin
+                  ? [{ icon: '👥', label: 'Staff & Team', sub: 'Manage team',    to: '/admin/staff' }]
+                  : [{ icon: '📋', label: 'Patient List', sub: 'Directory',      to: '/admin/patients' }]),
               ].map(({ icon, label, sub, to }) => (
                 <Link
-                  key={label} to={to}
+                  key={label}
+                  to={to}
                   className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 transition-colors group"
                 >
                   <span className="text-base">{icon}</span>
@@ -264,18 +336,22 @@ export function AdminDashboard() {
               <h2 className="text-[13px] font-bold text-slate-900">🔔 Live Alerts</h2>
             </div>
             <div className="px-4 py-1">
-              {alerts.map((a) => <AlertItem key={a.text} dotColor={a.dotColor} time={a.time}>{a.text}</AlertItem>)}
+              {alerts.map((a, i) => <AlertItem key={i} dotColor={a.dotColor} time={a.time}>{a.text}</AlertItem>)}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Bottom grid — department load + pending labs */}
+      {/* Bottom grid — department load + invoices needing attention */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-[13px] font-bold text-slate-900">Department Load</h2>
-            <Link to="/admin/analytics" className="text-[11px] text-indigo-600 hover:underline font-semibold">View report →</Link>
+            {isAdmin && (
+              <Link to="/admin/analytics" className="text-[11px] text-indigo-600 hover:underline font-semibold">
+                View report →
+              </Link>
+            )}
           </div>
           {DEPT_STATS.map(d => (
             <StatBar key={d.label} label={d.label} value={d.value} max={100} color={d.color} />
@@ -284,39 +360,41 @@ export function AdminDashboard() {
 
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-50">
-            <h2 className="text-[13px] font-bold text-slate-900">Pending Lab Orders</h2>
-            <Link to="/admin/lab" className="text-[11px] text-indigo-600 hover:underline font-semibold">View all →</Link>
+            <h2 className="text-[13px] font-bold text-slate-900">Invoices Needing Attention</h2>
+            <Link to="/admin/billing" className="text-[11px] text-indigo-600 hover:underline font-semibold">
+              View all →
+            </Link>
           </div>
           <div className="px-4 divide-y divide-slate-50">
-            {labQ.isLoading && (
+            {invoicesQ.isLoading && (
               <div className="space-y-2 py-3">
-                {[1,2,3].map(i => <div key={i} className="h-7 bg-slate-100 rounded animate-pulse" />)}
+                {[1, 2, 3].map(i => <div key={i} className="h-7 bg-slate-100 rounded animate-pulse" />)}
               </div>
             )}
-            {labQ.isError && <p className="text-sm text-red-500 px-4 py-2">Failed to load lab orders</p>}
-            {!labQ.isLoading && pendingLabs.length === 0 && (
-              <p className="text-[12px] text-slate-400 py-6 text-center">No pending lab orders</p>
+            {invoicesQ.isError && (
+              <p className="text-sm text-red-500 px-4 py-2">Failed to load invoices</p>
             )}
-            {pendingLabs.map(lab => {
-              const patName = lab.patient?.userId
-                ? `${lab.patient.userId.firstName ?? ''} ${lab.patient.userId.lastName ?? ''}`.trim()
-                : lab.patient?.patientId ?? '—';
-              const docName = lab.doctor?.userId
-                ? `Dr. ${lab.doctor.userId.firstName ?? ''} ${lab.doctor.userId.lastName ?? ''}`.trim()
-                : 'Unknown';
-              const createdLabel = lab.createdAt
-                ? new Date(lab.createdAt).toLocaleDateString() : '—';
+            {!invoicesQ.isLoading && pendingInvoices.length === 0 && (
+              <p className="text-[12px] text-slate-400 py-6 text-center">No invoices requiring attention</p>
+            )}
+            {pendingInvoices.map(inv => {
+              const patName = inv.patient?.userId
+                ? `${inv.patient.userId.firstName ?? ''} ${inv.patient.userId.lastName ?? ''}`.trim()
+                : 'Patient';
+              const createdLabel = inv.createdAt
+                ? new Date(inv.createdAt).toLocaleDateString()
+                : '—';
               return (
-                <div key={lab._id} className="flex items-center gap-3 py-2.5">
+                <div key={inv._id} className="flex items-center gap-3 py-2.5">
                   <div className="flex-1 min-w-0">
-                    <p className="text-[11px] font-semibold text-slate-800 truncate">{lab.testName ?? lab.orderId ?? '—'}</p>
-                    <p className="text-[10px] text-slate-400 truncate">{patName} · {docName} · {createdLabel}</p>
+                    <p className="text-[11px] font-semibold text-slate-800 truncate">
+                      {inv.invoiceId} · {patName}
+                    </p>
+                    <p className="text-[10px] text-slate-400 truncate">
+                      Total: ${inv.total.toFixed(2)} · Balance: ${inv.balance.toFixed(2)} · {createdLabel}
+                    </p>
                   </div>
-                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${
-                    lab.priority === 'urgent' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'
-                  }`}>
-                    {lab.status ?? 'Pending'}
-                  </span>
+                  <StatusBadge status={inv.status} />
                 </div>
               );
             })}
