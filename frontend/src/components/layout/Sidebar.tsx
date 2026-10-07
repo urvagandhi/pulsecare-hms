@@ -3,8 +3,8 @@ import { cn } from '@/lib/utils';
 import { usePermissions } from '@/hooks/usePermissions';
 import type { AuthUser } from '@/store/authSlice';
 import {
-  LayoutDashboard, Users, Calendar, FileText, FlaskConical,
-  Pill, Package, Award, BarChart3, Settings, LogOut, Menu, ChevronRight
+  LayoutDashboard, Users, Calendar, FileText,
+  Award, BarChart3, LogOut, Menu, ChevronRight
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useState } from 'react';
@@ -18,25 +18,15 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'doctor', 'nurse', 'receptionist', 'patient'] },
-  { label: 'Patients', href: '/admin/patients', icon: Users, roles: ['admin', 'doctor', 'nurse', 'receptionist'] },
-  { label: 'Appointments', href: '/patient/appointments', icon: Calendar, roles: ['patient'] },
-  { label: 'Schedule',     href: '/doctor/schedule',      icon: Calendar, roles: ['doctor'] },
+  { label: 'Patients', href: '/admin/patients', icon: Users, roles: ['admin', 'receptionist'] },
+  { label: 'Staff', href: '/admin/staff', icon: Award, roles: ['admin'] },
+  { label: 'Book Appointment', href: '/patient/book-appointment', icon: Calendar, roles: ['patient'] },
+  { label: 'Appointments', href: '/patient/appointments', icon: Calendar, roles: ['patient', 'doctor'] },
+  { label: 'Appointments', href: '/admin/appointments', icon: Calendar, roles: ['admin', 'receptionist'] },
+  { label: 'Schedule', href: '/doctor/schedule', icon: Calendar, roles: ['doctor'] },
   { label: 'Billing', href: '/admin/billing', icon: FileText, roles: ['admin', 'receptionist'] },
   { label: 'My Bills', href: '/patient/billing', icon: FileText, roles: ['patient'] },
-  { label: 'Lab Orders', href: '/doctor/lab', icon: FlaskConical, roles: ['doctor'] },
-  { label: 'Lab Results', href: '/patient/lab', icon: FlaskConical, roles: ['patient'] },
-  { label: 'Lab Management', href: '/admin/lab', icon: FlaskConical, roles: ['admin', 'nurse'] },
-  { label: 'Prescriptions', href: '/doctor/prescriptions', icon: Pill, roles: ['doctor'] },
-  { label: 'Dispensing Queue', href: '/nurse/dispensing', icon: Pill, roles: ['nurse'] },
-  { label: 'My Prescriptions', href: '/patient/prescriptions', icon: Pill, roles: ['patient'] },
-  { label: 'Pharmacy', href: '/admin/pharmacy', icon: Pill, roles: ['admin'] },
-  { label: 'Inventory', href: '/admin/inventory', icon: Package, roles: ['admin'] },
-  { label: 'Inventory', href: '/nurse/inventory', icon: Package, roles: ['nurse'] },
-  { label: 'Documents', href: '/doctor/documents', icon: Award, roles: ['doctor'] },
-  { label: 'My Documents', href: '/patient/documents', icon: Award, roles: ['patient'] },
-  { label: 'Documents', href: '/admin/documents', icon: Award, roles: ['admin'] },
   { label: 'Analytics', href: '/admin/analytics', icon: BarChart3, roles: ['admin'] },
-  { label: 'Settings', href: '/admin/settings', icon: Settings, roles: ['admin'] },
 ];
 
 export function Sidebar() {
