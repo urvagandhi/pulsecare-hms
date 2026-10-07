@@ -7,6 +7,12 @@ export interface IAvailability {
   endTime: string;
 }
 
+export interface IDoctorLeave {
+  startDate: Date;
+  endDate: Date;
+  reason?: string;
+}
+
 export interface IDoctor {
   _id: Types.ObjectId;
   userId: Types.ObjectId; // ref User
@@ -16,6 +22,7 @@ export interface IDoctor {
   department?: Types.ObjectId; // ref Department
   availability: IAvailability[];
   consultationFee: number;
+  leaves?: IDoctorLeave[];
   rating: number;
   reviewCount: number;
   isActive: boolean;
@@ -36,6 +43,11 @@ const DoctorSchema = new Schema<IDoctor>(
       endTime: { type: String, required: true },
     }],
     consultationFee: { type: Number, default: 0, min: 0 },
+    leaves: [{
+      startDate: { type: Date, required: true },
+      endDate: { type: Date, required: true },
+      reason: { type: String },
+    }],
     rating: { type: Number, default: 0, min: 0, max: 5 },
     reviewCount: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true, index: true },

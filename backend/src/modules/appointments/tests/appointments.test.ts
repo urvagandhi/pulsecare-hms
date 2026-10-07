@@ -309,6 +309,140 @@ describe('Appointment Routes', () => {
     expect(res.status).toBe(403);
     expect(res.body.success).toBe(false);
   });
+
+  describe('8. Doctor Leave Window Enforcement [Task 3.3 / F2]', () => {
+    let leaveDoctorProfileId: string;
+
+    beforeEach(async () => {
+      const docUser = await User.create({
+        firstName: 'Holiday',
+        lastName: 'Doctor',
+        email: `holiday.doc.${Date.now()}@test.com`,
+        password: 'DocPass1!',
+        role: 'doctor',
+      });
+
+      const leaveDoctor = await Doctor.create({
+        userId: docUser._id,
+        specialization: 'Dermatology',
+        availability: [
+          { day: 'monday', startTime: '09:00', endTime: '12:00' },
+          { day: 'tuesday', startTime: '09:00', endTime: '12:00' },
+          { day: 'wednesday', startTime: '09:00', endTime: '12:00' },
+          { day: 'thursday', startTime: '09:00', endTime: '12:00' },
+          { day: 'friday', startTime: '09:00', endTime: '12:00' },
+          { day: 'saturday', startTime: '09:00', endTime: '12:00' },
+          { day: 'sunday', startTime: '09:00', endTime: '12:00' },
+        ],
+        leaves: [
+          {
+            startDate: new Date('2026-11-10T00:00:00.000Z'),
+            endDate: new Date('2026-11-12T00:00:00.000Z'),
+            reason: 'Medical Conference',
+          },
+        ],
+      });
+      leaveDoctorProfileId = leaveDoctor._id.toString();
+    });
+
+    it('rejects booking on dates inside the leave window (inclusive)', async () => {
+      // 2026-11-10 is the leave start date
+      const resStart = await request(app)
+        .post('/api/v1/appointments')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({
+          doctorId: leaveDoctorProfileId,
+          patientId: patientProfileId,
+          date: '2026-11-10',
+          timeSlot: '09:00',
+          type: 'consultation',
+        });
+
+      expect(resStart.status).toBe(400);
+      expect(resStart.body.error.message).toMatch(/leave/i);
+
+      // 2026-11-11 is inside the leave window
+      const resMid = await request(app)
+        .post('/api/v1/appointments')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({
+          doctorId: leaveDoctorProfileId,
+          patientId: patientProfileId,
+          date: '2026-11-11',
+          timeSlot: '09:00',
+          type: 'consultation',
+        });
+
+      expect(resMid.status).toBe(400);
+      expect(resMid.body.error.message).toMatch(/leave/i);
+
+      // 2026-11-12 is the leave end date (inclusive)
+      const resEnd = await request(app)
+        .post('/api/v1/appointments')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({
+          doctorId: leaveDoctorProfileId,
+          patientId: patientProfileId,
+          date: '2026-11-12',
+          timeSlot: '09:00',
+          type: 'consultation',
+        });
+
+      expect(resEnd.status).toBe(400);
+      expect(resEnd.body.error.message).toMatch(/leave/i);
+    });
+
+    it('succeeds booking on the day before and day after the leave window', async () => {
+      // Day before: 2026-11-09
+      const resBefore = await request(app)
+        .post('/api/v1/appointments')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({
+          doctorId: leaveDoctorProfileId,
+          patientId: patientProfileId,
+          date: '2026-11-09',
+          timeSlot: '09:00',
+          type: 'consultation',
+        });
+
+      expect(resBefore.status).toBe(201);
+      expect(resBefore.body.success).toBe(true);
+
+      // Day after: 2026-11-13
+      const resAfter = await request(app)
+        .post('/api/v1/appointments')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({
+          doctorId: leaveDoctorProfileId,
+          patientId: patientProfileId,
+          date: '2026-11-13',
+          timeSlot: '09:00',
+          type: 'consultation',
+        });
+
+      expect(resAfter.status).toBe(201);
+      expect(resAfter.body.success).toBe(true);
+    });
+
+    it('returns empty slots array on a leave day and normal slots on working day', async () => {
+      // Leave day: 2026-11-11
+      const resLeave = await request(app)
+        .get(`/api/v1/appointments/slots?doctorId=${leaveDoctorProfileId}&date=2026-11-11`)
+        .set('Authorization', `Bearer ${patientToken}`);
+
+      expect(resLeave.status).toBe(200);
+      expect(resLeave.body.data).toEqual([]);
+
+      // Working day: 2026-11-09
+      const resWork = await request(app)
+        .get(`/api/v1/appointments/slots?doctorId=${leaveDoctorProfileId}&date=2026-11-09`)
+        .set('Authorization', `Bearer ${patientToken}`);
+
+      expect(resWork.status).toBe(200);
+      expect(resWork.body.data.length).toBeGreaterThan(0);
+      expect(resWork.body.data).toContain('09:00');
+    });
+  });
 });
 
 // Suppress unused variable warning for setup variable

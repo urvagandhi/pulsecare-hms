@@ -7,7 +7,7 @@ import { Department } from '../../models/Department';
 import { AppError, ConflictError, NotFoundError, ValidationError } from '../../middleware/errorHandler';
 import { z } from 'zod';
 import { CreateStaffSchema, UpdateStaffSchema, CreateDepartmentSchema, UpdateDepartmentSchema } from './schema';
-import { getUtcDayOfWeek } from '../../utils/dateUtils';
+import { getUtcDayOfWeek, parseUtcMidnight } from '../../utils/dateUtils';
 
 type CreateStaffInput = z.infer<typeof CreateStaffSchema>;
 type UpdateStaffInput = z.infer<typeof UpdateStaffSchema>;
@@ -160,6 +160,13 @@ export async function updateStaffMember(userId: string, input: UpdateStaffInput)
     if (input.specialization !== undefined) profileFields.specialization = input.specialization;
     if (input.qualification !== undefined) profileFields.qualification = input.qualification;
     if (input.consultationFee !== undefined) profileFields.consultationFee = input.consultationFee;
+    if (input.leaves !== undefined) {
+      profileFields.leaves = input.leaves.map((l) => ({
+        startDate: new Date(l.startDate),
+        endDate: new Date(l.endDate),
+        reason: l.reason,
+      }));
+    }
     await Doctor.findOneAndUpdate({ userId }, profileFields);
   } else if (user.role === 'nurse') {
     if (input.ward !== undefined) profileFields.ward = input.ward;
@@ -205,7 +212,16 @@ export async function getAvailableDoctors(date: string, specialization?: string)
     .populate('department')
     .lean();
 
-  return doctors;
+  const targetDateStr = parseUtcMidnight(date).toISOString().split('T')[0];
+  return doctors.filter((doc) => {
+    if (!doc.leaves || doc.leaves.length === 0) return true;
+    const onLeave = doc.leaves.some((l) => {
+      const startStr = new Date(l.startDate).toISOString().split('T')[0];
+      const endStr = new Date(l.endDate).toISOString().split('T')[0];
+      return targetDateStr >= startStr && targetDateStr <= endStr;
+    });
+    return !onLeave;
+  });
 }
 
 export async function createDepartment(input: CreateDepartmentInput) {

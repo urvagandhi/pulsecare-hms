@@ -14,6 +14,7 @@ interface DoctorProfile {
   doctorId: string;
   specialization: string;
   consultationFee: number;
+  leaves?: { startDate: string; endDate: string; reason?: string }[];
   userId: {
     firstName: string;
     lastName: string;
@@ -253,7 +254,21 @@ export function BookAppointment() {
             {slotsLoading && <p className="text-sm text-muted-foreground">Loading available slots...</p>}
 
             {!slotsLoading && slots.length === 0 && (
-              <p className="text-sm text-muted-foreground">No available slots for this date.</p>
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-amber-300">
+                <p className="font-semibold flex items-center gap-1.5">
+                  ⚠️ Doctor Unavailable on {selectedDate}
+                </p>
+                <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">
+                  {selectedDoctor?.leaves?.some((l) => {
+                    const startStr = new Date(l.startDate).toISOString().split('T')[0];
+                    const endStr = new Date(l.endDate).toISOString().split('T')[0];
+                    return selectedDate >= startStr && selectedDate <= endStr;
+                  })
+                    ? `Dr. ${selectedDoctor?.userId?.firstName} ${selectedDoctor?.userId?.lastName} is scheduled on leave / time off on this date.`
+                    : `Dr. ${selectedDoctor?.userId?.firstName} ${selectedDoctor?.userId?.lastName} has no available consultation slots on this date.`}
+                  {' '}Please select another date.
+                </p>
+              </div>
             )}
 
             {slots.length > 0 && (

@@ -45,6 +45,19 @@ export async function bookAppointment(
   if (!doctor) throw new NotFoundError('Doctor');
   if (!doctor.isActive) throw new ValidationError('Doctor is not available');
 
+  // Check doctor leave windows (inclusive of start and end dates)
+  if (doctor.leaves && doctor.leaves.length > 0) {
+    const targetDateStr = appointmentDate.toISOString().split('T')[0];
+    const onLeave = doctor.leaves.some((l) => {
+      const startStr = new Date(l.startDate).toISOString().split('T')[0];
+      const endStr = new Date(l.endDate).toISOString().split('T')[0];
+      return targetDateStr >= startStr && targetDateStr <= endStr;
+    });
+    if (onLeave) {
+      throw new ValidationError('Doctor is on leave on this date');
+    }
+  }
+
   // Find the Patient document
   const patient = await Patient.findById(input.patientId);
   if (!patient) throw new NotFoundError('Patient');
@@ -155,6 +168,18 @@ export async function getAvailableSlots(doctorId: string, date: string) {
   if (!doctor) throw new NotFoundError('Doctor');
 
   const appointmentDate = parseUtcMidnight(date);
+
+  // Check if doctor is on leave on this date
+  if (doctor.leaves && doctor.leaves.length > 0) {
+    const targetDateStr = appointmentDate.toISOString().split('T')[0];
+    const onLeave = doctor.leaves.some((l) => {
+      const startStr = new Date(l.startDate).toISOString().split('T')[0];
+      const endStr = new Date(l.endDate).toISOString().split('T')[0];
+      return targetDateStr >= startStr && targetDateStr <= endStr;
+    });
+    if (onLeave) return [];
+  }
+
   const dayOfWeek = getUtcDayOfWeek(date);
   const availabilityForDay = doctor.availability.find(a => a.day === dayOfWeek);
 

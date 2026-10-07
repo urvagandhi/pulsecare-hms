@@ -1,5 +1,14 @@
 import { z } from 'zod';
 
+export const DoctorLeaveSchema = z.object({
+  startDate: z.string().or(z.date()),
+  endDate: z.string().or(z.date()),
+  reason: z.string().optional(),
+}).refine(
+  (data) => new Date(data.endDate).getTime() >= new Date(data.startDate).getTime(),
+  { message: 'endDate must be greater than or equal to startDate', path: ['endDate'] }
+);
+
 export const CreateStaffSchema = z.object({
   firstName: z.string().min(1).max(50),
   lastName: z.string().min(1).max(50),
@@ -14,6 +23,7 @@ export const CreateStaffSchema = z.object({
   qualification: z.array(z.string()).optional(),
   departmentId: z.string().optional(),
   consultationFee: z.number().min(0).optional(),
+  leaves: z.array(DoctorLeaveSchema).optional(),
   // Nurse-specific
   ward: z.string().optional(),
   shift: z.enum(['morning', 'afternoon', 'night']).optional(),

@@ -26,6 +26,12 @@ interface StaffUser {
   isActive: boolean;
 }
 
+export interface DoctorLeave {
+  startDate: string;
+  endDate: string;
+  reason?: string;
+}
+
 interface DoctorProfile {
   _id: string;
   doctorId?: string;
@@ -33,6 +39,7 @@ interface DoctorProfile {
   receptionistId?: string;
   specialization?: string;
   department?: { _id: string; name: string } | null;
+  leaves?: DoctorLeave[];
   userId: StaffUser;
   isActive: boolean;
 }
@@ -63,56 +70,11 @@ interface CreateStaffForm {
   lastName: string;
   email: string;
   password: string;
-  role: 'doctor' | 'nurse' | 'receptionist';
+  role: 'doctor' | 'receptionist';
   specialization: string;
   departmentId: string;
   qualification: string;
-  shift: 'morning' | 'afternoon' | 'night';
 }
-
-const columns: ColumnDef<StaffEntry>[] = [
-  {
-    header: 'Staff ID',
-    accessorKey: 'profile',
-    cell: (row) =>
-      row.profile.doctorId ?? row.profile.nurseId ?? row.profile.receptionistId ?? '—',
-  },
-  {
-    header: 'Name',
-    accessorKey: 'profile.userId',
-    cell: (row) =>
-      `${row.profile.userId?.firstName ?? ''} ${row.profile.userId?.lastName ?? ''}`,
-  },
-  {
-    header: 'Role',
-    accessorKey: 'role',
-    cell: (row) => (
-      <span className="capitalize">{row.role}</span>
-    ),
-  },
-  {
-    header: 'Specialization',
-    accessorKey: 'profile.specialization',
-    cell: (row) => row.profile.specialization ?? '—',
-  },
-  {
-    header: 'Department',
-    accessorKey: 'profile.department',
-    cell: (row) => row.profile.department?.name ?? '—',
-  },
-  {
-    header: 'Email',
-    accessorKey: 'profile.userId.email',
-    cell: (row) => row.profile.userId?.email ?? '—',
-  },
-  {
-    header: 'Status',
-    accessorKey: 'profile.isActive',
-    cell: (row) => (
-      <StatusBadge status={row.profile.isActive ? 'active' : 'inactive'} />
-    ),
-  },
-];
 
 const defaultForm: CreateStaffForm = {
   firstName: '',
@@ -123,11 +85,17 @@ const defaultForm: CreateStaffForm = {
   specialization: '',
   departmentId: '',
   qualification: '',
-  shift: 'morning',
 };
 
 export function AdminStaff() {
   const [modalOpen, setModalOpen] = useState(false);
+  const [leaveModalOpen, setLeaveModalOpen] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState<StaffEntry | null>(null);
+  const [leaves, setLeaves] = useState<DoctorLeave[]>([]);
+  const [newLeaveStart, setNewLeaveStart] = useState('');
+  const [newLeaveEnd, setNewLeaveEnd] = useState('');
+  const [newLeaveReason, setNewLeaveReason] = useState('');
+
   const [form, setForm] = useState<CreateStaffForm>(defaultForm);
   const [page, setPage] = useState(1);
   const queryClient = useQueryClient();
@@ -167,6 +135,53 @@ export function AdminStaff() {
     },
   });
 
+  const updateLeaveMutation = useMutation({
+    mutationFn: async (updatedLeaves: DoctorLeave[]) => {
+      if (!selectedDoctor) return;
+      const res = await api.patch(`/staff/${selectedDoctor.profile.userId._id}`, {
+        leaves: updatedLeaves,
+      });
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success('Doctor leaves updated successfully');
+      setLeaveModalOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['staff'] });
+    },
+    onError: (err: unknown) => {
+      const msg =
+        (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error
+          ?.message ?? 'Failed to update doctor leaves';
+      toast.error(msg);
+    },
+  });
+
+  const handleAddLeave = () => {
+    if (!newLeaveStart || !newLeaveEnd) {
+      toast.error('Start date and end date are required');
+      return;
+    }
+    if (newLeaveEnd < newLeaveStart) {
+      toast.error('End date must be greater than or equal to start date');
+      return;
+    }
+    setLeaves([
+      ...leaves,
+      {
+        startDate: newLeaveStart,
+        endDate: newLeaveEnd,
+        reason: newLeaveReason.trim() || 'Annual Leave',
+      },
+    ]);
+    setNewLeaveStart('');
+    setNewLeaveEnd('');
+    setNewLeaveReason('');
+  };
+
+  const handleRemoveLeave = (idx: number) => {
+    setLeaves(leaves.filter((_, i) => i !== idx));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     createMutation.mutate({
@@ -177,6 +192,79 @@ export function AdminStaff() {
     });
   };
 
+  const columns: ColumnDef<StaffEntry>[] = [
+    {
+      header: 'Staff ID',
+      accessorKey: 'profile',
+      cell: (row) =>
+        row.profile.doctorId ?? row.profile.nurseId ?? row.profile.receptionistId ?? '—',
+    },
+    {
+      header: 'Name',
+      accessorKey: 'profile.userId',
+      cell: (row) =>
+        `${row.profile.userId?.firstName ?? ''} ${row.profile.userId?.lastName ?? ''}`,
+    },
+    {
+      header: 'Role',
+      accessorKey: 'role',
+      cell: (row) => (
+        <span className="capitalize">{row.role}</span>
+      ),
+    },
+    {
+      header: 'Specialization',
+      accessorKey: 'profile.specialization',
+      cell: (row) => row.profile.specialization ?? '—',
+    },
+    {
+      header: 'Department',
+      accessorKey: 'profile.department',
+      cell: (row) => row.profile.department?.name ?? '—',
+    },
+    {
+      header: 'Email',
+      accessorKey: 'profile.userId.email',
+      cell: (row) => row.profile.userId?.email ?? '—',
+    },
+    {
+      header: 'Status',
+      accessorKey: 'profile.isActive',
+      cell: (row) => (
+        <StatusBadge status={row.profile.isActive ? 'active' : 'inactive'} />
+      ),
+    },
+    {
+      header: 'Actions',
+      accessorKey: '_id',
+      cell: (row) =>
+        row.role === 'doctor' ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setSelectedDoctor(row);
+              setLeaves(
+                (row.profile.leaves ?? []).map((l) => ({
+                  startDate: l.startDate ? new Date(l.startDate).toISOString().split('T')[0] : '',
+                  endDate: l.endDate ? new Date(l.endDate).toISOString().split('T')[0] : '',
+                  reason: l.reason,
+                }))
+              );
+              setNewLeaveStart('');
+              setNewLeaveEnd('');
+              setNewLeaveReason('');
+              setLeaveModalOpen(true);
+            }}
+          >
+            Time Off
+          </Button>
+        ) : (
+          <span className="text-muted-foreground text-xs">—</span>
+        ),
+    },
+  ];
+
   const staff = data?.data ?? [];
   const meta = data?.meta;
   const departments = deptData?.data ?? [];
@@ -186,7 +274,7 @@ export function AdminStaff() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Staff</h1>
-          <p className="text-muted-foreground">Manage hospital staff members</p>
+          <p className="text-muted-foreground">Manage hospital doctors and receptionists</p>
         </div>
         <Button onClick={() => setModalOpen(true)}>Add Staff</Button>
       </div>
@@ -293,7 +381,6 @@ export function AdminStaff() {
                 required
               >
                 <option value="doctor">Doctor</option>
-                <option value="nurse">Nurse</option>
                 <option value="receptionist">Receptionist</option>
               </Select>
             </div>
@@ -307,23 +394,6 @@ export function AdminStaff() {
                   onChange={(e) => setForm({ ...form, specialization: e.target.value })}
                   required={form.role === 'doctor'}
                 />
-              </div>
-            )}
-
-            {form.role === 'nurse' && (
-              <div className="space-y-1">
-                <Label htmlFor="shift">Shift</Label>
-                <Select
-                  id="shift"
-                  value={form.shift}
-                  onChange={(e) =>
-                    setForm({ ...form, shift: e.target.value as CreateStaffForm['shift'] })
-                  }
-                >
-                  <option value="morning">Morning</option>
-                  <option value="afternoon">Afternoon</option>
-                  <option value="night">Night</option>
-                </Select>
               </div>
             )}
 
@@ -366,6 +436,109 @@ export function AdminStaff() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Doctor Time Off / Leaves Modal */}
+      <Dialog open={leaveModalOpen} onOpenChange={setLeaveModalOpen}>
+        <DialogContent onClose={() => setLeaveModalOpen(false)}>
+          <DialogHeader>
+            <DialogTitle>
+              Doctor Time Off — Dr. {selectedDoctor?.profile.userId.firstName}{' '}
+              {selectedDoctor?.profile.userId.lastName}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-5">
+            {/* Existing leaves list */}
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold uppercase text-muted-foreground">
+                Current Scheduled Leave Periods
+              </Label>
+              {leaves.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic">No leave scheduled for this doctor.</p>
+              ) : (
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {leaves.map((l, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between rounded-lg border p-2.5 text-xs bg-slate-50 dark:bg-slate-900"
+                    >
+                      <div>
+                        <p className="font-semibold text-slate-900 dark:text-slate-100">
+                          {l.startDate} to {l.endDate}
+                        </p>
+                        <p className="text-muted-foreground">{l.reason || 'Leave'}</p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleRemoveLeave(idx)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Add new leave section */}
+            <div className="border-t pt-4 space-y-3">
+              <Label className="text-xs font-semibold uppercase text-muted-foreground">
+                Add New Leave Period
+              </Label>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label htmlFor="leaveStart" className="text-xs">Start Date</Label>
+                  <Input
+                    id="leaveStart"
+                    type="date"
+                    value={newLeaveStart}
+                    onChange={(e) => setNewLeaveStart(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="leaveEnd" className="text-xs">End Date</Label>
+                  <Input
+                    id="leaveEnd"
+                    type="date"
+                    value={newLeaveEnd}
+                    onChange={(e) => setNewLeaveEnd(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="leaveReason" className="text-xs">Reason (optional)</Label>
+                <Input
+                  id="leaveReason"
+                  placeholder="e.g. Conference, Medical leave"
+                  value={newLeaveReason}
+                  onChange={(e) => setNewLeaveReason(e.target.value)}
+                />
+              </div>
+              <Button type="button" variant="secondary" size="sm" onClick={handleAddLeave} className="w-full">
+                + Add Leave Window
+              </Button>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setLeaveModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                disabled={updateLeaveMutation.isPending}
+                onClick={() => updateLeaveMutation.mutate(leaves)}
+              >
+                {updateLeaveMutation.isPending ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
