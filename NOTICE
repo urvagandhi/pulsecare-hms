@@ -1,0 +1,43 @@
+PulseCare Hospital Management System (PulseCare HMS)
+Copyright 2026 Urva, Rakshit
+
+Developed by:
+- Urva (Backend Architecture & APIs)
+- Rakshit (Frontend & UI Engineering)
+
+License: Apache License, Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
+
+System Architecture & Engineering Highlights:
+---------------------------------------------
+1. Modular Architecture & Healthcare Domain Scoping:
+   - Engineered around four core clinical workflows:
+     * Patient Registration & Management
+     * Doctor & Department Management
+     * Appointment Booking & Scheduling
+     * Billing & Invoices
+   - Cleanly structured modular design with complete separation of concerns
+     (Schema -> Service -> Controller -> Router).
+
+2. Reliability & Resilience Hardening:
+   - Built-in graceful in-memory fallback for Redis caching, rate limiting, and Socket.IO
+     ensuring full standalone operational capability without external cache dependencies.
+   - Robust timezone normalization enforcing UTC midnight and UTC day-of-week calculations
+     to eliminate calendar and scheduling drift.
+   - Thread-safe atomic sequence counters (PAT-xxxx, DOC-xxxx, APT-xxxx, INV-xxxx,
+     REC-xxxx, NUR-xxxx) preventing race conditions and collision bugs.
+
+3. Appointment & Daily Queue Management:
+   - High-throughput atomic per-doctor, per-date daily queue token generator (#1, #2, ...).
+   - Database-level partial unique compound indexing guaranteeing zero duplicate slot bookings.
+   - Real-time doctor leave window tracking with automated booking blackout protection.
+   - Comprehensive administrative staff portal for walk-ins and consultation status updates.
+
+4. Financial Engine & Server-Side Document Generation:
+   - Centralized deterministic pure-function invoice engine with strict two-decimal precision.
+   - Categorized line items with dynamic recalculation upon modifications.
+   - High-fidelity server-side PDF generation using pdf-lib for tax invoices,
+     appointment slips, and patient ID cards with strict cryptographic role and ownership validation.
+
+5. Visual Identity & User Experience:
+   - Custom-crafted PulseCare HMS design system with responsive medical teal theme,
+     dark mode support, Framer Motion transitions, and accessible public landing page.

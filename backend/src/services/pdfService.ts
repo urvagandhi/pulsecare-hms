@@ -171,6 +171,7 @@ export async function generateDocumentPdf(doc: IDocument): Promise<Buffer> {
 /**
  * Generates an itemized Invoice PDF.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function generateInvoicePdf(invoice: any): Promise<Buffer> {
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage([595.28, 841.89]); // A4
@@ -360,6 +361,7 @@ export async function generateInvoicePdf(invoice: any): Promise<Buffer> {
 /**
  * Generates a Patient ID Card PDF (A4 format with ID card border & emergency contact info).
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function generatePatientIdCardPdf(patient: any): Promise<Buffer> {
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage([595.28, 841.89]); // A4
@@ -492,6 +494,7 @@ export async function generatePatientIdCardPdf(patient: any): Promise<Buffer> {
 /**
  * Generates an Appointment Slip PDF with Queue Token (A4 format).
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function generateAppointmentSlipPdf(appointment: any): Promise<Buffer> {
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage([595.28, 841.89]); // A4

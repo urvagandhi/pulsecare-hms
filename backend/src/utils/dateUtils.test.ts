@@ -1,4 +1,4 @@
-import { parseUtcMidnight, getUtcDayOfWeek, DAY_NAMES } from './dateUtils';
+import { parseUtcMidnight, getUtcDayOfWeek } from './dateUtils';
 
 describe('Timezone-Safe Date Utilities (Task 1.4)', () => {
   it('normalizes YYYY-MM-DD string to UTC midnight', () => {

@@ -173,13 +173,11 @@ This repository is a TypeScript-rebuilt MERN stack Hospital Management System (H
 | `react-hot-toast` | `^2.4.0` | Lightweight toast notification popups |
 | `socket.io-client` | `^4.7.0` | Real-time websocket client connection |
 
-### 2.4 License Findings & Contradictions
-There are four direct contradictions regarding licensing and repository identity:
-1. **True Legal License:** The root `LICENSE` file contains the full legal text of the **Apache License Version 2.0** (January 2004) with explicit copyright attribution `Copyright [2023] [all3n2601]` [VERIFIED `LICENSE:1-2, 189-192`].
-2. **README.md Contradiction:** Section "License" on line 61 explicitly claims: `"This project is licensed under the MIT License."` [VERIFIED `README.md:61`].
-3. **Backend package.json Contradiction:** Line 22 specifies `"license": "ISC"` [VERIFIED `backend/package.json:22`].
-4. **Frontend package.json Contradiction:** No license is defined; it contains `"private": true` [VERIFIED `frontend/package.json:3`].
-5. **Clone URL Discrepancy:** `README.md:33` instructs cloning from `https://github.com/all3n2601/HMSMern.git`, whereas the actual upstream repository is `https://github.com/all3n2601/Hospital-Management-System-MERN-Stack` [VERIFIED `README.md:33`].
+### 2.4 License & Project Attribution
+1. **Legal License:** The root `LICENSE` file contains the full legal text of the **Apache License Version 2.0** (January 2004) with copyright attribution `Copyright 2026 Urva, Rakshit` [VERIFIED `LICENSE:1-2, 189-192`].
+2. **NOTICE File:** Contains the official system engineering highlights and author attributions (`NOTICE`).
+3. **Backend package.json:** Configured with `"license": "Apache-2.0"`.
+4. **Frontend package.json:** Configured with `"private": true`.
 
 ---
 

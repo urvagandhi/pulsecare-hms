@@ -1,7 +1,8 @@
 {
-  "name": "hms-frontend",
+  "name": "pulsecare-frontend",
+  "version": "1.0.0",
+  "author": "Urva, Rakshit",
   "private": true,
-  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",

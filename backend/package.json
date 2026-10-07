@@ -1,7 +1,7 @@
 {
-  "name": "backend",
+  "name": "pulsecare-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "PulseCare HMS - Hospital Management System Backend API",
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",
@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit",
     "seed": "ts-node src/scripts/seed.ts",
     "seed:reset": "ts-node src/scripts/seed.ts --reset --yes",
+    "backup": "sh -c 'mongodump --uri=\"${MONGODB_URI:-mongodb://localhost:27017/pulsecare-hms}\" --out=\"./backups/$(date +%Y%m%d_%H%M%S)\"'",
     "postinstall": "node -e \"const fs=require('fs'),p='node_modules/buffer-equal-constant-time/index.js',c=fs.readFileSync(p,'utf8');if(!c.includes('SlowBuffer || Buffer'))fs.writeFileSync(p,c.replace('require(\\'buffer\\').SlowBuffer;','require(\\'buffer\\').SlowBuffer || Buffer;'));\"",
     "_postinstall_reason": "Patches buffer-equal-constant-time@1.0.1 to remove removed SlowBuffer API in Node 25+ (jsonwebtoken@9 transitive dep). Remove when upgrading to jose or jsonwebtoken@10."
   },
@@ -20,8 +21,8 @@
     "buffer-equal-constant-time": "1.0.1"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Urva, Rakshit",
+  "license": "Apache-2.0",
   "dependencies": {
     "@aws-sdk/client-secrets-manager": "^3.0.0",
     "@socket.io/redis-adapter": "^8.3.0",
