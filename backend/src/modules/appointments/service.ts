@@ -7,6 +7,8 @@ import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '.
 import { emitToUser } from '../../socket';
 import { CreateAppointmentSchema, UpdateStatusSchema } from './schema';
 
+import { parseUtcMidnight, getUtcDayOfWeek } from '../../utils/dateUtils';
+
 type CreateAppointmentInput = z.infer<typeof CreateAppointmentSchema>;
 type UpdateStatusInput = z.infer<typeof UpdateStatusSchema>;
 
@@ -25,16 +27,13 @@ function generateTimeSlots(startTime: string, endTime: string): string[] {
   return slots;
 }
 
-const DAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const;
-
 export async function bookAppointment(
   input: CreateAppointmentInput,
   createdByUserId: string,
   requestingRole?: string
 ) {
   // Validate date is not in the past
-  const appointmentDate = new Date(input.date);
-  appointmentDate.setUTCHours(0, 0, 0, 0);
+  const appointmentDate = parseUtcMidnight(input.date);
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
   if (appointmentDate < today) {
@@ -55,8 +54,8 @@ export async function bookAppointment(
     throw new ForbiddenError('You can only book appointments for yourself');
   }
 
-  // Check doctor availability for that day of week
-  const dayOfWeek = DAY_NAMES[appointmentDate.getDay()];
+  // Check doctor availability for that day of week (consistent UTC day)
+  const dayOfWeek = getUtcDayOfWeek(input.date);
   const availabilityForDay = doctor.availability.find(a => a.day === dayOfWeek);
   if (!availabilityForDay) {
     throw new ValidationError(`Doctor is not available on ${dayOfWeek}`);
@@ -68,8 +67,8 @@ export async function bookAppointment(
     throw new ValidationError(`Time slot ${input.timeSlot} is not within doctor's availability`);
   }
 
-  // Use a normalized date (midnight UTC for the date part)
-  const normalizedDate = new Date(input.date + 'T00:00:00.000Z');
+  // Use normalized UTC midnight date
+  const normalizedDate = appointmentDate;
 
   // Try with transaction first, fall back to non-transactional if replica set not available
   let appointment;
@@ -155,8 +154,8 @@ export async function getAvailableSlots(doctorId: string, date: string) {
   const doctor = await Doctor.findById(doctorId);
   if (!doctor) throw new NotFoundError('Doctor');
 
-  const appointmentDate = new Date(date + 'T00:00:00.000Z');
-  const dayOfWeek = DAY_NAMES[new Date(date).getDay()];
+  const appointmentDate = parseUtcMidnight(date);
+  const dayOfWeek = getUtcDayOfWeek(date);
   const availabilityForDay = doctor.availability.find(a => a.day === dayOfWeek);
 
   if (!availabilityForDay) return [];

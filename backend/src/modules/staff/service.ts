@@ -7,21 +7,12 @@ import { Department } from '../../models/Department';
 import { AppError, ConflictError, NotFoundError, ValidationError } from '../../middleware/errorHandler';
 import { z } from 'zod';
 import { CreateStaffSchema, UpdateStaffSchema, CreateDepartmentSchema, UpdateDepartmentSchema } from './schema';
+import { getUtcDayOfWeek } from '../../utils/dateUtils';
 
 type CreateStaffInput = z.infer<typeof CreateStaffSchema>;
 type UpdateStaffInput = z.infer<typeof UpdateStaffSchema>;
 type CreateDepartmentInput = z.infer<typeof CreateDepartmentSchema>;
 type UpdateDepartmentInput = z.infer<typeof UpdateDepartmentSchema>;
-
-const DAY_OF_WEEK_MAP: Record<number, string> = {
-  0: 'sunday',
-  1: 'monday',
-  2: 'tuesday',
-  3: 'wednesday',
-  4: 'thursday',
-  5: 'friday',
-  6: 'saturday',
-};
 
 export async function createStaffMember(input: CreateStaffInput) {
   const existing = await User.findOne({ email: input.email });
@@ -198,8 +189,7 @@ export async function deactivateStaff(userId: string) {
 }
 
 export async function getAvailableDoctors(date: string, specialization?: string) {
-  const dayOfWeek = new Date(date).getUTCDay();
-  const dayName = DAY_OF_WEEK_MAP[dayOfWeek];
+  const dayName = getUtcDayOfWeek(date);
 
   const filter: Record<string, unknown> = {
     isActive: true,
