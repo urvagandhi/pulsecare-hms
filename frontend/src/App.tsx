@@ -10,6 +10,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { AuthInitializer } from '@/components/Auth/AuthInitializer';
 import { SignIn } from '@/pages/public/SignIn';
 import { SignUp } from '@/pages/public/SignUp';
+import { Landing } from '@/pages/public/Landing';
 import { Unauthorized } from '@/pages/public/Unauthorized';
 import { NotFound } from '@/pages/public/NotFound';
 import { AdminDashboard } from '@/pages/admin/Dashboard';
@@ -72,6 +73,7 @@ export default function App() {
           <AuthInitializer>
           <Routes>
             {/* Public routes */}
+            <Route path="/" element={<Landing />} />
             <Route path="/sign-in" element={<SignIn />} />
             <Route path="/sign-up" element={<SignUp />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
