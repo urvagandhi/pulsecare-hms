@@ -49,6 +49,7 @@ interface LineItemInput {
   description: string;
   quantity: number;
   unitPrice: number;
+  category?: 'consultation' | 'doctor_charge' | 'medicine' | 'procedure' | 'other';
 }
 
 export function AdminBilling() {
@@ -76,7 +77,9 @@ export function AdminBilling() {
 
   // Create form state
   const [patientId, setPatientId] = useState('');
-  const [lineItems, setLineItems] = useState<LineItemInput[]>([{ description: '', quantity: 1, unitPrice: 0 }]);
+  const [lineItems, setLineItems] = useState<LineItemInput[]>([
+    { description: '', quantity: 1, unitPrice: 0, category: 'other' },
+  ]);
   const [taxRate, setTaxRate] = useState(0);
   const [discount, setDiscount] = useState(0);
   const [notes, setNotes] = useState('');
@@ -120,7 +123,7 @@ export function AdminBilling() {
 
   // Line item helpers
   const addItem = () =>
-    setLineItems((prev) => [...prev, { description: '', quantity: 1, unitPrice: 0 }]);
+    setLineItems((prev) => [...prev, { description: '', quantity: 1, unitPrice: 0, category: 'other' }]);
   const removeItem = (i: number) =>
     setLineItems((prev) => prev.filter((_, idx) => idx !== i));
   const updateItem = (i: number, field: string, value: string | number) =>
@@ -130,7 +133,7 @@ export function AdminBilling() {
 
   const resetCreateForm = () => {
     setPatientId('');
-    setLineItems([{ description: '', quantity: 1, unitPrice: 0 }]);
+    setLineItems([{ description: '', quantity: 1, unitPrice: 0, category: 'other' }]);
     setTaxRate(0);
     setDiscount(0);
     setNotes('');
@@ -233,6 +236,25 @@ export function AdminBilling() {
       const msg =
         (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error
           ?.message ?? 'Failed to void invoice';
+      toast.error(msg);
+    },
+  });
+
+  // Remove item from draft invoice mutation
+  const removeItemMutation = useMutation({
+    mutationFn: async ({ id, itemIndex }: { id: string; itemIndex: number }) => {
+      const res = await api.delete(`/billing/${id}/items/${itemIndex}`);
+      return res.data;
+    },
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({ queryKey: ['billing', variables.id] });
+      void queryClient.invalidateQueries({ queryKey: ['billing', 'admin'] });
+      toast.success('Line item removed and invoice recalculated');
+    },
+    onError: (err: unknown) => {
+      const msg =
+        (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error
+          ?.message ?? 'Failed to remove line item';
       toast.error(msg);
     },
   });
@@ -464,6 +486,17 @@ export function AdminBilling() {
                       onChange={(e) => updateItem(i, 'description', e.target.value)}
                       className="flex-1"
                     />
+                    <Select
+                      value={item.category || 'other'}
+                      onChange={(e) => updateItem(i, 'category', e.target.value)}
+                      className="w-36"
+                    >
+                      <option value="consultation">Consultation</option>
+                      <option value="doctor_charge">Doctor Charge</option>
+                      <option value="medicine">Medicine</option>
+                      <option value="procedure">Procedure</option>
+                      <option value="other">Other</option>
+                    </Select>
                     <Input
                       type="number"
                       placeholder="Qty"
@@ -715,18 +748,40 @@ export function AdminBilling() {
                     <thead>
                       <tr className="border-b text-left text-muted-foreground">
                         <th className="pb-2 pr-4 font-medium">Description</th>
+                        <th className="pb-2 pr-4 font-medium">Category</th>
                         <th className="pb-2 pr-4 font-medium text-right">Qty</th>
                         <th className="pb-2 pr-4 font-medium text-right">Unit Price</th>
                         <th className="pb-2 font-medium text-right">Total</th>
+                        {detailInv.status === 'draft' && (
+                          <th className="pb-2 font-medium text-right">Action</th>
+                        )}
                       </tr>
                     </thead>
                     <tbody className="divide-y">
                       {detailInv.lineItems.map((item, idx) => (
                         <tr key={idx}>
                           <td className="py-2 pr-4">{item.description}</td>
+                          <td className="py-2 pr-4 capitalize text-xs">
+                            <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-mono">
+                              {(item.category || 'other').replace('_', ' ')}
+                            </span>
+                          </td>
                           <td className="py-2 pr-4 text-right">{item.quantity}</td>
                           <td className="py-2 pr-4 text-right">{fmt(item.unitPrice)}</td>
                           <td className="py-2 text-right font-medium">{fmt(item.total)}</td>
+                          {detailInv.status === 'draft' && (
+                            <td className="py-2 text-right">
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                disabled={detailInv.lineItems.length <= 1 || removeItemMutation.isPending}
+                                onClick={() => removeItemMutation.mutate({ id: detailInv._id, itemIndex: idx })}
+                              >
+                                Remove
+                              </Button>
+                            </td>
+                          )}
                         </tr>
                       ))}
                     </tbody>

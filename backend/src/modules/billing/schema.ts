@@ -1,5 +1,13 @@
 import { z } from 'zod';
 
+export const LineItemCategorySchema = z.enum([
+  'consultation',
+  'doctor_charge',
+  'medicine',
+  'procedure',
+  'other',
+]);
+
 export const CreateInvoiceSchema = z.object({
   patientId: z.string().min(1),
   appointmentId: z.string().optional(),
@@ -8,6 +16,7 @@ export const CreateInvoiceSchema = z.object({
       description: z.string().min(1),
       quantity: z.number().gt(0),
       unitPrice: z.number().gte(0),
+      category: LineItemCategorySchema.default('other').optional(),
     })
   ).min(1),
   taxRate: z.number().min(0).max(100).default(0),

@@ -9,6 +9,7 @@ module.exports = {
   },
   moduleFileExtensions: ["ts", "tsx", "js", "json"],
   testTimeout: 30000,
+  maxWorkers: 2,
   coverageThreshold: {
     global: {
       lines: 80,

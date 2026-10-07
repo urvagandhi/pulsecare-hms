@@ -2,8 +2,10 @@ import { Types } from 'mongoose';
 import { z } from 'zod';
 import { Invoice } from '../../models/Invoice';
 import { Patient } from '../../models/Patient';
-import { ForbiddenError, NotFoundError, ValidationError } from '../../middleware/errorHandler';
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../../middleware/errorHandler';
 import { CreateInvoiceSchema, RecordPaymentSchema, VoidInvoiceSchema, ListInvoicesQuerySchema } from './schema';
+
+export { calculateInvoiceTotals, LineItemCategory, InvoiceTotalsResult } from './calculator';
 
 type CreateInvoiceInput = z.infer<typeof CreateInvoiceSchema>;
 type RecordPaymentInput = z.infer<typeof RecordPaymentSchema>;
@@ -147,5 +149,33 @@ export async function getInvoiceById(
     }
   }
 
+  return invoice;
+}
+
+export async function removeLineItem(
+  invoiceId: string,
+  itemIndex: number
+) {
+  const invoice = await Invoice.findById(invoiceId);
+  if (!invoice) throw new NotFoundError('Invoice');
+
+  if (invoice.status !== 'draft') {
+    throw new ConflictError('Only draft invoices can be modified');
+  }
+
+  if (invoice.lineItems.length <= 1) {
+    throw new ValidationError('Cannot remove the last remaining line item from an invoice');
+  }
+
+  if (
+    !Number.isInteger(itemIndex) ||
+    itemIndex < 0 ||
+    itemIndex >= invoice.lineItems.length
+  ) {
+    throw new ValidationError('Invalid item index');
+  }
+
+  invoice.lineItems.splice(itemIndex, 1);
+  await invoice.save();
   return invoice;
 }

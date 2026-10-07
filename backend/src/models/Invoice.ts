@@ -1,13 +1,16 @@
 import { Schema, model, Types } from 'mongoose';
 import { nextSequence, getHighestSuffix } from './Counter';
+import { calculateInvoiceTotals, LineItemCategory } from '../modules/billing/calculator';
 
 export type InvoiceStatus = 'draft' | 'issued' | 'paid' | 'partial' | 'overdue' | 'void';
+export type { LineItemCategory };
 
 export interface ILineItem {
   description: string;
   quantity: number;
   unitPrice: number;
   readonly total: number; // computed: quantity * unitPrice
+  category?: LineItemCategory;
 }
 
 export interface IInsurance {
@@ -58,6 +61,11 @@ const LineItemSchema = new Schema<ILineItem>(
     quantity: { type: Number, required: true, min: [0.001, 'Quantity must be positive'] },
     unitPrice: { type: Number, required: true, min: [0, 'Unit price cannot be negative'] },
     total: { type: Number, default: 0 },
+    category: {
+      type: String,
+      enum: ['consultation', 'doctor_charge', 'medicine', 'procedure', 'other'],
+      default: 'other',
+    },
   },
   { _id: false }
 );
@@ -131,29 +139,21 @@ InvoiceSchema.pre('save', async function (next) {
     subtotal: number; tax: number; total: number; amountPaid: number; balance: number;
   };
 
-  // 1. Compute each lineItem.total
-  for (const item of this.lineItems) {
-    (item as { total: number }).total = item.quantity * item.unitPrice;
-  }
-
-  // 2. Compute subtotal
-  doc.subtotal = this.lineItems.reduce((sum, item) => sum + item.total, 0);
-
-  // 3. Compute tax
-  doc.tax = Math.round((doc.subtotal * this.taxRate / 100) * 100) / 100;
-
-  // 4. Compute total
-  if (this.discount < 0) throw new Error('Discount cannot be negative');
-  doc.total = doc.subtotal + doc.tax - this.discount;
-  if (doc.total < 0) throw new Error('Discount cannot exceed subtotal + tax');
-
-  // 5. Compute amountPaid
+  // Compute amountPaid from payments
   doc.amountPaid = this.payments.reduce((sum, p) => sum + p.amount, 0);
 
-  // 6. Compute balance
-  doc.balance = doc.total - doc.amountPaid;
+  // Recalculate totals via central calculateInvoiceTotals
+  const totals = calculateInvoiceTotals(this.lineItems, this.taxRate, this.discount, doc.amountPaid);
 
-  // 7. Auto-generate invoiceId if not set using atomic counter
+  for (let i = 0; i < this.lineItems.length; i++) {
+    (this.lineItems[i] as { total: number }).total = totals.lineItems[i].total;
+  }
+  doc.subtotal = totals.subtotal;
+  doc.tax = totals.tax;
+  doc.total = totals.total;
+  doc.balance = totals.balance;
+
+  // Auto-generate invoiceId if not set using atomic counter
   if (!this.invoiceId) {
     const seq = await nextSequence('invoice', () => getHighestSuffix(Invoice, 'invoiceId', 'INV-'));
     this.invoiceId = `INV-${String(seq).padStart(4, '0')}`;

@@ -20,6 +20,9 @@ router.patch('/:id/issue', authenticate, authorize('billing', 'issue'), BillingC
 // Record payment
 router.post('/:id/payments', authenticate, authorize('billing', 'write'), BillingController.recordPayment);
 
+// Remove item from draft invoice
+router.delete('/:id/items/:itemIndex', authenticate, authorize('billing', 'write'), BillingController.removeLineItem);
+
 // Void invoice
 router.patch('/:id/void', authenticate, authorize('billing', 'void'), BillingController.voidInvoice);
 

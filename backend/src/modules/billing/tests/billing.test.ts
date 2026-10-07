@@ -27,6 +27,7 @@ jest.mock('../../../socket', () => ({
 import { app } from '../../../app';
 import { User } from '../../../models/User';
 import { Patient } from '../../../models/Patient';
+import { calculateInvoiceTotals } from '../calculator';
 
 let mongoServer: MongoMemoryServer;
 
@@ -335,5 +336,146 @@ describe('Billing Routes', () => {
       .set('Authorization', `Bearer ${patientToken}`);
 
     expect([403, 404]).toContain(res.status);
+  });
+
+  describe('Task 3.5 — calculateInvoiceTotals unit tests', () => {
+    it('calculates totals, tax, and rounding correctly for single and multi-item invoices', () => {
+      const items = [
+        { description: 'Cardiology Consultation', quantity: 1, unitPrice: 150, category: 'consultation' as const },
+        { description: 'ECG Procedure', quantity: 2, unitPrice: 75.25, category: 'procedure' as const },
+      ];
+
+      // Subtotal = 150 + 150.5 = 300.5
+      // Tax at 7.5% = 300.5 * 0.075 = 22.5375 -> rounded to 22.54
+      // Discount = 20
+      // Total = 300.5 + 22.54 - 20 = 303.04
+      const result = calculateInvoiceTotals(items, 7.5, 20, 100);
+
+      expect(result.subtotal).toBe(300.5);
+      expect(result.tax).toBe(22.54);
+      expect(result.total).toBe(303.04);
+      expect(result.amountPaid).toBe(100);
+      expect(result.balance).toBe(203.04);
+      expect(result.lineItems[0].total).toBe(150);
+      expect(result.lineItems[1].total).toBe(150.5);
+    });
+
+    it('handles zero tax, zero discount, and default categories', () => {
+      const items = [{ description: 'General checkup', quantity: 1, unitPrice: 100 }];
+      const result = calculateInvoiceTotals(items);
+
+      expect(result.subtotal).toBe(100);
+      expect(result.tax).toBe(0);
+      expect(result.total).toBe(100);
+      expect(result.balance).toBe(100);
+    });
+
+    it('throws error when discount is negative', () => {
+      const items = [{ description: 'Medicine', quantity: 1, unitPrice: 50 }];
+      expect(() => calculateInvoiceTotals(items, 0, -10)).toThrow('Discount cannot be negative');
+    });
+
+    it('throws error when discount exceeds subtotal + tax', () => {
+      const items = [{ description: 'Medicine', quantity: 1, unitPrice: 50 }];
+      expect(() => calculateInvoiceTotals(items, 10, 100)).toThrow('Discount cannot exceed subtotal + tax');
+    });
+  });
+
+  describe('Task 3.5 — DELETE /api/v1/billing/:id/items/:itemIndex endpoint tests', () => {
+    it('removes item from draft invoice and recalculates totals (draft ok)', async () => {
+      // Create draft invoice with 2 items
+      const createRes = await request(app)
+        .post('/api/v1/billing')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          patientId: patientProfileId,
+          lineItems: [
+            { description: 'Item 1', quantity: 1, unitPrice: 100, category: 'consultation' },
+            { description: 'Item 2', quantity: 2, unitPrice: 50, category: 'medicine' },
+          ],
+          taxRate: 10,
+          discount: 10,
+        });
+
+      expect(createRes.status).toBe(201);
+      const invId = createRes.body.data._id;
+      // Initial: subtotal = 200, tax = 20, total = 210
+      expect(createRes.body.data.subtotal).toBe(200);
+
+      // Remove item at index 0 (Item 1 @ 100)
+      const delRes = await request(app)
+        .delete(`/api/v1/billing/${invId}/items/0`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(delRes.status).toBe(200);
+      expect(delRes.body.success).toBe(true);
+      expect(delRes.body.data.lineItems.length).toBe(1);
+      expect(delRes.body.data.lineItems[0].description).toBe('Item 2');
+      // New: subtotal = 100, tax = 10, discount = 10 -> total = 100
+      expect(delRes.body.data.subtotal).toBe(100);
+      expect(delRes.body.data.tax).toBe(10);
+      expect(delRes.body.data.total).toBe(100);
+    });
+
+    it('returns 409 Conflict when attempting to remove an item from an issued invoice', async () => {
+      const createRes = await request(app)
+        .post('/api/v1/billing')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          patientId: patientProfileId,
+          lineItems: [
+            { description: 'Item 1', quantity: 1, unitPrice: 100 },
+            { description: 'Item 2', quantity: 1, unitPrice: 50 },
+          ],
+        });
+
+      const invId = createRes.body.data._id;
+
+      // Issue invoice
+      await request(app)
+        .patch(`/api/v1/billing/${invId}/issue`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      // Try to remove item from issued invoice
+      const delRes = await request(app)
+        .delete(`/api/v1/billing/${invId}/items/0`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(delRes.status).toBe(409);
+      expect(delRes.body.error.message).toMatch(/draft/i);
+    });
+
+    it('returns 400 Bad Request when attempting to remove the last remaining item', async () => {
+      const createRes = await createDraftInvoice(adminToken, patientProfileId);
+      const invId = createRes.body.data._id;
+
+      const delRes = await request(app)
+        .delete(`/api/v1/billing/${invId}/items/0`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(delRes.status).toBe(400);
+      expect(delRes.body.error.message).toMatch(/last remaining/i);
+    });
+
+    it('returns 403 Forbidden when a patient attempts to remove an item', async () => {
+      const createRes = await request(app)
+        .post('/api/v1/billing')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          patientId: patientProfileId,
+          lineItems: [
+            { description: 'Item 1', quantity: 1, unitPrice: 100 },
+            { description: 'Item 2', quantity: 1, unitPrice: 50 },
+          ],
+        });
+
+      const invId = createRes.body.data._id;
+
+      const delRes = await request(app)
+        .delete(`/api/v1/billing/${invId}/items/0`)
+        .set('Authorization', `Bearer ${patientToken}`);
+
+      expect(delRes.status).toBe(403);
+    });
   });
 });

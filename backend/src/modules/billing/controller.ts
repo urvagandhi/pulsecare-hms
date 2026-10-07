@@ -116,3 +116,19 @@ export async function voidInvoice(req: Request, res: Response, next: NextFunctio
     next(err);
   }
 }
+
+export async function removeLineItem(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    if (!req.user) return next(new AuthError());
+
+    const itemIndex = parseInt(req.params.itemIndex, 10);
+    if (isNaN(itemIndex)) {
+      return next(new ValidationError('Invalid item index'));
+    }
+
+    const invoice = await BillingService.removeLineItem(req.params.id, itemIndex);
+    res.json(successResponse(invoice));
+  } catch (err) {
+    next(err);
+  }
+}

@@ -1,8 +1,11 @@
+export type LineItemCategory = 'consultation' | 'doctor_charge' | 'medicine' | 'procedure' | 'other';
+
 export interface ILineItem {
   description: string;
   quantity: number;
   unitPrice: number;
   total: number;
+  category?: LineItemCategory;
 }
 
 export interface IPayment {
