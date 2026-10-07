@@ -162,7 +162,8 @@ afterEach(async () => {
   }
 });
 
-describe('Lab Routes', () => {
+// Skipped in Task 2.1: Lab module unmounted for scope trimming (4 core modules only)
+describe.skip('Lab Routes', () => {
   it('1. POST /api/v1/lab/orders — doctor creates order → 201, orderId matches /^LAB-\\d{4,}$/', async () => {
     const res = await createLabOrder(doctorToken, patientProfileId, doctorProfileId);
 

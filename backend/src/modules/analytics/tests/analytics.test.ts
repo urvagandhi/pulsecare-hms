@@ -215,11 +215,8 @@ afterAll(async () => {
   await mongoServer.stop();
 });
 
-// ---------------------------------------------------------------------------
-// Settings tests
-// ---------------------------------------------------------------------------
-
-describe('Settings', () => {
+// Skipped in Task 2.1: Settings module unmounted for scope trimming
+describe.skip('Settings', () => {
   describe('GET /api/v1/settings', () => {
     it('returns 200 with default settings for admin', async () => {
       const res = await request(app)
@@ -413,11 +410,8 @@ describe('Analytics - Revenue', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Lab analytics tests
-// ---------------------------------------------------------------------------
-
-describe('Analytics - Lab', () => {
+// Skipped in Task 2.1: Lab analytics route unmounted for scope trimming
+describe.skip('Analytics - Lab', () => {
   it('returns 200 with expected shape for admin', async () => {
     const res = await request(app)
       .get('/api/v1/analytics/lab')
@@ -463,11 +457,8 @@ describe('Analytics - Lab', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Prescription analytics tests
-// ---------------------------------------------------------------------------
-
-describe('Analytics - Prescriptions', () => {
+// Skipped in Task 2.1: Prescriptions analytics route unmounted for scope trimming
+describe.skip('Analytics - Prescriptions', () => {
   it('returns 200 with expected shape for admin', async () => {
     const res = await request(app)
       .get('/api/v1/analytics/prescriptions')

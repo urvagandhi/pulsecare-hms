@@ -194,7 +194,8 @@ const createPrescription = async (
     });
 };
 
-describe('Pharmacy Routes', () => {
+// Skipped in Task 2.1: Pharmacy module unmounted for scope trimming (4 core modules only)
+describe.skip('Pharmacy Routes', () => {
   // -------------------------------------------------------------------------
   // Drug tests
   // -------------------------------------------------------------------------

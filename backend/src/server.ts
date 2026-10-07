@@ -7,7 +7,8 @@ import { env } from './config/env';
 import { logger } from './middleware/requestLogger';
 import { fetchSecrets } from './config/secrets';
 import { startAppointmentJobs } from './jobs/appointments';
-import { startInventoryJobs } from './jobs/inventory';
+// Unmounted in Task 2.1:
+// import { startInventoryJobs } from './jobs/inventory';
 
 async function bootstrap() {
   const secrets = await fetchSecrets();
@@ -27,7 +28,6 @@ async function bootstrap() {
   server.listen(env.PORT, () => {
     logger.info(`HMS API running on port ${env.PORT} [${env.NODE_ENV}]`);
     startAppointmentJobs();
-    startInventoryJobs();
   });
 
   const shutdown = async (signal: string) => {

@@ -7,7 +7,9 @@ const router = Router();
 
 router.get('/appointments', authenticate, authorize('analytics', 'read'), AnalyticsController.getAppointmentAnalytics);
 router.get('/revenue', authenticate, authorize('analytics', 'read'), AnalyticsController.getRevenueAnalytics);
-router.get('/lab', authenticate, authorize('analytics', 'read'), AnalyticsController.getLabAnalytics);
-router.get('/prescriptions', authenticate, authorize('analytics', 'read'), AnalyticsController.getPrescriptionAnalytics);
+
+// Unmounted in Task 2.1 scope trimming:
+// router.get('/lab', authenticate, authorize('analytics', 'read'), AnalyticsController.getLabAnalytics);
+// router.get('/prescriptions', authenticate, authorize('analytics', 'read'), AnalyticsController.getPrescriptionAnalytics);
 
 export { router as analyticsRouter };
