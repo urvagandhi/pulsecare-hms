@@ -29,9 +29,10 @@ interface AppointmentRowProps {
   meta: string;
   time: string;
   status: string;
+  tokenNumber?: number;
 }
 
-export function AppointmentRow({ initials, name, meta, time, status }: AppointmentRowProps) {
+export function AppointmentRow({ initials, name, meta, time, status, tokenNumber }: AppointmentRowProps) {
   const gradient = GRADIENTS[(initials.charCodeAt(0) || 0) % GRADIENTS.length];
   const statusStyle = STATUS_STYLES[status] ?? 'bg-slate-100 text-slate-500';
   const statusLabel = STATUS_LABELS[status] ?? (status.charAt(0).toUpperCase() + status.slice(1));
@@ -49,6 +50,11 @@ export function AppointmentRow({ initials, name, meta, time, status }: Appointme
         <p className="text-[12px] font-semibold text-slate-900 truncate">{name}</p>
         <p className="text-[10px] text-slate-400 truncate">{meta}</p>
       </div>
+      {tokenNumber !== undefined && (
+        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-200">
+          #{tokenNumber}
+        </span>
+      )}
       <span className="text-[10px] font-semibold text-slate-500 whitespace-nowrap">{time}</span>
       <span className={cn('text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap', statusStyle)}>
         {statusLabel}

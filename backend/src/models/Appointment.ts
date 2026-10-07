@@ -7,6 +7,7 @@ export type AppointmentType = 'consultation' | 'follow-up' | 'emergency' | 'proc
 export interface IAppointment {
   _id: Types.ObjectId;
   appointmentId: string; // APT-XXXX
+  tokenNumber?: number;
   patient: Types.ObjectId;    // ref Patient
   doctor: Types.ObjectId;     // ref Doctor
   department?: Types.ObjectId; // ref Department
@@ -26,6 +27,7 @@ export interface IAppointment {
 const AppointmentSchema = new Schema<IAppointment>(
   {
     appointmentId: { type: String, unique: true, index: true },
+    tokenNumber: { type: Number, index: true },
     patient: { type: Schema.Types.ObjectId, ref: 'Patient', required: true, index: true },
     doctor: { type: Schema.Types.ObjectId, ref: 'Doctor', required: true, index: true },
     department: { type: Schema.Types.ObjectId, ref: 'Department' },
@@ -49,11 +51,21 @@ AppointmentSchema.index(
   { unique: true, partialFilterExpression: { status: { $nin: ['cancelled', 'noShow'] } } }
 );
 
-// Auto-generate appointmentId using atomic counter
+// Auto-generate appointmentId and doctor-date daily tokenNumber using atomic counter
 AppointmentSchema.pre('save', async function (next) {
   if (!this.appointmentId) {
     const seq = await nextSequence('appointment', () => getHighestSuffix(Appointment, 'appointmentId', 'APT-'));
     this.appointmentId = `APT-${String(seq).padStart(4, '0')}`;
+  }
+  if (!this.tokenNumber && this.doctor && this.date) {
+    const doctorId = this.doctor instanceof Types.ObjectId
+      ? this.doctor.toString()
+      : (this.doctor as any)?._id
+        ? (this.doctor as any)._id.toString()
+        : String(this.doctor);
+    const dateStr = (this.date instanceof Date ? this.date : new Date(this.date)).toISOString().split('T')[0];
+    const key = `token:${doctorId}:${dateStr}`;
+    this.tokenNumber = await nextSequence(key);
   }
   next();
 });

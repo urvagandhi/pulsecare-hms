@@ -61,6 +61,12 @@ export function BookAppointment() {
   const [selectedSlot, setSelectedSlot] = useState('');
   const [appointmentType, setAppointmentType] = useState<'consultation' | 'follow-up' | 'procedure'>('consultation');
   const [reason, setReason] = useState('');
+  const [confirmedBooking, setConfirmedBooking] = useState<{
+    appointmentId: string;
+    tokenNumber?: number;
+    date: string;
+    timeSlot: string;
+  } | null>(null);
 
   // Fetch patient profile to get patient._id
   const { data: patientProfileData } = useQuery<PatientProfileResponse>({
@@ -115,9 +121,19 @@ export function BookAppointment() {
       });
       return res.data;
     },
-    onSuccess: () => {
-      toast.success('Appointment booked successfully!');
-      void navigate('/patient/appointments');
+    onSuccess: (res) => {
+      const appt = res.data;
+      setConfirmedBooking({
+        appointmentId: appt.appointmentId,
+        tokenNumber: appt.tokenNumber,
+        date: selectedDate,
+        timeSlot: selectedSlot,
+      });
+      toast.success(
+        appt.tokenNumber !== undefined
+          ? `Appointment booked! Your Queue Token is #${appt.tokenNumber}`
+          : 'Appointment booked successfully!'
+      );
     },
     onError: (err: unknown) => {
       const message =
@@ -136,33 +152,84 @@ export function BookAppointment() {
         <p className="text-muted-foreground">Schedule a visit with one of our doctors</p>
       </div>
 
-      {/* Step indicator */}
-      <div className="flex items-center gap-2 text-sm">
-        {[1, 2, 3].map((s) => (
-          <div
-            key={s}
-            className={`flex items-center gap-1 ${
-              s === step ? 'text-primary font-semibold' : s < step ? 'text-green-600' : 'text-muted-foreground'
-            }`}
-          >
-            <span
-              className={`w-6 h-6 rounded-full flex items-center justify-center text-xs border ${
-                s === step
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : s < step
-                    ? 'border-green-600 bg-green-600 text-white'
-                    : 'border-muted-foreground'
-              }`}
-            >
-              {s}
-            </span>
-            {s === 1 && 'Select Doctor'}
-            {s === 2 && 'Choose Slot'}
-            {s === 3 && 'Confirm'}
-            {s < 3 && <span className="mx-1 text-muted-foreground">›</span>}
+      {confirmedBooking ? (
+        <Card className="text-center p-8 space-y-6 border-teal-200 dark:border-teal-800 bg-teal-50/20 dark:bg-teal-950/20">
+          <div className="mx-auto w-16 h-16 bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-200 rounded-full flex items-center justify-center text-3xl font-bold shadow-sm">
+            ✓
           </div>
-        ))}
-      </div>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Appointment Confirmed!</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Your appointment is booked and your queue token has been assigned.
+            </p>
+          </div>
+
+          <div className="p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 max-w-sm mx-auto shadow-sm space-y-3">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Your Daily Queue Token</p>
+              <p className="text-5xl font-black text-teal-600 dark:text-teal-400 mt-1">
+                #{confirmedBooking.tokenNumber ?? 1}
+              </p>
+            </div>
+            <div className="border-t pt-3 text-sm space-y-1 text-slate-700 dark:text-slate-300">
+              <p className="font-mono text-xs text-muted-foreground">{confirmedBooking.appointmentId}</p>
+              <p className="font-semibold text-slate-900 dark:text-slate-100">
+                Dr. {selectedDoctor?.userId?.firstName} {selectedDoctor?.userId?.lastName}
+              </p>
+              <p className="text-xs text-muted-foreground">{selectedDoctor?.specialization}</p>
+              <p className="text-xs font-medium text-teal-700 dark:text-teal-300 pt-1">
+                {confirmedBooking.date} at {confirmedBooking.timeSlot}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-3 justify-center pt-2">
+            <Button onClick={() => navigate('/patient/appointments')}>
+              View My Appointments
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setConfirmedBooking(null);
+                setStep(1);
+                setSelectedDoctorId('');
+                setSelectedSlot('');
+                setReason('');
+              }}
+            >
+              Book Another
+            </Button>
+          </div>
+        </Card>
+      ) : (
+        <>
+          {/* Step indicator */}
+          <div className="flex items-center gap-2 text-sm">
+            {[1, 2, 3].map((s) => (
+              <div
+                key={s}
+                className={`flex items-center gap-1 ${
+                  s === step ? 'text-primary font-semibold' : s < step ? 'text-green-600' : 'text-muted-foreground'
+                }`}
+              >
+                <span
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs border ${
+                    s === step
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : s < step
+                        ? 'border-green-600 bg-green-600 text-white'
+                        : 'border-muted-foreground'
+                  }`}
+                >
+                  {s}
+                </span>
+                {s === 1 && 'Select Doctor'}
+                {s === 2 && 'Choose Slot'}
+                {s === 3 && 'Confirm'}
+                {s < 3 && <span className="mx-1 text-muted-foreground">›</span>}
+              </div>
+            ))}
+          </div>
 
       {/* Step 1: Select doctor */}
       {step === 1 && (
@@ -384,6 +451,8 @@ export function BookAppointment() {
             </div>
           </CardContent>
         </Card>
+      )}
+        </>
       )}
     </div>
   );

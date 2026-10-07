@@ -8,7 +8,7 @@ import { AppointmentRow } from '@/components/Shared/AppointmentRow';
 import { AlertItem } from '@/components/Shared/AlertItem';
 
 interface Appointment {
-  _id: string; timeSlot?: string; status?: string; type?: string; reason?: string;
+  _id: string; timeSlot?: string; status?: string; type?: string; reason?: string; tokenNumber?: number;
   patient?: { patientId?: string; userId?: { firstName?: string; lastName?: string } };
   doctor?: { specialization?: string };
 }
@@ -133,6 +133,7 @@ export function DoctorDashboard() {
                 meta={[appt.doctor?.specialization, appt.reason, appt.patient?.patientId].filter(Boolean).join(' · ')}
                 time={appt.timeSlot ?? '—'}
                 status={appt.status ?? 'scheduled'}
+                tokenNumber={appt.tokenNumber}
               />
             ))}
           </div>

@@ -21,6 +21,7 @@ interface Appointment {
   status?: string;
   type?: string;
   reason?: string;
+  tokenNumber?: number;
   patient?: { patientId?: string; userId?: { firstName?: string; lastName?: string } };
   doctor?: { specialization?: string; userId?: { firstName?: string; lastName?: string } };
 }
@@ -272,6 +273,7 @@ export function AdminDashboard() {
                     meta={getDoctorMeta(appt)}
                     time={appt.timeSlot ?? '—'}
                     status={appt.status ?? 'scheduled'}
+                    tokenNumber={appt.tokenNumber}
                   />
                 ))}
               </>
@@ -294,6 +296,7 @@ export function AdminDashboard() {
                     meta={getDoctorMeta(appt)}
                     time={appt.timeSlot ?? '—'}
                     status={appt.status ?? 'scheduled'}
+                    tokenNumber={appt.tokenNumber}
                   />
                 ))}
               </>

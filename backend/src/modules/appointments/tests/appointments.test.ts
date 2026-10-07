@@ -443,6 +443,153 @@ describe('Appointment Routes', () => {
       expect(resWork.body.data).toContain('09:00');
     });
   });
+
+  describe('Task 3.4 — Queue token on appointments', () => {
+    let secondDoctorProfileId: string;
+
+    beforeAll(async () => {
+      // Create a second doctor with monday-friday availability
+      const doc2User = await User.create({
+        firstName: 'Second',
+        lastName: 'Doctor',
+        email: 'doc2.token@test.com',
+        password: 'Password123!',
+        role: 'doctor',
+      });
+      const doc2Profile = await Doctor.create({
+        userId: doc2User._id,
+        specialization: 'Neurology',
+        consultationFee: 200,
+        availability: [
+          { day: 'monday', startTime: '09:00', endTime: '17:00' },
+          { day: 'tuesday', startTime: '09:00', endTime: '17:00' },
+          { day: 'wednesday', startTime: '09:00', endTime: '17:00' },
+          { day: 'thursday', startTime: '09:00', endTime: '17:00' },
+          { day: 'friday', startTime: '09:00', endTime: '17:00' },
+        ],
+      });
+      secondDoctorProfileId = doc2Profile._id.toString();
+    });
+
+    it('assigns sequential tokens per doctor and date, and never reuses tokens after cancellation', async () => {
+      const testDate = '2026-12-01'; // Tuesday
+      // 1. First booking -> token 1
+      const res1 = await request(app)
+        .post('/api/v1/appointments')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({
+          doctorId: doctorProfileId,
+          patientId: patientProfileId,
+          date: testDate,
+          timeSlot: '09:00',
+          type: 'consultation',
+        });
+
+      expect(res1.status).toBe(201);
+      expect(res1.body.data.tokenNumber).toBe(1);
+
+      // Cancel first booking
+      const appt1Id = res1.body.data._id;
+      const cancelRes = await request(app)
+        .delete(`/api/v1/appointments/${appt1Id}`)
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({ cancelReason: 'Rescheduling' });
+
+      expect(cancelRes.status).toBe(200);
+
+      // 2. Second booking on same date -> token 2 (never reuses token 1)
+      const res2 = await request(app)
+        .post('/api/v1/appointments')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({
+          doctorId: doctorProfileId,
+          patientId: patientProfileId,
+          date: testDate,
+          timeSlot: '10:00',
+          type: 'consultation',
+        });
+
+      expect(res2.status).toBe(201);
+      expect(res2.body.data.tokenNumber).toBe(2);
+    });
+
+    it('generates independent token sequences across doctors and dates', async () => {
+      const dateA = '2026-12-02'; // Wednesday
+      const dateB = '2026-12-03'; // Thursday
+
+      // Doctor 1 on dateA -> token 1
+      const resDoc1DateA = await request(app)
+        .post('/api/v1/appointments')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({
+          doctorId: doctorProfileId,
+          patientId: patientProfileId,
+          date: dateA,
+          timeSlot: '09:00',
+          type: 'consultation',
+        });
+      expect(resDoc1DateA.status).toBe(201);
+      expect(resDoc1DateA.body.data.tokenNumber).toBe(1);
+
+      // Doctor 2 on dateA -> token 1 (independent doctor)
+      const resDoc2DateA = await request(app)
+        .post('/api/v1/appointments')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({
+          doctorId: secondDoctorProfileId,
+          patientId: patientProfileId,
+          date: dateA,
+          timeSlot: '09:00',
+          type: 'consultation',
+        });
+      expect(resDoc2DateA.status).toBe(201);
+      expect(resDoc2DateA.body.data.tokenNumber).toBe(1);
+
+      // Doctor 1 on dateB -> token 1 (independent date)
+      const resDoc1DateB = await request(app)
+        .post('/api/v1/appointments')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({
+          doctorId: doctorProfileId,
+          patientId: patientProfileId,
+          date: dateB,
+          timeSlot: '09:00',
+          type: 'consultation',
+        });
+      expect(resDoc1DateB.status).toBe(201);
+      expect(resDoc1DateB.body.data.tokenNumber).toBe(1);
+    });
+
+    it('assigns unique tokens under 5 parallel bookings for different slots', async () => {
+      const testDate = '2026-12-04'; // Friday
+      const slots = ['09:00', '09:30', '10:00', '10:30', '11:00'];
+
+      // Admin books 5 slots in parallel
+      const parallelPromises = slots.map((timeSlot) =>
+        request(app)
+          .post('/api/v1/appointments')
+          .set('Authorization', `Bearer ${adminToken}`)
+          .send({
+            doctorId: doctorProfileId,
+            patientId: patientProfileId,
+            date: testDate,
+            timeSlot,
+            type: 'consultation',
+          })
+      );
+
+      const responses = await Promise.all(parallelPromises);
+      for (const res of responses) {
+        expect(res.status).toBe(201);
+        expect(typeof res.body.data.tokenNumber).toBe('number');
+      }
+
+      const tokenNumbers = responses.map((r) => r.body.data.tokenNumber);
+      const uniqueTokens = new Set(tokenNumbers);
+      expect(uniqueTokens.size).toBe(5);
+      expect(tokenNumbers.sort((a, b) => a - b)).toEqual([1, 2, 3, 4, 5]);
+    });
+  });
 });
 
 // Suppress unused variable warning for setup variable

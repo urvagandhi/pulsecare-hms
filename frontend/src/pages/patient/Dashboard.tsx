@@ -6,7 +6,7 @@ import { KpiCard } from '@/components/Shared/KpiCard';
 import { AlertItem } from '@/components/Shared/AlertItem';
 
 interface Appointment {
-  _id: string; date?: string; timeSlot?: string; status?: string; reason?: string;
+  _id: string; date?: string; timeSlot?: string; status?: string; reason?: string; tokenNumber?: number;
   doctor?: { specialization?: string; userId?: { firstName?: string; lastName?: string } };
 }
 interface Invoice { _id: string; invoiceId?: string; totalAmount?: number; status?: string; createdAt?: string; }
@@ -198,6 +198,11 @@ export function PatientDashboard() {
                       {appt.timeSlot ?? '—'} · {appt.doctor?.specialization ?? 'General'}{appt.reason ? ` · ${appt.reason}` : ''}
                     </p>
                   </div>
+                  {appt.tokenNumber !== undefined && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-200 whitespace-nowrap">
+                      Token #{appt.tokenNumber}
+                    </span>
+                  )}
                   <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${
                     appt.status === 'confirmed' ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'
                   }`}>

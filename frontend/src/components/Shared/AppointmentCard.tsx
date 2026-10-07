@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 export interface AppointmentRecord {
   _id: string;
   appointmentId: string;
+  tokenNumber?: number;
   date: string;
   timeSlot: string;
   type: string;
@@ -70,8 +71,13 @@ export function AppointmentCard({
       <CardContent className="pt-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="space-y-1">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-mono text-muted-foreground">{appointment.appointmentId}</span>
+              {appointment.tokenNumber !== undefined && (
+                <span className="text-xs font-semibold bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300 px-2 py-0.5 rounded border border-teal-300 dark:border-teal-800">
+                  Token #{appointment.tokenNumber}
+                </span>
+              )}
               <StatusBadge status={appointment.status} />
               <span className="text-xs bg-secondary text-secondary-foreground px-2 py-0.5 rounded capitalize">
                 {appointment.type}
