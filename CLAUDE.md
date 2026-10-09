@@ -23,10 +23,12 @@ npm run typecheck  # tsc --noEmit
 npm run build    # tsc + vite build
 ```
 
-### Full Stack (Docker)
+### Full Stack (Local)
 ```bash
-docker compose up         # Dev stack: MongoDB 7, Redis 7, API, Frontend
-docker compose -f docker-compose.prod.yml up  # Production
+# Terminal 1: Backend
+cd backend && npm run dev
+# Terminal 2: Frontend
+cd frontend && npm run dev
 ```
 
 ### Run a single test file

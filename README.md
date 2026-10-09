@@ -59,7 +59,7 @@ PulseCare HMS is strictly scoped and optimized around four essential clinical wo
 
 ---
 
-## 🚀 Step-by-Step Local Run Guide (No Docker Required)
+## 🚀 Step-by-Step Local Run Guide
 
 ### 1. Clone & Install Dependencies
 
