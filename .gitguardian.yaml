@@ -1,0 +1,13 @@
+# GitGuardian configuration
+# https://docs.gitguardian.com/ggshield-docs/configuration/overview
+version: 2
+secret:
+  ignored-paths:
+    - "**/tests/**"
+    - "**/test/**"
+    - "**/*.test.ts"
+    - "**/*.test.js"
+    - "backend/src/scripts/seed.ts"
+    - "backend/scripts/smoke.sh"
+    - "backend/.env.example"
+    - "frontend/.env.example"
