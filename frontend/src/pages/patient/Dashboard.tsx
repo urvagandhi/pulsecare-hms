@@ -4,8 +4,10 @@ import api from '@/lib/api';
 import { useAppSelector } from '@/store/hooks';
 import { KpiCard } from '@/components/Shared/KpiCard';
 import { AlertItem } from '@/components/Shared/AlertItem';
+import { DashboardSkeleton } from '@/components/Shared/DashboardSkeleton';
 import { Button } from '@/components/ui/button';
 import { downloadPdf } from '@/lib/downloadPdf';
+import { Calendar, Pill, FlaskConical, DollarSign, FileText } from 'lucide-react';
 
 interface Appointment {
   _id: string; date?: string; timeSlot?: string; status?: string; reason?: string; tokenNumber?: number;
@@ -16,10 +18,10 @@ interface Prescription { _id: string; status?: string; medicationName?: string; 
 interface LabResult { _id: string; testName?: string; status?: string; createdAt?: string; }
 
 type TimelineEvent =
-  | { kind: 'lab';    _id: string; title: string; sub: string; date: string; icon: string; iconBg: string }
-  | { kind: 'appt';   _id: string; title: string; sub: string; date: string; icon: string; iconBg: string }
-  | { kind: 'bill';   _id: string; title: string; sub: string; date: string; icon: string; iconBg: string }
-  | { kind: 'script'; _id: string; title: string; sub: string; date: string; icon: string; iconBg: string };
+  | { kind: 'lab';    _id: string; title: string; sub: string; date: string; icon: React.ReactNode; iconBg: string }
+  | { kind: 'appt';   _id: string; title: string; sub: string; date: string; icon: React.ReactNode; iconBg: string }
+  | { kind: 'bill';   _id: string; title: string; sub: string; date: string; icon: React.ReactNode; iconBg: string }
+  | { kind: 'script'; _id: string; title: string; sub: string; date: string; icon: React.ReactNode; iconBg: string };
 
 function greetingByHour(): string {
   const h = new Date().getHours();
@@ -86,14 +88,13 @@ export function PatientDashboard() {
     ? `Next appointment: ${new Date(nextAppt.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}`
     : 'No upcoming appointments';
 
-  // Build timeline from all fetched data
   const timeline: TimelineEvent[] = [
     ...labResults.slice(0, 2).map(r => ({
       kind: 'lab' as const, _id: r._id,
       title: `Lab Result: ${r.testName ?? 'Test'}`,
       sub: r.status === 'resulted' ? 'Results ready for review' : `Status: ${r.status ?? '—'}`,
       date: formatDate(r.createdAt),
-      icon: '🔬', iconBg: 'bg-emerald-50',
+      icon: <FlaskConical className="w-4 h-4 text-emerald-600" />, iconBg: 'bg-emerald-50',
     })),
     ...upcomingAppts.map(a => ({
       kind: 'appt' as const, _id: a._id,
@@ -102,23 +103,27 @@ export function PatientDashboard() {
         ? `Dr. ${a.doctor.userId.firstName} ${a.doctor.userId.lastName} · ${a.doctor.specialization ?? ''}`
         : a.reason ?? 'Scheduled visit',
       date: formatDate(a.date),
-      icon: '📅', iconBg: 'bg-blue-50',
+      icon: <Calendar className="w-4 h-4 text-sky-600" />, iconBg: 'bg-sky-50',
     })),
     ...allBills.filter(b => b.status === 'paid').slice(0, 1).map(b => ({
       kind: 'bill' as const, _id: b._id,
       title: `Invoice Paid — ${b.invoiceId ?? b._id.slice(-6)}`,
       sub: `$${(b.totalAmount ?? 0).toLocaleString()} · Payment received`,
       date: formatDate(b.createdAt),
-      icon: '💰', iconBg: 'bg-amber-50',
+      icon: <DollarSign className="w-4 h-4 text-amber-600" />, iconBg: 'bg-amber-50',
     })),
     ...activePrescriptions.slice(0, 1).map(p => ({
       kind: 'script' as const, _id: p._id,
       title: `Prescription Active`,
       sub: [p.medicationName, p.dosage, p.daysSupply ? `${p.daysSupply} days` : ''].filter(Boolean).join(' · ') || 'Active prescription',
       date: 'Active',
-      icon: '💊', iconBg: 'bg-violet-50',
+      icon: <Pill className="w-4 h-4 text-violet-600" />, iconBg: 'bg-violet-50',
     })),
   ].slice(0, 5);
+
+  if (apptQ.isLoading && billsQ.isLoading) {
+    return <DashboardSkeleton />;
+  }
 
   return (
     <div className="space-y-5">
@@ -126,7 +131,7 @@ export function PatientDashboard() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">
-            {greetingByHour()}, {user?.firstName} 👋
+            {greetingByHour()}, {user?.firstName}
           </h1>
           <p className="text-[12px] text-slate-500 mt-0.5">{nextApptLabel}</p>
         </div>
@@ -135,13 +140,14 @@ export function PatientDashboard() {
             variant="outline"
             size="sm"
             onClick={() => downloadPdf('/patients/me/id-card', 'patient-id-card.pdf')}
-            className="text-[11px] h-9"
+            className="text-[11px] h-9 gap-1.5"
           >
+            <FileText className="w-3.5 h-3.5 text-emerald-600" />
             Download ID Card
           </Button>
           <Link
             to="/patient/book-appointment"
-            className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-2 rounded-lg transition-colors"
+            className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50/80 hover:bg-emerald-100/80 px-3 py-2 rounded-lg transition-colors border border-emerald-200/80/60"
           >
             + Book Appointment
           </Link>
@@ -153,21 +159,21 @@ export function PatientDashboard() {
         <KpiCard
           title="Upcoming Appointments" value={apptQ.isLoading ? '…' : upcomingCount}
           trend={nextAppt?.date ? `Next: ${new Date(nextAppt.date).toLocaleDateString('en-US', { weekday: 'short' })}` : 'None'}
-          trendDir="neutral" color="blue" icon="📅" isLoading={apptQ.isLoading}
+          trendDir="neutral" color="blue" icon={<Calendar className="w-5 h-5 text-sky-600" />} isLoading={apptQ.isLoading}
         />
         <KpiCard
           title="Active Prescriptions" value={rxQ.isLoading ? '…' : activePrescriptions.length}
-          trend="Active" trendDir="up" color="green" icon="💊" isLoading={rxQ.isLoading}
+          trend="Active" trendDir="up" color="green" icon={<Pill className="w-5 h-5 text-emerald-600" />} isLoading={rxQ.isLoading}
         />
         <KpiCard
           title="Lab Results"          value={labQ.isLoading ? '…' : labResults.length}
           trend={newLabCount > 0 ? `${newLabCount} new` : 'Up to date'} trendDir="neutral"
-          color="purple" icon="🔬" isLoading={labQ.isLoading}
+          color="purple" icon={<FlaskConical className="w-5 h-5 text-violet-600" />} isLoading={labQ.isLoading}
         />
         <KpiCard
           title="Outstanding Balance"  value={billsQ.isLoading ? '…' : outstandingAmt > 0 ? `$${outstandingAmt.toLocaleString()}` : '$0'}
           trend={unpaidBills.length > 0 ? `${unpaidBills.length} due` : 'All paid'} trendDir={unpaidBills.length > 0 ? 'down' : 'neutral'}
-          color="amber" icon="💰" isLoading={billsQ.isLoading}
+          color="amber" icon={<DollarSign className="w-5 h-5 text-amber-600" />} isLoading={billsQ.isLoading}
         />
       </div>
 
@@ -211,7 +217,7 @@ export function PatientDashboard() {
                     </p>
                   </div>
                   {appt.tokenNumber !== undefined && (
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-200 whitespace-nowrap">
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50/80 text-emerald-700 border border-emerald-200/80 whitespace-nowrap">
                       Token #{appt.tokenNumber}
                     </span>
                   )}
@@ -233,18 +239,20 @@ export function PatientDashboard() {
             <h2 className="text-[13px] font-bold text-slate-900 mb-3">Quick Actions</h2>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { icon: '📅', label: 'Book Appt',   sub: 'Schedule visit',   to: '/patient/book-appointment' },
-                { icon: '💊', label: 'Refill Rx',     sub: 'Request refill',  to: '/patient/prescriptions' },
-                { icon: '💰', label: 'Pay Bill',     sub: outstandingAmt > 0 ? `$${outstandingAmt.toLocaleString()} due` : 'No balance due', to: '/patient/billing' },
-                { icon: '📄', label: 'My Records',   sub: 'Documents',        to: '/patient/documents' },
+                { icon: <Calendar className="w-4 h-4 text-emerald-600" />, label: 'Book Appt',   sub: 'Schedule visit',   to: '/patient/book-appointment' },
+                { icon: <Pill className="w-4 h-4 text-violet-600" />, label: 'Refill Rx',     sub: 'Request refill',  to: '/patient/prescriptions' },
+                { icon: <DollarSign className="w-4 h-4 text-amber-600" />, label: 'Pay Bill',     sub: outstandingAmt > 0 ? `$${outstandingAmt.toLocaleString()} due` : 'No balance due', to: '/patient/billing' },
+                { icon: <FileText className="w-4 h-4 text-emerald-600" />, label: 'My Records',   sub: 'Documents',        to: '/patient/documents' },
               ].map(({ icon, label, sub, to }) => (
                 <Link
                   key={label} to={to}
-                  className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 transition-colors group"
+                  className="flex items-center gap-2.5 p-2.5 rounded-xl border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/80/50 transition-colors group"
                 >
-                  <span className="text-base">{icon}</span>
+                  <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center flex-shrink-0 group-hover:bg-white">
+                    {icon}
+                  </div>
                   <div>
-                    <p className="text-[11px] font-bold text-slate-700 group-hover:text-indigo-700">{label}</p>
+                    <p className="text-[11px] font-bold text-slate-700 group-hover:text-emerald-700">{label}</p>
                     <p className="text-[10px] text-slate-400">{sub}</p>
                   </div>
                 </Link>

@@ -4,6 +4,8 @@ import api from '@/lib/api';
 import { useAppSelector } from '@/store/hooks';
 import { KpiCard } from '@/components/Shared/KpiCard';
 import { StatBar } from '@/components/Shared/StatBar';
+import { DashboardSkeleton } from '@/components/Shared/DashboardSkeleton';
+import { Pill, Package, FlaskConical, AlertTriangle } from 'lucide-react';
 
 interface Prescription {
   _id: string; status?: string; medicationName?: string; dosage?: string;
@@ -61,39 +63,43 @@ export function NurseDashboard() {
   const lowStock   = inventoryQ.data?.data ?? [];
   const labOrders  = labQ.data?.data ?? [];
 
-  return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div>
-        <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">
-          {greetingByHour()}, {user?.firstName} 💉
-        </h1>
-        <p className="text-[12px] text-slate-500 mt-0.5">
-          {pendingRx.length > 0
-            ? `${pendingRx.length} dispensing request${pendingRx.length > 1 ? 's' : ''} pending`
-            : 'Dispensing queue is clear'}
-          {lowStock.length > 0 && ` · ${lowStock.length} item${lowStock.length > 1 ? 's' : ''} low on stock`}
-        </p>
-      </div>
+  if (dispensingQ.isLoading && inventoryQ.isLoading) {
+    return <DashboardSkeleton />;
+  }
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <KpiCard
-          title="Pending Dispense"     value={dispensingQ.isLoading ? '…' : dispensingQ.isError ? '—' : pendingRx.length}
-          trend={pendingRx.length > 0 ? `${pendingRx.length} waiting` : 'Queue clear'} trendDir={pendingRx.length > 0 ? 'down' : 'neutral'}
-          color="amber" icon="💊" sparklineData={DISPENSE_SPARK} isLoading={dispensingQ.isLoading}
-        />
-        <KpiCard
-          title="Low Stock Items"      value={inventoryQ.isLoading ? '…' : inventoryQ.isError ? '—' : lowStock.length}
-          trend={lowStock.length > 0 ? `${lowStock.length} items low` : 'Stock OK'} trendDir={lowStock.length > 0 ? 'down' : 'neutral'}
-          color="purple" icon="📦" sparklineData={STOCK_SPARK} isLoading={inventoryQ.isLoading}
-        />
-        <KpiCard
-          title="Lab Samples Collected Today"  value={labQ.isLoading ? '…' : labQ.isError ? '—' : labOrders.length}
-          trend="Awaiting results"     trendDir="neutral"
-          color="green" icon="🔬" sparklineData={LAB_SPARK} isLoading={labQ.isLoading}
-        />
-      </div>
+  return (
+      <div className="space-y-5">
+        {/* Header */}
+        <div>
+          <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">
+            {greetingByHour()}, {user?.firstName}
+          </h1>
+          <p className="text-[12px] text-slate-500 mt-0.5">
+            {pendingRx.length > 0
+              ? `${pendingRx.length} dispensing request${pendingRx.length > 1 ? 's' : ''} pending`
+              : 'Dispensing queue is clear'}
+            {lowStock.length > 0 && ` · ${lowStock.length} item${lowStock.length > 1 ? 's' : ''} low on stock`}
+          </p>
+        </div>
+
+        {/* KPI Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <KpiCard
+            title="Pending Dispense"     value={dispensingQ.isLoading ? '…' : dispensingQ.isError ? '—' : pendingRx.length}
+            trend={pendingRx.length > 0 ? `${pendingRx.length} waiting` : 'Queue clear'} trendDir={pendingRx.length > 0 ? 'down' : 'neutral'}
+            color="amber" icon={<Pill className="w-5 h-5 text-amber-600" />} sparklineData={DISPENSE_SPARK} isLoading={dispensingQ.isLoading}
+          />
+          <KpiCard
+            title="Low Stock Items"      value={inventoryQ.isLoading ? '…' : inventoryQ.isError ? '—' : lowStock.length}
+            trend={lowStock.length > 0 ? `${lowStock.length} items low` : 'Stock OK'} trendDir={lowStock.length > 0 ? 'down' : 'neutral'}
+            color="purple" icon={<Package className="w-5 h-5 text-violet-600" />} sparklineData={STOCK_SPARK} isLoading={inventoryQ.isLoading}
+          />
+          <KpiCard
+            title="Lab Samples Collected Today"  value={labQ.isLoading ? '…' : labQ.isError ? '—' : labOrders.length}
+            trend="Awaiting results"     trendDir="neutral"
+            color="green" icon={<FlaskConical className="w-5 h-5 text-emerald-600" />} sparklineData={LAB_SPARK} isLoading={labQ.isLoading}
+          />
+        </div>
 
       {/* Main grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -155,7 +161,10 @@ export function NurseDashboard() {
           {/* Low stock */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-50">
-              <h2 className="text-[13px] font-bold text-slate-900">⚠️ Low Stock</h2>
+              <h2 className="text-[13px] font-bold text-slate-900 flex items-center gap-1.5">
+                <AlertTriangle className="w-4 h-4 text-amber-500" />
+                Low Stock
+              </h2>
               <Link to="/nurse/inventory" className="text-[11px] font-semibold text-indigo-600 hover:underline">
                 View →
               </Link>
@@ -190,14 +199,16 @@ export function NurseDashboard() {
             <h2 className="text-[13px] font-bold text-slate-900 mb-3">Quick Actions</h2>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { icon: '💊', label: 'Dispense',    sub: 'Process script',  href: '/nurse/dispensing' },
-                { icon: '📦', label: 'Stock Check', sub: 'Inventory view',  href: '/nurse/inventory' },
-              ].map(({ icon, label, sub, href }) => (
+                { icon: Pill, label: 'Dispense',    sub: 'Process script',  href: '/nurse/dispensing', color: 'text-indigo-600 bg-indigo-50' },
+                { icon: Package, label: 'Stock Check', sub: 'Inventory view',  href: '/nurse/inventory', color: 'text-amber-600 bg-amber-50' },
+              ].map(({ icon: Icon, label, sub, href, color }) => (
                 <Link
                   key={label} to={href}
-                  className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 transition-colors group"
+                  className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50 transition-colors group"
                 >
-                  <span className="text-lg">{icon}</span>
+                  <div className={`p-2 rounded-lg ${color}`}>
+                    <Icon className="w-4 h-4" />
+                  </div>
                   <div>
                     <p className="text-[12px] font-bold text-slate-700 group-hover:text-indigo-700">{label}</p>
                     <p className="text-[10px] text-slate-400">{sub}</p>

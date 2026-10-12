@@ -75,7 +75,7 @@ export function AppointmentCard({
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-mono text-muted-foreground">{appointment.appointmentId}</span>
               {appointment.tokenNumber !== undefined && (
-                <span className="text-xs font-semibold bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300 px-2 py-0.5 rounded border border-teal-300 dark:border-teal-800">
+                <span className="text-xs font-semibold bg-emerald-100/80 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-800/80">
                   Token #{appointment.tokenNumber}
                 </span>
               )}

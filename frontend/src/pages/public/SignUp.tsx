@@ -17,7 +17,13 @@ const signUpSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
   email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/,
+      'Password must contain uppercase, lowercase, number, and special character'
+    ),
 });
 type SignUpForm = z.infer<typeof signUpSchema>;
 
@@ -77,7 +83,10 @@ export function SignUp() {
               {errors.password && <p className="text-destructive text-xs">{errors.password.message}</p>}
             </div>
             {registerMutation.isError && (
-              <p className="text-destructive text-sm text-center">Registration failed. Please try again.</p>
+              <p className="text-destructive text-sm text-center">
+                {(registerMutation.error as any)?.response?.data?.error?.message ??
+                  'Registration failed. Please try again.'}
+              </p>
             )}
             <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
               {registerMutation.isPending ? 'Creating account...' : 'Create Account'}

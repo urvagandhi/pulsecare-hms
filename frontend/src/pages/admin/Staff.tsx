@@ -138,7 +138,10 @@ export function AdminStaff() {
   const updateLeaveMutation = useMutation({
     mutationFn: async (updatedLeaves: DoctorLeave[]) => {
       if (!selectedDoctor) return;
-      const res = await api.patch(`/staff/${selectedDoctor.profile.userId._id}`, {
+      const targetUserId =
+        (selectedDoctor as any).userId?._id ?? selectedDoctor.profile?.userId?._id;
+      if (!targetUserId) return;
+      const res = await api.patch(`/staff/${targetUserId}`, {
         leaves: updatedLeaves,
       });
       return res.data;
@@ -197,55 +200,73 @@ export function AdminStaff() {
       header: 'Staff ID',
       accessorKey: 'profile',
       cell: (row) =>
-        row.profile.doctorId ?? row.profile.nurseId ?? row.profile.receptionistId ?? '—',
+        (row as any).doctorId ??
+        (row as any).nurseId ??
+        (row as any).receptionistId ??
+        row.profile?.doctorId ??
+        row.profile?.nurseId ??
+        row.profile?.receptionistId ??
+        '—',
     },
     {
       header: 'Name',
       accessorKey: 'profile.userId',
-      cell: (row) =>
-        `${row.profile.userId?.firstName ?? ''} ${row.profile.userId?.lastName ?? ''}`,
+      cell: (row) => {
+        const u = (row as any).userId ?? row.profile?.userId;
+        return `${u?.firstName ?? ''} ${u?.lastName ?? ''}`.trim() || '—';
+      },
     },
     {
       header: 'Role',
       accessorKey: 'role',
-      cell: (row) => (
-        <span className="capitalize">{row.role}</span>
-      ),
+      cell: (row) => {
+        const r = (row as any).userId?.role ?? (row as any).role ?? row.role ?? '—';
+        return <span className="capitalize">{r}</span>;
+      },
     },
     {
       header: 'Specialization',
       accessorKey: 'profile.specialization',
-      cell: (row) => row.profile.specialization ?? '—',
+      cell: (row) => (row as any).specialization ?? row.profile?.specialization ?? '—',
     },
     {
       header: 'Department',
       accessorKey: 'profile.department',
-      cell: (row) => row.profile.department?.name ?? '—',
+      cell: (row) => {
+        const d = (row as any).department ?? row.profile?.department;
+        return d?.name ?? '—';
+      },
     },
     {
       header: 'Email',
       accessorKey: 'profile.userId.email',
-      cell: (row) => row.profile.userId?.email ?? '—',
+      cell: (row) => {
+        const u = (row as any).userId ?? row.profile?.userId;
+        return u?.email ?? '—';
+      },
     },
     {
       header: 'Status',
       accessorKey: 'profile.isActive',
-      cell: (row) => (
-        <StatusBadge status={row.profile.isActive ? 'active' : 'inactive'} />
-      ),
+      cell: (row) => {
+        const active = (row as any).isActive ?? row.profile?.isActive ?? true;
+        return <StatusBadge status={active ? 'active' : 'inactive'} />;
+      },
     },
     {
       header: 'Actions',
       accessorKey: '_id',
-      cell: (row) =>
-        row.role === 'doctor' ? (
+      cell: (row) => {
+        const role = (row as any).userId?.role ?? (row as any).role ?? row.role;
+        return role === 'doctor' ? (
           <Button
             variant="outline"
             size="sm"
             onClick={() => {
               setSelectedDoctor(row);
+              const leavesList = (row as any).leaves ?? row.profile?.leaves ?? [];
               setLeaves(
-                (row.profile.leaves ?? []).map((l) => ({
+                leavesList.map((l: any) => ({
                   startDate: l.startDate ? new Date(l.startDate).toISOString().split('T')[0] : '',
                   endDate: l.endDate ? new Date(l.endDate).toISOString().split('T')[0] : '',
                   reason: l.reason,
@@ -261,7 +282,8 @@ export function AdminStaff() {
           </Button>
         ) : (
           <span className="text-muted-foreground text-xs">—</span>
-        ),
+        );
+      },
     },
   ];
 
@@ -444,8 +466,13 @@ export function AdminStaff() {
         <DialogContent onClose={() => setLeaveModalOpen(false)}>
           <DialogHeader>
             <DialogTitle>
-              Doctor Time Off — Dr. {selectedDoctor?.profile.userId.firstName}{' '}
-              {selectedDoctor?.profile.userId.lastName}
+              Doctor Time Off — Dr.{' '}
+              {(selectedDoctor as any)?.userId?.firstName ??
+                selectedDoctor?.profile?.userId?.firstName ??
+                ''}{' '}
+              {(selectedDoctor as any)?.userId?.lastName ??
+                selectedDoctor?.profile?.userId?.lastName ??
+                ''}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-5">

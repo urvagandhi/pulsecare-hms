@@ -3,11 +3,11 @@ import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 import { cn } from '@/lib/utils';
 
 const COLOR_CONFIG = {
-  blue:   { bar: 'from-sky-400 to-indigo-500',    iconBg: 'bg-sky-50',     spark: '#0ea5e9' },
-  green:  { bar: 'from-emerald-400 to-green-600', iconBg: 'bg-emerald-50', spark: '#10b981' },
-  amber:  { bar: 'from-amber-400 to-red-400',     iconBg: 'bg-amber-50',   spark: '#f59e0b' },
-  purple: { bar: 'from-violet-400 to-indigo-500', iconBg: 'bg-violet-50',  spark: '#8b5cf6' },
-  pink:   { bar: 'from-pink-400 to-rose-500',     iconBg: 'bg-pink-50',    spark: '#ec4899' },
+  blue:   { bar: 'from-emerald-400 to-teal-500',    iconBg: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400', spark: '#10b981' },
+  green:  { bar: 'from-teal-400 to-emerald-600',   iconBg: 'bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400',       spark: '#0d9488' },
+  amber:  { bar: 'from-amber-400 to-emerald-500',   iconBg: 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400',     spark: '#f59e0b' },
+  purple: { bar: 'from-teal-400 to-cyan-500',      iconBg: 'bg-cyan-50 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400',       spark: '#06b6d4' },
+  pink:   { bar: 'from-rose-400 to-emerald-500',    iconBg: 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400',       spark: '#f43f5e' },
 } as const;
 
 interface KpiCardProps {
@@ -17,7 +17,7 @@ interface KpiCardProps {
   trend?: string;
   trendDir?: 'up' | 'down' | 'neutral';
   color: keyof typeof COLOR_CONFIG;
-  icon: string;
+  icon: React.ReactNode;
   sparklineData?: number[];
   isLoading?: boolean;
 }

@@ -51,7 +51,7 @@ export function AppointmentRow({ initials, name, meta, time, status, tokenNumber
         <p className="text-[10px] text-slate-400 truncate">{meta}</p>
       </div>
       {tokenNumber !== undefined && (
-        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-200">
+        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50/80 text-emerald-700 border border-emerald-200/80">
           #{tokenNumber}
         </span>
       )}

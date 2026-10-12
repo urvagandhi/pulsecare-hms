@@ -6,6 +6,8 @@ import { useAppSelector } from '@/store/hooks';
 import { KpiCard } from '@/components/Shared/KpiCard';
 import { AppointmentRow } from '@/components/Shared/AppointmentRow';
 import { AlertItem } from '@/components/Shared/AlertItem';
+import { DashboardSkeleton } from '@/components/Shared/DashboardSkeleton';
+import { Calendar, FlaskConical, Pill, FileText, ClipboardList } from 'lucide-react';
 
 interface Appointment {
   _id: string; timeSlot?: string; status?: string; type?: string; reason?: string; tokenNumber?: number;
@@ -75,12 +77,16 @@ export function DoctorDashboard() {
     weekday: 'long', month: 'long', day: 'numeric',
   });
 
+  if (apptQ.isLoading && labQ.isLoading) {
+    return <DashboardSkeleton />;
+  }
+
   return (
     <div className="space-y-5">
       {/* Header */}
       <div>
         <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">
-          {greetingByHour()}, Dr. {user?.firstName} 👨‍⚕️
+          {greetingByHour()}, Dr. {user?.firstName}
         </h1>
         <p className="text-[12px] text-slate-500 mt-0.5">
           {dateLabel} · {todayAppts.length} patients today
@@ -93,18 +99,18 @@ export function DoctorDashboard() {
         <KpiCard
           title="Today's Patients"    value={apptQ.isLoading ? '…' : apptQ.isError ? '—' : todayAppts.length}
           trend={`${todayAppts.filter(a => a.status === 'confirmed').length} confirmed`} trendDir="up"
-          color="green" icon="📅" sparklineData={APPT_SPARK} isLoading={apptQ.isLoading}
+          color="green" icon={<Calendar className="w-5 h-5 text-emerald-600" />} sparklineData={APPT_SPARK} isLoading={apptQ.isLoading}
         />
         <KpiCard
           title="Pending Lab Orders"  value={labQ.isLoading ? '…' : labQ.isError ? '—' : labOrders.length}
           subtitle={`${criticalLabs.length} critical`}
           trend={criticalLabs.length > 0 ? `${criticalLabs.length} critical` : 'All normal'} trendDir={criticalLabs.length > 0 ? 'down' : 'neutral'}
-          color="purple" icon="🧪" sparklineData={LAB_SPARK} isLoading={labQ.isLoading}
+          color="purple" icon={<FlaskConical className="w-5 h-5 text-violet-600" />} sparklineData={LAB_SPARK} isLoading={labQ.isLoading}
         />
         <KpiCard
           title="Active Prescriptions" value={rxQ.isLoading ? '…' : rxQ.isError ? '—' : activePrescriptions.length}
           trend="Active" trendDir="neutral"
-          color="amber" icon="💊" sparklineData={RX_SPARK} isLoading={rxQ.isLoading}
+          color="amber" icon={<Pill className="w-5 h-5 text-amber-600" />} sparklineData={RX_SPARK} isLoading={rxQ.isLoading}
         />
       </div>
 
@@ -139,7 +145,7 @@ export function DoctorDashboard() {
           </div>
           {/* Footer */}
           <div className="px-6 py-3 border-t border-slate-100 text-right">
-            <Link to="/doctor/schedule" className="text-xs font-medium text-indigo-600 hover:text-indigo-800">
+            <Link to="/doctor/schedule" className="text-xs font-medium text-emerald-600 hover:text-emerald-800">
               Full schedule →
             </Link>
           </div>
@@ -152,18 +158,20 @@ export function DoctorDashboard() {
             <h2 className="text-[13px] font-bold text-slate-900 mb-3">Quick Actions</h2>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { icon: '💊', label: 'Prescribe',         sub: 'New prescription',    to: '/doctor/prescriptions/new' },
-                { icon: '🧪', label: 'Order Lab',         sub: 'Request test',        to: '/doctor/lab/new' },
-                { icon: '📄', label: 'Issue Certificate', sub: 'Medical certificate', to: '/doctor/documents' },
-                { icon: '📝', label: 'Patient Notes',     sub: 'Clinical notes',      to: '/doctor/patients' },
+                { icon: <Pill className="w-4 h-4 text-amber-600" />, label: 'Prescribe',         sub: 'New prescription',    to: '/doctor/prescriptions/new' },
+                { icon: <FlaskConical className="w-4 h-4 text-violet-600" />, label: 'Order Lab',         sub: 'Request test',        to: '/doctor/lab/new' },
+                { icon: <FileText className="w-4 h-4 text-emerald-600" />, label: 'Issue Certificate', sub: 'Medical certificate', to: '/doctor/documents' },
+                { icon: <ClipboardList className="w-4 h-4 text-sky-600" />, label: 'Patient Notes',     sub: 'Clinical notes',      to: '/doctor/patients' },
               ].map(({ icon, label, sub, to }) => (
                 <Link
                   key={label} to={to}
-                  className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 transition-colors group"
+                  className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/80 transition-colors group"
                 >
-                  <span className="text-base">{icon}</span>
+                  <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center flex-shrink-0 group-hover:bg-white">
+                    {icon}
+                  </div>
                   <div>
-                    <p className="text-[11px] font-bold text-slate-700 group-hover:text-indigo-700">{label}</p>
+                    <p className="text-[11px] font-bold text-slate-700 group-hover:text-emerald-700">{label}</p>
                     <p className="text-[10px] text-slate-400">{sub}</p>
                   </div>
                 </Link>
@@ -174,8 +182,11 @@ export function DoctorDashboard() {
           {/* Lab results feed */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-50">
-              <h2 className="text-[13px] font-bold text-slate-900">🧪 Lab Results In</h2>
-              <Link to="/doctor/lab" className="text-[11px] font-semibold text-indigo-600 hover:underline">View all →</Link>
+              <div className="flex items-center gap-2">
+                <FlaskConical className="w-4 h-4 text-violet-600" />
+                <h2 className="text-[13px] font-bold text-slate-900">Lab Results In</h2>
+              </div>
+              <Link to="/doctor/lab" className="text-[11px] font-semibold text-emerald-600 hover:underline">View all →</Link>
             </div>
             <div className="px-4 py-1">
               {labQ.isLoading && <div className="h-16 animate-pulse bg-slate-50 rounded-lg m-2" />}

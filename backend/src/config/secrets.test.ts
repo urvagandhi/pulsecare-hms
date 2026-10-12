@@ -7,8 +7,6 @@ describe('Secrets Guard (Task 1.5)', () => {
     REDIS_URL: 'redis://localhost:6379',
     JWT_SECRET: 'super-secure-production-jwt-secret-xyz-12345678',
     JWT_REFRESH_SECRET: 'super-secure-production-refresh-secret-xyz-12345678',
-    AWS_SES_FROM_EMAIL: 'noreply@pulsecare.com',
-    AWS_S3_BUCKET: 'pulsecare-prod-bucket',
   };
 
   it('allows safe secrets in any environment', () => {

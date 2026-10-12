@@ -20,7 +20,7 @@ export function Logo({ size = 'md', showText = true, className = '', iconOnly = 
     <div className={`flex items-center gap-2.5 ${className}`}>
       {/* Pulse / Medical Cross emblem */}
       <div
-        className={`${dim.box} rounded-xl bg-gradient-to-br from-teal-600 via-teal-700 to-emerald-700 flex items-center justify-center shadow-sm shadow-teal-900/10 shrink-0 text-white`}
+        className={`${dim.box} rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 flex items-center justify-center shadow-sm shadow-emerald-900/15 shrink-0 text-white`}
       >
         <svg
           viewBox="0 0 24 24"
@@ -42,10 +42,10 @@ export function Logo({ size = 'md', showText = true, className = '', iconOnly = 
       {showText && !iconOnly && (
         <div className="flex flex-col leading-none">
           <div className="flex items-center gap-1.5">
-            <span className={`font-bold tracking-tight text-slate-900 dark:text-white ${dim.text}`}>
-              Pulse<span className="text-teal-600 dark:text-teal-400">Care</span>
+            <span className={`font-extrabold tracking-tight text-slate-900 dark:text-white ${dim.text}`}>
+              Pulse<span className="text-emerald-600 dark:text-emerald-400">Care</span>
             </span>
-            <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300 border border-teal-200 dark:border-teal-800 tracking-wider">
+            <span className="text-[10px] font-mono font-bold uppercase px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 tracking-wider">
               HMS
             </span>
           </div>
