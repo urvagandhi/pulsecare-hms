@@ -68,46 +68,48 @@ export function NurseDashboard() {
   }
 
   return (
-      <div className="space-y-5">
-        {/* Header */}
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
         <div>
-          <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             {greetingByHour()}, {user?.firstName}
           </h1>
-          <p className="text-[12px] text-slate-500 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {pendingRx.length > 0
-              ? `${pendingRx.length} dispensing request${pendingRx.length > 1 ? 's' : ''} pending`
+              ? `${pendingRx.length} dispensing request${pendingRx.length > 1 ? 's' : ''} pending review`
               : 'Dispensing queue is clear'}
-            {lowStock.length > 0 && ` · ${lowStock.length} item${lowStock.length > 1 ? 's' : ''} low on stock`}
+            {lowStock.length > 0 && ` · ${lowStock.length} item${lowStock.length > 1 ? 's' : ''} low on stock`} · Clinical Pharmacy
           </p>
         </div>
+      </div>
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <KpiCard
-            title="Pending Dispense"     value={dispensingQ.isLoading ? '…' : dispensingQ.isError ? '—' : pendingRx.length}
-            trend={pendingRx.length > 0 ? `${pendingRx.length} waiting` : 'Queue clear'} trendDir={pendingRx.length > 0 ? 'down' : 'neutral'}
-            color="amber" icon={<Pill className="w-5 h-5 text-amber-600" />} sparklineData={DISPENSE_SPARK} isLoading={dispensingQ.isLoading}
-          />
-          <KpiCard
-            title="Low Stock Items"      value={inventoryQ.isLoading ? '…' : inventoryQ.isError ? '—' : lowStock.length}
-            trend={lowStock.length > 0 ? `${lowStock.length} items low` : 'Stock OK'} trendDir={lowStock.length > 0 ? 'down' : 'neutral'}
-            color="purple" icon={<Package className="w-5 h-5 text-violet-600" />} sparklineData={STOCK_SPARK} isLoading={inventoryQ.isLoading}
-          />
-          <KpiCard
-            title="Lab Samples Collected Today"  value={labQ.isLoading ? '…' : labQ.isError ? '—' : labOrders.length}
-            trend="Awaiting results"     trendDir="neutral"
-            color="green" icon={<FlaskConical className="w-5 h-5 text-emerald-600" />} sparklineData={LAB_SPARK} isLoading={labQ.isLoading}
-          />
-        </div>
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <KpiCard
+          title="Pending Dispenses"     value={dispensingQ.isLoading ? '…' : dispensingQ.isError ? '—' : pendingRx.length}
+          trend={pendingRx.length > 0 ? `${pendingRx.length} waiting` : 'Queue clear'} trendDir={pendingRx.length > 0 ? 'down' : 'neutral'}
+          color="amber" icon={<Pill className="w-5 h-5 text-amber-600 dark:text-amber-400" />} sparklineData={DISPENSE_SPARK} isLoading={dispensingQ.isLoading}
+        />
+        <KpiCard
+          title="Low Stock Items"      value={inventoryQ.isLoading ? '…' : inventoryQ.isError ? '—' : lowStock.length}
+          trend={lowStock.length > 0 ? `${lowStock.length} items low` : 'Stock OK'} trendDir={lowStock.length > 0 ? 'down' : 'neutral'}
+          color="purple" icon={<Package className="w-5 h-5 text-teal-600 dark:text-teal-400" />} sparklineData={STOCK_SPARK} isLoading={inventoryQ.isLoading}
+        />
+        <KpiCard
+          title="Lab Samples Collected"  value={labQ.isLoading ? '…' : labQ.isError ? '—' : labOrders.length}
+          trend="Awaiting results"     trendDir="neutral"
+          color="green" icon={<FlaskConical className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />} sparklineData={LAB_SPARK} isLoading={labQ.isLoading}
+        />
+      </div>
 
       {/* Main grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Dispensing queue */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-50">
-            <h2 className="text-[13px] font-bold text-slate-900">Dispensing Queue</h2>
-            <Link to="/nurse/dispensing" className="text-[11px] font-semibold text-indigo-600 hover:underline">
+        <div className="lg:col-span-7 xl:col-span-8 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden flex flex-col">
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-slate-800">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white">Dispensing Queue</h2>
+            <Link to="/nurse/dispensing" className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:underline">
               View all →
             </Link>
           </div>
@@ -157,23 +159,23 @@ export function NurseDashboard() {
         </div>
 
         {/* Right column */}
-        <div className="space-y-4">
+        <div className="lg:col-span-5 xl:col-span-4 space-y-5">
           {/* Low stock */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-50">
-              <h2 className="text-[13px] font-bold text-slate-900 flex items-center gap-1.5">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-slate-800">
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                 <AlertTriangle className="w-4 h-4 text-amber-500" />
-                Low Stock
+                Inventory Stock Warnings
               </h2>
-              <Link to="/nurse/inventory" className="text-[11px] font-semibold text-indigo-600 hover:underline">
+              <Link to="/nurse/inventory" className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:underline">
                 View →
               </Link>
             </div>
-            <div className="px-4 py-2">
-              {inventoryQ.isLoading && <div className="h-16 animate-pulse bg-slate-50 rounded-lg" />}
-              {inventoryQ.isError && <p className="text-sm text-red-500 px-4 py-2">Failed to load inventory</p>}
+            <div className="p-4 sm:p-5">
+              {inventoryQ.isLoading && <div className="h-16 animate-pulse bg-slate-50 dark:bg-slate-800/60 rounded-xl" />}
+              {inventoryQ.isError && <p className="text-xs text-rose-500 py-2">Failed to load inventory</p>}
               {!inventoryQ.isLoading && lowStock.length === 0 && (
-                <p className="text-[11px] text-slate-400 py-3 text-center">All stock levels OK</p>
+                <p className="text-xs text-slate-400 py-3 text-center">All pharmaceutical stock levels OK</p>
               )}
               {lowStock.map(item => {
                 const reorder = item.reorderLevel ?? 50;
@@ -195,23 +197,23 @@ export function NurseDashboard() {
           </div>
 
           {/* Quick actions */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
-            <h2 className="text-[13px] font-bold text-slate-900 mb-3">Quick Actions</h2>
-            <div className="grid grid-cols-2 gap-3">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs p-5">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-3">Quick Actions</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-2.5">
               {[
-                { icon: Pill, label: 'Dispense',    sub: 'Process script',  href: '/nurse/dispensing', color: 'text-indigo-600 bg-indigo-50' },
-                { icon: Package, label: 'Stock Check', sub: 'Inventory view',  href: '/nurse/inventory', color: 'text-amber-600 bg-amber-50' },
+                { icon: Pill, label: 'Dispense',    sub: 'Process script',  href: '/nurse/dispensing', color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40' },
+                { icon: Package, label: 'Stock Check', sub: 'Inventory view',  href: '/nurse/inventory', color: 'text-amber-600 bg-amber-50 dark:bg-amber-950/40' },
               ].map(({ icon: Icon, label, sub, href, color }) => (
                 <Link
                   key={label} to={href}
-                  className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50 transition-colors group"
+                  className="flex items-center gap-3 p-3 rounded-xl border border-slate-200/70 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 transition-all group"
                 >
                   <div className={`p-2 rounded-lg ${color}`}>
                     <Icon className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="text-[12px] font-bold text-slate-700 group-hover:text-indigo-700">{label}</p>
-                    <p className="text-[10px] text-slate-400">{sub}</p>
+                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-emerald-700 dark:group-hover:text-emerald-400">{label}</p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">{sub}</p>
                   </div>
                 </Link>
               ))}

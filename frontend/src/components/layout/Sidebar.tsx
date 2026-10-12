@@ -31,7 +31,11 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Analytics', href: '/admin/analytics', icon: BarChart3, roles: ['admin'] },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  onCloseMobile?: () => void;
+}
+
+export function Sidebar({ onCloseMobile }: SidebarProps) {
   const { user } = usePermissions();
   const { logoutMutation } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
@@ -40,7 +44,7 @@ export function Sidebar() {
 
   return (
     <aside className={cn(
-      'flex flex-col h-full bg-white dark:bg-gray-900 border-r border-border transition-all duration-300',
+      'flex flex-col h-full bg-white dark:bg-slate-900 border-r border-border transition-all duration-300 shadow-sm md:shadow-none',
       collapsed ? 'w-16' : 'w-64'
     )}>
       {/* Logo area */}
@@ -50,13 +54,26 @@ export function Sidebar() {
         ) : (
           <Logo size="md" />
         )}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ml-auto"
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          {collapsed ? <ChevronRight className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-        </button>
+        <div className="flex items-center gap-1 ml-auto">
+          {/* Collapse desktop toggle */}
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors hidden md:flex text-slate-500"
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {collapsed ? <ChevronRight className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+          </button>
+          {/* Mobile close button */}
+          {onCloseMobile && (
+            <button
+              onClick={onCloseMobile}
+              className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors md:hidden text-slate-500"
+              aria-label="Close sidebar"
+            >
+              <ChevronRight className="w-5 h-5 rotate-180" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Navigation */}
@@ -65,6 +82,7 @@ export function Sidebar() {
           <NavLink
             key={item.href}
             to={item.href}
+            onClick={() => onCloseMobile?.()}
             className={({ isActive }) => cn(
               'flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all group',
               isActive

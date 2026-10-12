@@ -31,29 +31,29 @@ export function KpiCard({
   const sparkData = (sparklineData ?? []).map((v, i) => ({ i, v }));
 
   return (
-    <div className="relative bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+    <div className="relative bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-shadow overflow-hidden">
       <div className={cn('absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r', cfg.bar)} />
-      <div className="p-4 pt-5">
-        <div className="flex items-start justify-between mb-2">
-          <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center text-lg', cfg.iconBg)}>
+      <div className="p-4 sm:p-5">
+        <div className="flex items-start justify-between mb-3 gap-2">
+          <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border border-slate-200/40 dark:border-slate-800', cfg.iconBg)}>
             {icon}
           </div>
           {trend && (
-            <span className={cn('text-[10px] font-bold px-2 py-1 rounded-full', {
-              'bg-emerald-50 text-emerald-700': trendDir === 'up',
-              'bg-red-50 text-red-600':         trendDir === 'down',
-              'bg-slate-100 text-slate-500':    trendDir === 'neutral',
+            <span className={cn('text-[10px] font-semibold font-mono px-2 py-0.5 rounded-full shrink-0 tracking-tight', {
+              'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800': trendDir === 'up',
+              'bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200/60 dark:border-rose-800': trendDir === 'down',
+              'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700': trendDir === 'neutral',
             })}>
               {trendDir === 'up' ? '↑ ' : trendDir === 'down' ? '↓ ' : ''}{trend}
             </span>
           )}
         </div>
         {isLoading ? (
-          <div className="h-7 bg-slate-100 rounded animate-pulse my-1" />
+          <div className="h-7 w-20 bg-slate-100 dark:bg-slate-800 rounded-md animate-pulse my-1" />
         ) : (
-          <p className="text-2xl font-extrabold text-slate-900 tracking-tight">{value}</p>
+          <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">{value}</p>
         )}
-        <p className="text-[11px] text-slate-500 mt-0.5">{title}</p>
+        <p className="text-[11px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 mt-1 line-clamp-1">{title}</p>
         {subtitle && <p className="text-[10px] text-slate-400 mt-0.5">{subtitle}</p>}
       </div>
       {sparklineData && sparklineData.length > 0 && (
