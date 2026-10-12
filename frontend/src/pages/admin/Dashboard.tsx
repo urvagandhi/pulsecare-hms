@@ -152,43 +152,43 @@ export function AdminDashboard() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
         <div>
-          <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             {greetingByHour()}, {user?.firstName}
           </h1>
-          <p className="text-[12px] text-slate-500 mt-0.5">
-            {dateLabel} · Hospital Overview
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            {dateLabel} · Hospital Operational Center
           </p>
         </div>
         {isAdmin ? (
           <Link
             to="/admin/analytics"
-            className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50/80 hover:bg-emerald-100/80 px-3 py-2 rounded-lg transition-colors border border-emerald-200/80/60"
+            className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 px-4 py-2 rounded-xl transition-all border border-emerald-200/80 dark:border-emerald-800 shrink-0 self-start sm:self-auto"
           >
-            <BarChart3 className="w-3.5 h-3.5" />
+            <BarChart3 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             Analytics Overview →
           </Link>
         ) : (
           <Link
             to="/admin/billing"
-            className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50/80 hover:bg-emerald-100/80 px-3 py-2 rounded-lg transition-colors border border-emerald-200/80/60"
+            className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 px-4 py-2 rounded-xl transition-all border border-emerald-200/80 dark:border-emerald-800 shrink-0 self-start sm:self-auto"
           >
-            <CreditCard className="w-3.5 h-3.5" />
+            <CreditCard className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             Billing Overview →
           </Link>
         )}
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <KpiCard
           title="Total Patients"
           value={patientsQ.isLoading ? '…' : patientsQ.isError ? '—' : totalPatients.toLocaleString()}
           trend="Active Records"
           trendDir="up"
           color="blue"
-          icon={<Users className="w-5 h-5 text-sky-600" />}
+          icon={<Users className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />}
           sparklineData={PATIENT_SPARK}
           isLoading={patientsQ.isLoading}
         />
@@ -198,7 +198,7 @@ export function AdminDashboard() {
           trend={`${todayAppts.filter(a => a.status === 'scheduled').length} pending`}
           trendDir="neutral"
           color="green"
-          icon={<Calendar className="w-5 h-5 text-emerald-600" />}
+          icon={<Calendar className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />}
           sparklineData={APPT_SPARK}
           isLoading={apptQ.isLoading}
         />
@@ -209,7 +209,7 @@ export function AdminDashboard() {
             trend={revenueQ.data?.data?.outstanding ? `$${revenueQ.data.data.outstanding.toLocaleString()} outstanding` : 'Up to date'}
             trendDir="up"
             color="amber"
-            icon={<DollarSign className="w-5 h-5 text-amber-600" />}
+            icon={<DollarSign className="w-5 h-5 text-amber-600 dark:text-amber-400" />}
             sparklineData={REVENUE_SPARK}
             isLoading={revenueQ.isLoading}
           />
@@ -220,7 +220,7 @@ export function AdminDashboard() {
             trend="Awaiting payment"
             trendDir="neutral"
             color="amber"
-            icon={<DollarSign className="w-5 h-5 text-amber-600" />}
+            icon={<DollarSign className="w-5 h-5 text-amber-600 dark:text-amber-400" />}
             sparklineData={REVENUE_SPARK}
             isLoading={invoicesQ.isLoading}
           />
@@ -231,34 +231,34 @@ export function AdminDashboard() {
           trend="Scheduled ahead"
           trendDir="up"
           color="purple"
-          icon={<Clock className="w-5 h-5 text-violet-600" />}
+          icon={<Clock className="w-5 h-5 text-teal-600 dark:text-teal-400" />}
           sparklineData={STAFF_SPARK}
           isLoading={upcomingQ.isLoading}
         />
       </div>
 
       {/* Main grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Appointments card - takes 2 cols */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-50">
-            <h2 className="text-[13px] font-bold text-slate-900">Appointments</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        {/* Appointments card */}
+        <div className="lg:col-span-7 xl:col-span-8 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden flex flex-col">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 gap-3">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white">Appointments Queue</h2>
             <div className="flex items-center gap-3">
-              <div className="flex gap-1 bg-slate-100 rounded-lg p-0.5">
+              <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
                 {(['today', 'upcoming'] as const).map(tab => (
                   <button
                     key={tab}
                     onClick={() => setApptTab(tab)}
                     className={cn(
-                      'px-3 py-1 text-xs font-medium rounded-md transition-colors capitalize',
-                      apptTab === tab ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'
+                      'px-3 py-1 text-xs font-semibold rounded-lg transition-all capitalize',
+                      apptTab === tab ? 'bg-white dark:bg-slate-700 shadow-xs text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                     )}
                   >
                     {tab}
                   </button>
                 ))}
               </div>
-              <Link to="/admin/appointments" className="text-[11px] font-semibold text-indigo-600 hover:underline">
+              <Link to="/admin/appointments" className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:underline">
                 View all →
               </Link>
             </div>
@@ -314,30 +314,30 @@ export function AdminDashboard() {
         </div>
 
         {/* Right column */}
-        <div className="space-y-4">
+        <div className="lg:col-span-5 xl:col-span-4 space-y-5">
           {/* Quick Actions */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
-            <h2 className="text-[13px] font-bold text-slate-900 mb-3">Quick Actions</h2>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs p-5">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-3">Quick Actions</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-2.5">
               {[
-                { icon: <UserPlus className="w-4 h-4 text-emerald-600" />, label: 'New Patient',      sub: 'Register',       to: '/admin/patients' },
-                { icon: <Calendar className="w-4 h-4 text-emerald-600" />, label: 'Appointments',     sub: 'Manage visits',  to: '/admin/appointments' },
-                { icon: <DollarSign className="w-4 h-4 text-amber-600" />, label: 'Billing',          sub: 'Manage bills',   to: '/admin/billing' },
+                { icon: <UserPlus className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />, label: 'New Patient',      sub: 'Register',       to: '/admin/patients' },
+                { icon: <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />, label: 'Appointments',     sub: 'Manage visits',  to: '/admin/appointments' },
+                { icon: <DollarSign className="w-4 h-4 text-amber-600 dark:text-amber-400" />, label: 'Billing',          sub: 'Manage bills',   to: '/admin/billing' },
                 ...(isAdmin
-                  ? [{ icon: <Users className="w-4 h-4 text-indigo-600" />, label: 'Staff & Team', sub: 'Manage team',    to: '/admin/staff' }]
-                  : [{ icon: <ClipboardList className="w-4 h-4 text-sky-600" />, label: 'Patient List', sub: 'Directory',      to: '/admin/patients' }]),
+                  ? [{ icon: <Users className="w-4 h-4 text-teal-600 dark:text-teal-400" />, label: 'Staff & Team', sub: 'Manage team',    to: '/admin/staff' }]
+                  : [{ icon: <ClipboardList className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />, label: 'Patient List', sub: 'Directory',      to: '/admin/patients' }]),
               ].map(({ icon, label, sub, to }) => (
                 <Link
                   key={label}
                   to={to}
-                  className="flex items-center gap-2.5 p-2.5 rounded-xl border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/80/50 transition-colors group"
+                  className="flex items-center gap-3 p-3 rounded-xl border border-slate-200/70 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 transition-all group"
                 >
-                  <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center flex-shrink-0 group-hover:bg-white">
+                  <div className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700 flex items-center justify-center shrink-0 group-hover:bg-white dark:group-hover:bg-slate-700">
                     {icon}
                   </div>
-                  <div>
-                    <p className="text-[11px] font-bold text-slate-700 group-hover:text-emerald-700">{label}</p>
-                    <p className="text-[10px] text-slate-400">{sub}</p>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 truncate">{label}</p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{sub}</p>
                   </div>
                 </Link>
               ))}
@@ -345,12 +345,12 @@ export function AdminDashboard() {
           </div>
 
           {/* Live Alerts */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-50">
-              <Bell className="w-4 h-4 text-emerald-600" />
-              <h2 className="text-[13px] font-bold text-slate-900">Live Alerts</h2>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden">
+            <div className="flex items-center gap-2 px-5 py-3.5 border-b border-slate-100 dark:border-slate-800">
+              <Bell className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white">Operational Alerts</h2>
             </div>
-            <div className="px-4 py-1">
+            <div className="px-5 py-3">
               {alerts.map((a, i) => <AlertItem key={i} dotColor={a.dotColor} time={a.time}>{a.text}</AlertItem>)}
             </div>
           </div>
