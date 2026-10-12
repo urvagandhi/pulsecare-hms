@@ -5,6 +5,7 @@ import { useAppSelector } from '@/store/hooks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { AppointmentCard, AppointmentRecord } from '@/components/Shared/AppointmentCard';
+import { TablePageSkeleton } from '@/components/Shared/DashboardSkeleton';
 
 interface AppointmentsResponse {
   success: boolean;
@@ -65,6 +66,10 @@ export function DoctorSchedule() {
   });
 
   const appointments = data?.data ?? [];
+
+  if (isLoading && !data) {
+    return <TablePageSkeleton title="Loading Doctor Schedule..." />;
+  }
 
   return (
     <div className="space-y-6">

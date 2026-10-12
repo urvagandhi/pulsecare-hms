@@ -249,7 +249,7 @@ export function AdminAppointments() {
       header: 'Token',
       accessorKey: 'tokenNumber',
       cell: (row) => (
-        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100/80 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80">
           #{row.tokenNumber ?? '—'}
         </span>
       ),
@@ -333,7 +333,7 @@ export function AdminAppointments() {
           <Button
             size="sm"
             variant="ghost"
-            className="h-7 text-xs px-2 text-teal-600 dark:text-teal-400 hover:text-teal-700 hover:bg-teal-50 dark:hover:bg-teal-950/30"
+            className="h-7 text-xs px-2 text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 hover:bg-emerald-50/80 dark:hover:bg-emerald-950/30"
             onClick={() => handleDownloadSlip(row)}
             title="Download Appointment Slip"
           >
@@ -350,7 +350,7 @@ export function AdminAppointments() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Calendar className="w-7 h-7 text-teal-600 dark:text-teal-400" />
+            <Calendar className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
             Appointment Management
           </h1>
           <p className="text-muted-foreground">
@@ -362,7 +362,7 @@ export function AdminAppointments() {
             setConfirmedBooking(null);
             setBookModalOpen(true);
           }}
-          className="bg-teal-600 hover:bg-teal-700 text-white gap-2"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
         >
           <Plus className="w-4 h-4" /> Book for Patient
         </Button>
@@ -391,7 +391,7 @@ export function AdminAppointments() {
                   type="button"
                   size="sm"
                   variant={dateFilter === todayStr ? 'default' : 'outline'}
-                  className={`h-6 text-xs px-2 ${dateFilter === todayStr ? 'bg-teal-600 hover:bg-teal-700 text-white' : ''}`}
+                  className={`h-6 text-xs px-2 ${dateFilter === todayStr ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}`}
                   onClick={() => {
                     setDateFilter(todayStr);
                     setPage(1);
@@ -403,7 +403,7 @@ export function AdminAppointments() {
                   type="button"
                   size="sm"
                   variant={dateFilter === tomorrowStr ? 'default' : 'outline'}
-                  className={`h-6 text-xs px-2 ${dateFilter === tomorrowStr ? 'bg-teal-600 hover:bg-teal-700 text-white' : ''}`}
+                  className={`h-6 text-xs px-2 ${dateFilter === tomorrowStr ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}`}
                   onClick={() => {
                     setDateFilter(tomorrowStr);
                     setPage(1);
@@ -522,7 +522,7 @@ export function AdminAppointments() {
         <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl flex items-center gap-2">
-              <Plus className="w-5 h-5 text-teal-600" /> Book Appointment for Patient
+              <Plus className="w-5 h-5 text-emerald-600" /> Book Appointment for Patient
             </DialogTitle>
           </DialogHeader>
 
@@ -550,7 +550,7 @@ export function AdminAppointments() {
                       onClick={() => setSelectedPatientId(p._id)}
                       className={`p-2.5 flex items-center justify-between cursor-pointer transition-colors ${
                         selectedPatientId === p._id
-                          ? 'bg-teal-50 dark:bg-teal-950/40 border-l-4 border-teal-600 text-teal-900 dark:text-teal-100 font-medium'
+                          ? 'bg-emerald-50/80 dark:bg-emerald-950/40 border-l-4 border-teal-600 text-teal-900 dark:text-teal-100 font-medium'
                           : 'hover:bg-slate-50 dark:hover:bg-slate-800'
                       }`}
                     >
@@ -563,7 +563,10 @@ export function AdminAppointments() {
                         </p>
                       </div>
                       {selectedPatientId === p._id && (
-                        <span className="text-teal-600 text-xs font-semibold">Selected ✓</span>
+                        <span className="text-emerald-600 text-xs font-semibold flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          Selected
+                        </span>
                       )}
                     </div>
                   ))
@@ -634,7 +637,7 @@ export function AdminAppointments() {
                       variant={selectedSlot === slot ? 'default' : 'outline'}
                       className={`h-9 text-xs font-mono font-medium ${
                         selectedSlot === slot
-                          ? 'bg-teal-600 hover:bg-teal-700 text-white'
+                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
                           : 'hover:border-teal-500'
                       }`}
                       onClick={() => setSelectedSlot(slot)}
@@ -680,7 +683,7 @@ export function AdminAppointments() {
             <Button
               disabled={!selectedPatientId || !selectedDoctorId || !selectedSlot || bookMutation.isPending}
               onClick={() => bookMutation.mutate()}
-              className="bg-teal-600 hover:bg-teal-700 text-white"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
             >
               {bookMutation.isPending ? 'Booking...' : 'Confirm Booking'}
             </Button>
@@ -692,18 +695,18 @@ export function AdminAppointments() {
       {confirmedBooking && (
         <Dialog open={!!confirmedBooking} onOpenChange={() => setConfirmedBooking(null)}>
           <DialogContent className="max-w-md text-center">
-            <div className="mx-auto w-14 h-14 bg-teal-100 dark:bg-teal-900/50 text-teal-600 dark:text-teal-300 rounded-full flex items-center justify-center">
+            <div className="mx-auto w-14 h-14 bg-emerald-100/80 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-300 rounded-full flex items-center justify-center">
               <CheckCircle2 className="w-8 h-8" />
             </div>
             <DialogHeader>
               <DialogTitle className="text-xl text-center">Appointment Confirmed!</DialogTitle>
             </DialogHeader>
 
-            <div className="p-4 bg-teal-50/50 dark:bg-teal-950/30 rounded-xl border border-teal-200 dark:border-teal-800 space-y-2 my-2">
+            <div className="p-4 bg-emerald-50/80/50 dark:bg-emerald-950/30 rounded-xl border border-emerald-200/80 dark:border-emerald-800/80 space-y-2 my-2">
               <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
                 Daily Queue Token
               </p>
-              <p className="text-4xl font-black text-teal-600 dark:text-teal-400">
+              <p className="text-4xl font-black text-emerald-600 dark:text-emerald-400">
                 #{confirmedBooking.tokenNumber ?? 1}
               </p>
               <div className="text-xs text-muted-foreground font-mono">
@@ -714,7 +717,7 @@ export function AdminAppointments() {
                   Dr. {confirmedBooking.doctor?.userId?.firstName} {confirmedBooking.doctor?.userId?.lastName}
                 </p>
                 <p className="text-xs text-muted-foreground">{confirmedBooking.doctor?.specialization}</p>
-                <p className="text-xs font-medium text-teal-700 dark:text-teal-300 mt-1">
+                <p className="text-xs font-medium text-emerald-700 dark:text-emerald-300 mt-1">
                   {confirmedBooking.date} at {confirmedBooking.timeSlot}
                 </p>
               </div>
@@ -729,7 +732,7 @@ export function AdminAppointments() {
                 Close
               </Button>
               <Button
-                className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white gap-2"
+                className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
                 onClick={() => handleDownloadSlip(confirmedBooking)}
               >
                 <Download className="w-4 h-4" /> Download Slip
@@ -802,7 +805,7 @@ export function AdminAppointments() {
               <Button
                 disabled={updateStatusMutation.isPending}
                 onClick={() => updateStatusMutation.mutate()}
-                className="bg-teal-600 hover:bg-teal-700 text-white"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white"
               >
                 {updateStatusMutation.isPending ? 'Updating...' : 'Save Status'}
               </Button>

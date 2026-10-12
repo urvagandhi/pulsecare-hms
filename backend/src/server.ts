@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import http from 'http';
 import { app } from './app';
 import { connectDB, disconnectDB } from './db/mongoose';

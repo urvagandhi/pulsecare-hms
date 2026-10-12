@@ -22,9 +22,10 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Patients', href: '/admin/patients', icon: Users, roles: ['admin', 'receptionist'] },
   { label: 'Staff', href: '/admin/staff', icon: Award, roles: ['admin'] },
   { label: 'Book Appointment', href: '/patient/book-appointment', icon: Calendar, roles: ['patient'] },
-  { label: 'Appointments', href: '/patient/appointments', icon: Calendar, roles: ['patient', 'doctor'] },
+  { label: 'Appointments', href: '/patient/appointments', icon: Calendar, roles: ['patient'] },
   { label: 'Appointments', href: '/admin/appointments', icon: Calendar, roles: ['admin', 'receptionist'] },
-  { label: 'Schedule', href: '/doctor/schedule', icon: Calendar, roles: ['doctor'] },
+  { label: 'Appointments', href: '/doctor/schedule', icon: Calendar, roles: ['doctor'] },
+  { label: 'Schedule', href: '/doctor/schedule', icon: Calendar, roles: [] },
   { label: 'Billing', href: '/admin/billing', icon: FileText, roles: ['admin', 'receptionist'] },
   { label: 'My Bills', href: '/patient/billing', icon: FileText, roles: ['patient'] },
   { label: 'Analytics', href: '/admin/analytics', icon: BarChart3, roles: ['admin'] },
@@ -59,39 +60,41 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
+      <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto">
         {visibleItems.map((item) => (
           <NavLink
             key={item.href}
             to={item.href}
             className={({ isActive }) => cn(
-              'flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors',
+              'flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all group',
               isActive
-                ? 'bg-primary/10 text-primary font-medium'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
+                ? 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 font-semibold shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100'
             )}
           >
-            <item.icon className="w-5 h-5 flex-shrink-0" />
+            <item.icon className="w-4 h-4 flex-shrink-0 transition-transform group-hover:scale-105" />
             {!collapsed && <span>{item.label}</span>}
           </NavLink>
         ))}
       </nav>
 
       {/* User + logout */}
-      <div className="p-2 border-t border-border">
+      <div className="p-3 border-t border-border bg-slate-50/50 dark:bg-slate-900/50">
         {!collapsed && user && (
-          <div className="px-3 py-2 mb-1">
-            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+          <div className="px-3 py-2 mb-1.5 bg-white dark:bg-slate-800 rounded-xl border border-slate-200/60 dark:border-slate-700/60 shadow-xs">
+            <p className="text-[13px] font-bold text-slate-900 dark:text-white truncate">
               {user.firstName} {user.lastName}
             </p>
-            <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
+            <p className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 capitalize tracking-wide font-medium">
+              {user.role}
+            </p>
           </div>
         )}
         <button
           onClick={() => logoutMutation.mutate()}
-          className="flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+          className="flex items-center gap-3 w-full px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
         >
-          <LogOut className="w-5 h-5 flex-shrink-0" />
+          <LogOut className="w-4 h-4 flex-shrink-0" />
           {!collapsed && <span>Sign out</span>}
         </button>
       </div>

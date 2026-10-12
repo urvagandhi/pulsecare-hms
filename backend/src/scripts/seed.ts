@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import mongoose, { HydratedDocument } from 'mongoose';
 import { connectDB, disconnectDB } from '../db/mongoose';
 import { fetchSecrets } from '../config/secrets';

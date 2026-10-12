@@ -8,6 +8,8 @@ import { AppointmentRow } from '@/components/Shared/AppointmentRow';
 import { AlertItem } from '@/components/Shared/AlertItem';
 import { StatBar } from '@/components/Shared/StatBar';
 import { StatusBadge } from '@/components/Shared/StatusBadge';
+import { DashboardSkeleton } from '@/components/Shared/DashboardSkeleton';
+import { Users, Calendar, DollarSign, Clock, Bell, UserPlus, ClipboardList, BarChart3, CreditCard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // Minimal types for dashboard queries
@@ -142,13 +144,18 @@ export function AdminDashboard() {
     },
   ].slice(0, 3);
 
+  const isInitialLoading = patientsQ.isLoading && apptQ.isLoading;
+  if (isInitialLoading) {
+    return <DashboardSkeleton />;
+  }
+
   return (
     <div className="space-y-5">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">
-            {greetingByHour()}, {user?.firstName} 👋
+            {greetingByHour()}, {user?.firstName}
           </h1>
           <p className="text-[12px] text-slate-500 mt-0.5">
             {dateLabel} · Hospital Overview
@@ -157,16 +164,18 @@ export function AdminDashboard() {
         {isAdmin ? (
           <Link
             to="/admin/analytics"
-            className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-2 rounded-lg transition-colors"
+            className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50/80 hover:bg-emerald-100/80 px-3 py-2 rounded-lg transition-colors border border-emerald-200/80/60"
           >
-            📊 Analytics →
+            <BarChart3 className="w-3.5 h-3.5" />
+            Analytics Overview →
           </Link>
         ) : (
           <Link
             to="/admin/billing"
-            className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-2 rounded-lg transition-colors"
+            className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50/80 hover:bg-emerald-100/80 px-3 py-2 rounded-lg transition-colors border border-emerald-200/80/60"
           >
-            💰 Billing Overview →
+            <CreditCard className="w-3.5 h-3.5" />
+            Billing Overview →
           </Link>
         )}
       </div>
@@ -179,7 +188,7 @@ export function AdminDashboard() {
           trend="Active Records"
           trendDir="up"
           color="blue"
-          icon="🏥"
+          icon={<Users className="w-5 h-5 text-sky-600" />}
           sparklineData={PATIENT_SPARK}
           isLoading={patientsQ.isLoading}
         />
@@ -189,7 +198,7 @@ export function AdminDashboard() {
           trend={`${todayAppts.filter(a => a.status === 'scheduled').length} pending`}
           trendDir="neutral"
           color="green"
-          icon="📅"
+          icon={<Calendar className="w-5 h-5 text-emerald-600" />}
           sparklineData={APPT_SPARK}
           isLoading={apptQ.isLoading}
         />
@@ -200,7 +209,7 @@ export function AdminDashboard() {
             trend={revenueQ.data?.data?.outstanding ? `$${revenueQ.data.data.outstanding.toLocaleString()} outstanding` : 'Up to date'}
             trendDir="up"
             color="amber"
-            icon="💰"
+            icon={<DollarSign className="w-5 h-5 text-amber-600" />}
             sparklineData={REVENUE_SPARK}
             isLoading={revenueQ.isLoading}
           />
@@ -211,7 +220,7 @@ export function AdminDashboard() {
             trend="Awaiting payment"
             trendDir="neutral"
             color="amber"
-            icon="💰"
+            icon={<DollarSign className="w-5 h-5 text-amber-600" />}
             sparklineData={REVENUE_SPARK}
             isLoading={invoicesQ.isLoading}
           />
@@ -222,7 +231,7 @@ export function AdminDashboard() {
           trend="Scheduled ahead"
           trendDir="up"
           color="purple"
-          icon="👥"
+          icon={<Clock className="w-5 h-5 text-violet-600" />}
           sparklineData={STAFF_SPARK}
           isLoading={upcomingQ.isLoading}
         />
@@ -311,21 +320,23 @@ export function AdminDashboard() {
             <h2 className="text-[13px] font-bold text-slate-900 mb-3">Quick Actions</h2>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { icon: '👤', label: 'New Patient',      sub: 'Register',       to: '/admin/patients' },
-                { icon: '📅', label: 'Appointments',     sub: 'Manage visits',  to: '/admin/appointments' },
-                { icon: '💰', label: 'Billing',          sub: 'Manage bills',   to: '/admin/billing' },
+                { icon: <UserPlus className="w-4 h-4 text-emerald-600" />, label: 'New Patient',      sub: 'Register',       to: '/admin/patients' },
+                { icon: <Calendar className="w-4 h-4 text-emerald-600" />, label: 'Appointments',     sub: 'Manage visits',  to: '/admin/appointments' },
+                { icon: <DollarSign className="w-4 h-4 text-amber-600" />, label: 'Billing',          sub: 'Manage bills',   to: '/admin/billing' },
                 ...(isAdmin
-                  ? [{ icon: '👥', label: 'Staff & Team', sub: 'Manage team',    to: '/admin/staff' }]
-                  : [{ icon: '📋', label: 'Patient List', sub: 'Directory',      to: '/admin/patients' }]),
+                  ? [{ icon: <Users className="w-4 h-4 text-indigo-600" />, label: 'Staff & Team', sub: 'Manage team',    to: '/admin/staff' }]
+                  : [{ icon: <ClipboardList className="w-4 h-4 text-sky-600" />, label: 'Patient List', sub: 'Directory',      to: '/admin/patients' }]),
               ].map(({ icon, label, sub, to }) => (
                 <Link
                   key={label}
                   to={to}
-                  className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 transition-colors group"
+                  className="flex items-center gap-2.5 p-2.5 rounded-xl border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/80/50 transition-colors group"
                 >
-                  <span className="text-base">{icon}</span>
+                  <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center flex-shrink-0 group-hover:bg-white">
+                    {icon}
+                  </div>
                   <div>
-                    <p className="text-[11px] font-bold text-slate-700 group-hover:text-indigo-700">{label}</p>
+                    <p className="text-[11px] font-bold text-slate-700 group-hover:text-emerald-700">{label}</p>
                     <p className="text-[10px] text-slate-400">{sub}</p>
                   </div>
                 </Link>
@@ -335,8 +346,9 @@ export function AdminDashboard() {
 
           {/* Live Alerts */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-50">
-              <h2 className="text-[13px] font-bold text-slate-900">🔔 Live Alerts</h2>
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-50">
+              <Bell className="w-4 h-4 text-emerald-600" />
+              <h2 className="text-[13px] font-bold text-slate-900">Live Alerts</h2>
             </div>
             <div className="px-4 py-1">
               {alerts.map((a, i) => <AlertItem key={i} dotColor={a.dotColor} time={a.time}>{a.text}</AlertItem>)}

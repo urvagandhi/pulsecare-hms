@@ -5,6 +5,7 @@ import api from '@/lib/api';
 import { useAppSelector } from '@/store/hooks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AppointmentCard, AppointmentRecord } from '@/components/Shared/AppointmentCard';
+import { TablePageSkeleton } from '@/components/Shared/DashboardSkeleton';
 import toast from 'react-hot-toast';
 
 interface AppointmentsResponse {
@@ -84,6 +85,10 @@ export function PatientAppointments() {
 
   const pastAppointments = pastData?.data ?? [];
   const isLoading = upcomingLoading || (activeTab === 'past' && pastLoading);
+
+  if (upcomingLoading && !upcomingData) {
+    return <TablePageSkeleton title="Loading Appointments..." />;
+  }
 
   return (
     <div className="space-y-6">

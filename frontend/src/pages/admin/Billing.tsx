@@ -16,6 +16,7 @@ import { useAppSelector } from '@/store/hooks';
 import { fmt } from '@/lib/format';
 import { downloadPdf } from '@/lib/downloadPdf';
 import type { Invoice } from '@/types/billing';
+import { Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface BillingResponse {
@@ -529,7 +530,7 @@ export function AdminBilling() {
                         size="sm"
                         onClick={() => removeItem(i)}
                       >
-                        ✕
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     )}
                   </div>

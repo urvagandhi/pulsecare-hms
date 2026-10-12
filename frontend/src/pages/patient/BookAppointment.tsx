@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Download } from 'lucide-react';
+import { Download, Check, AlertTriangle } from 'lucide-react';
 import { downloadPdf } from '@/lib/downloadPdf';
 import toast from 'react-hot-toast';
 
@@ -157,9 +157,9 @@ export function BookAppointment() {
       </div>
 
       {confirmedBooking ? (
-        <Card className="text-center p-8 space-y-6 border-teal-200 dark:border-teal-800 bg-teal-50/20 dark:bg-teal-950/20">
-          <div className="mx-auto w-16 h-16 bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-200 rounded-full flex items-center justify-center text-3xl font-bold shadow-sm">
-            ✓
+        <Card className="text-center p-8 space-y-6 border-emerald-200/80 dark:border-emerald-800/80 bg-emerald-50/80/20 dark:bg-emerald-950/20">
+          <div className="mx-auto w-16 h-16 bg-emerald-100/80 text-emerald-700 dark:bg-emerald-950 dark:text-teal-200 rounded-full flex items-center justify-center shadow-sm">
+            <Check className="w-8 h-8 stroke-[3]" />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Appointment Confirmed!</h2>
@@ -171,7 +171,7 @@ export function BookAppointment() {
           <div className="p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 max-w-sm mx-auto shadow-sm space-y-3">
             <div>
               <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Your Daily Queue Token</p>
-              <p className="text-5xl font-black text-teal-600 dark:text-teal-400 mt-1">
+              <p className="text-5xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
                 #{confirmedBooking.tokenNumber ?? 1}
               </p>
             </div>
@@ -181,7 +181,7 @@ export function BookAppointment() {
                 Dr. {selectedDoctor?.userId?.firstName} {selectedDoctor?.userId?.lastName}
               </p>
               <p className="text-xs text-muted-foreground">{selectedDoctor?.specialization}</p>
-              <p className="text-xs font-medium text-teal-700 dark:text-teal-300 pt-1">
+              <p className="text-xs font-medium text-emerald-700 dark:text-emerald-300 pt-1">
                 {confirmedBooking.date} at {confirmedBooking.timeSlot}
               </p>
             </div>
@@ -335,7 +335,8 @@ export function BookAppointment() {
             {!slotsLoading && slots.length === 0 && (
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-amber-300">
                 <p className="font-semibold flex items-center gap-1.5">
-                  ⚠️ Doctor Unavailable on {selectedDate}
+                  <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                  Doctor Unavailable on {selectedDate}
                 </p>
                 <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">
                   {selectedDoctor?.leaves?.some((l) => {
