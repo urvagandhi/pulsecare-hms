@@ -28,7 +28,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Schedule', href: '/doctor/schedule', icon: Calendar, roles: [] },
   { label: 'Billing', href: '/admin/billing', icon: FileText, roles: ['admin', 'receptionist'] },
   { label: 'My Bills', href: '/patient/billing', icon: FileText, roles: ['patient'] },
-  { label: 'Analytics', href: '/admin/analytics', icon: BarChart3, roles: ['admin'] },
+  { label: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['admin', 'doctor', 'nurse', 'receptionist'] },
 ];
 
 interface SidebarProps {
