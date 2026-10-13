@@ -8,8 +8,7 @@ const router = Router();
 router.get('/appointments', authenticate, authorize('analytics', 'read'), AnalyticsController.getAppointmentAnalytics);
 router.get('/revenue', authenticate, authorize('analytics', 'read'), AnalyticsController.getRevenueAnalytics);
 
-// Surplus routes unmounted for Task 2.1 scope trimming (retained 2 core analytics routes: appointments & revenue):
-// router.get('/lab', authenticate, authorize('analytics', 'read'), AnalyticsController.getLabAnalytics);
-// router.get('/prescriptions', authenticate, authorize('analytics', 'read'), AnalyticsController.getPrescriptionAnalytics);
+router.get('/lab', authenticate, authorize('analytics', 'read'), AnalyticsController.getLabAnalytics);
+router.get('/prescriptions', authenticate, authorize('analytics', 'read'), AnalyticsController.getPrescriptionAnalytics);
 
 export { router as analyticsRouter };

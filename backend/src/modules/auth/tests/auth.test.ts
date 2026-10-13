@@ -350,3 +350,43 @@ describe('POST /api/v1/auth/logout-all', () => {
     expect(refreshRes.status).toBe(401);
   });
 });
+
+describe('POST /api/v1/auth/reset-password', () => {
+  it('resets password successfully when valid token and password are provided', async () => {
+    const res = await request(app)
+      .post('/api/v1/auth/reset-password')
+      .send({ token: 'sample-valid-token-12345', password: 'NewSecurePass1!' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.message).toMatch(/Password reset successfully/i);
+  });
+
+  it('rejects reset password when password does not meet complexity', async () => {
+    const res = await request(app)
+      .post('/api/v1/auth/reset-password')
+      .send({ token: 'sample-token', password: 'weak' });
+
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('GET /api/v1/auth/me', () => {
+  it('returns authenticated user profile', async () => {
+    const registerRes = await registerAndGetTokens();
+    const { accessToken } = registerRes.body.data;
+
+    const res = await request(app)
+      .get('/api/v1/auth/me')
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.user.email).toBe(validUser.email);
+  });
+
+  it('returns 401 when token is missing', async () => {
+    const res = await request(app).get('/api/v1/auth/me');
+    expect(res.status).toBe(401);
+  });
+});

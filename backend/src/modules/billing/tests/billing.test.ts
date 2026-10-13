@@ -519,4 +519,47 @@ describe('Billing Routes', () => {
       expect(res.status).toBe(403);
     });
   });
+
+  describe('Billing Filter and Line Item Validation Coverage', () => {
+    it('queries invoices with patientId and multiple statuses', async () => {
+      const inv = await createDraftInvoice(adminToken, patientProfileId);
+      expect(inv.status).toBe(201);
+
+      const res = await request(app)
+        .get(`/api/v1/billing?patientId=${patientProfileId}&status=draft,issued`)
+        .set('Authorization', `Bearer ${adminToken}`);
+      expect(res.status).toBe(200);
+      expect(res.body.data.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('returns 400 when attempting to remove an out-of-bounds line item index or the last item', async () => {
+      const inv = await createDraftInvoice(adminToken, patientProfileId);
+      const invId = inv.body.data._id;
+
+      // Only 1 line item exists -> cannot remove last item
+      const removeLastRes = await request(app)
+        .delete(`/api/v1/billing/${invId}/items/0`)
+        .set('Authorization', `Bearer ${adminToken}`);
+      expect(removeLastRes.status).toBe(400);
+
+      // Add a second item
+      await request(app)
+        .post(`/api/v1/billing/${invId}/items`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ description: 'Lab Fee', quantity: 1, unitPrice: 50 });
+
+      // Out of bounds index
+      const outOfBoundsRes = await request(app)
+        .delete(`/api/v1/billing/${invId}/items/99`)
+        .set('Authorization', `Bearer ${adminToken}`);
+      expect(outOfBoundsRes.status).toBe(400);
+    });
+
+    it('returns 404 when querying a non-existent invoice ID', async () => {
+      const notFoundRes = await request(app)
+        .get(`/api/v1/billing/${new mongoose.Types.ObjectId()}`)
+        .set('Authorization', `Bearer ${adminToken}`);
+      expect(notFoundRes.status).toBe(404);
+    });
+  });
 });

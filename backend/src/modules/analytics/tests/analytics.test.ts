@@ -215,8 +215,7 @@ afterAll(async () => {
   await mongoServer.stop();
 });
 
-// Skipped in Task 2.1: Settings module unmounted for scope trimming
-describe.skip('Settings', () => {
+describe('Settings', () => {
   describe('GET /api/v1/settings', () => {
     it('returns 200 with default settings for admin', async () => {
       const res = await request(app)
@@ -281,6 +280,17 @@ describe.skip('Settings', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.data.hospitalName).toBe('Persisted Name');
+    });
+
+    it('returns 400 validation error when updating settings with invalid fields', async () => {
+      const res = await request(app)
+        .patch('/api/v1/settings')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ defaultTaxRate: -5 });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error.code).toBe('VALIDATION_ERROR');
     });
   });
 });
@@ -410,8 +420,7 @@ describe('Analytics - Revenue', () => {
   });
 });
 
-// Skipped in Task 2.1: Lab analytics route unmounted for scope trimming
-describe.skip('Analytics - Lab', () => {
+describe('Analytics - Lab', () => {
   it('returns 200 with expected shape for admin', async () => {
     const res = await request(app)
       .get('/api/v1/analytics/lab')
@@ -457,8 +466,7 @@ describe.skip('Analytics - Lab', () => {
   });
 });
 
-// Skipped in Task 2.1: Prescriptions analytics route unmounted for scope trimming
-describe.skip('Analytics - Prescriptions', () => {
+describe('Analytics - Prescriptions', () => {
   it('returns 200 with expected shape for admin', async () => {
     const res = await request(app)
       .get('/api/v1/analytics/prescriptions')

@@ -121,7 +121,7 @@ export async function getAvailableDoctors(req: Request, res: Response, next: Nex
 export async function getDoctorProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
-    const profile = await StaffService.getStaffMember(id);
+    const profile = await StaffService.getDoctorProfile(id);
     res.json(successResponse(profile));
   } catch (err) {
     next(err);
