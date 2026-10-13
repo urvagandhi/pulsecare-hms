@@ -112,7 +112,7 @@ export function PatientDashboard() {
     ...allBills.filter(b => b.status === 'paid').slice(0, 1).map(b => ({
       kind: 'bill' as const, _id: b._id,
       title: `Invoice Paid — ${b.invoiceId ?? b._id.slice(-6)}`,
-      sub: `$${(b.totalAmount ?? 0).toLocaleString()} · Payment received`,
+      sub: `₹${(b.totalAmount ?? 0).toLocaleString()} · Payment received`,
       date: formatDate(b.createdAt),
       icon: <DollarSign className="w-4 h-4 text-amber-600" />, iconBg: 'bg-amber-50',
     })),
@@ -175,7 +175,7 @@ export function PatientDashboard() {
           color="purple" icon={<FlaskConical className="w-5 h-5 text-teal-600" />} isLoading={labQ.isLoading}
         />
         <KpiCard
-          title="Outstanding Balance"  value={billsQ.isLoading ? '…' : outstandingAmt > 0 ? `$${outstandingAmt.toLocaleString()}` : '$0'}
+          title="Outstanding Balance"  value={billsQ.isLoading ? '…' : outstandingAmt > 0 ? `₹${outstandingAmt.toLocaleString()}` : '₹0'}
           trend={unpaidBills.length > 0 ? `${unpaidBills.length} due` : 'All paid'} trendDir={unpaidBills.length > 0 ? 'down' : 'neutral'}
           color="amber" icon={<DollarSign className="w-5 h-5 text-amber-600" />} isLoading={billsQ.isLoading}
         />
@@ -257,7 +257,7 @@ export function PatientDashboard() {
               {[
                 { icon: <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />, label: 'Book Appt',   sub: 'Schedule visit',   to: '/patient/book-appointment' },
                 { icon: <Pill className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />, label: 'Refill Rx',     sub: 'Request refill',  to: '/patient/prescriptions' },
-                { icon: <DollarSign className="w-4 h-4 text-amber-600 dark:text-amber-400" />, label: 'Pay Bill',     sub: outstandingAmt > 0 ? `$${outstandingAmt.toLocaleString()} due` : 'No balance due', to: '/patient/billing' },
+                { icon: <DollarSign className="w-4 h-4 text-amber-600 dark:text-amber-400" />, label: 'Pay Bill',     sub: outstandingAmt > 0 ? `₹${outstandingAmt.toLocaleString()} due` : 'No balance due', to: '/patient/billing' },
                 { icon: <FileText className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />, label: 'My Records',   sub: 'Documents & Lab',  to: '/patient/documents' },
               ].map(({ icon, label, sub, to }) => (
                 <Link

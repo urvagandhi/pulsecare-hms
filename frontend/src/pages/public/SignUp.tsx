@@ -63,12 +63,12 @@ export function SignUp() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName">First name</Label>
-                <Input id="firstName" placeholder="John" {...register('firstName')} />
+                <Input id="firstName" placeholder="Aarav" {...register('firstName')} />
                 {errors.firstName && <p className="text-destructive text-xs">{errors.firstName.message}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="lastName">Last name</Label>
-                <Input id="lastName" placeholder="Doe" {...register('lastName')} />
+                <Input id="lastName" placeholder="Sharma" {...register('lastName')} />
                 {errors.lastName && <p className="text-destructive text-xs">{errors.lastName.message}</p>}
               </div>
             </div>
