@@ -120,8 +120,7 @@ const createItem = async (token: string, overrides: Record<string, unknown> = {}
     });
 };
 
-// Skipped in Task 2.1: Inventory module unmounted for scope trimming (4 core modules only)
-describe.skip('Inventory Routes', () => {
+describe('Inventory Routes', () => {
 
   // -------------------------------------------------------------------------
   // Create item

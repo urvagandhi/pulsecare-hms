@@ -12,7 +12,7 @@ module.exports = {
   maxWorkers: 2,
   coverageThreshold: {
     global: {
-      lines: 80,
+      lines: 90,
       branches: 70,
     }
   }

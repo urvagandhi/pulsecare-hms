@@ -194,8 +194,7 @@ const createPrescription = async (
     });
 };
 
-// Skipped in Task 2.1: Pharmacy module unmounted for scope trimming (4 core modules only)
-describe.skip('Pharmacy Routes', () => {
+describe('Pharmacy Routes', () => {
   // -------------------------------------------------------------------------
   // Drug tests
   // -------------------------------------------------------------------------
@@ -630,5 +629,70 @@ describe.skip('Pharmacy Routes', () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data._id).toBe(drugId);
+  });
+
+  it('25. Dispense with insufficient stock returns 400', async () => {
+    // Drug with only 1 in stock
+    const drugRes = await request(app)
+      .post('/api/v1/pharmacy/drugs')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        name: 'LowStockDrug',
+        code: `LSD-${Date.now()}`,
+        category: 'analgesic',
+        unit: 'tablet',
+        stockQuantity: 1,
+        reorderLevel: 5,
+      });
+    const drugId = drugRes.body.data._id;
+
+    // Create prescription requesting 10
+    const rxRes = await request(app)
+      .post('/api/v1/pharmacy/prescriptions')
+      .set('Authorization', `Bearer ${doctorToken}`)
+      .send({
+        patientId: patientProfileId,
+        doctorId: doctorProfileId,
+        lineItems: [{ drugId, drugName: 'LowStockDrug', dosage: '10mg', frequency: 'daily', duration: '5 days', quantity: 10 }],
+      });
+    expect(rxRes.status).toBe(201);
+    const rxId = rxRes.body.data._id;
+
+    // Activate
+    await request(app)
+      .patch(`/api/v1/pharmacy/prescriptions/${rxId}/activate`)
+      .set('Authorization', `Bearer ${doctorToken}`)
+      .send({});
+
+    // Dispense -> insufficient stock
+    const dispenseRes = await request(app)
+      .patch(`/api/v1/pharmacy/prescriptions/${rxId}/dispense`)
+      .set('Authorization', `Bearer ${nurseToken}`)
+      .send({ notes: 'Dispensing note' });
+
+    expect(dispenseRes.status).toBe(400);
+    expect(dispenseRes.body.error.message).toMatch(/Insufficient stock/i);
+  });
+
+  it('26. Cancel prescription with notes preserves notes', async () => {
+    const drugRes = await createDrug(adminToken);
+    const rxRes = await createPrescription(doctorToken, patientProfileId, doctorProfileId, drugRes.body.data._id);
+    const rxId = rxRes.body.data._id;
+
+    const cancelRes = await request(app)
+      .patch(`/api/v1/pharmacy/prescriptions/${rxId}/cancel`)
+      .set('Authorization', `Bearer ${doctorToken}`)
+      .send({ notes: 'Patient allergic reaction' });
+
+    expect(cancelRes.status).toBe(200);
+    expect(cancelRes.body.data.status).toBe('cancelled');
+    expect(cancelRes.body.data.notes).toContain('allergic reaction');
+  });
+
+  it('27. GET /api/v1/pharmacy/drugs/:id — returns 404 for non-existent drug', async () => {
+    const res = await request(app)
+      .get(`/api/v1/pharmacy/drugs/${new mongoose.Types.ObjectId()}`)
+      .set('Authorization', `Bearer ${doctorToken}`);
+    expect(res.status).toBe(404);
   });
 });

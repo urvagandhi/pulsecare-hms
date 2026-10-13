@@ -18,51 +18,66 @@ jest.mock('../middleware/requestLogger', () => ({
 
 import { app } from '../app';
 
-describe('Scope Trimming Unmounted Routes (Task 2.1)', () => {
-  it('returns 404 for unmounted lab routes', async () => {
+describe('System API Route Mounting & Protection', () => {
+  it('verifies health check endpoint returns 200', async () => {
+    const res = await request(app).get('/api/v1/health');
+    expect(res.status).toBe(200);
+  });
+
+  it('verifies lab routes are mounted and protected with authentication', async () => {
     const res = await request(app).get('/api/v1/lab/orders');
-    expect(res.status).toBe(404);
+    expect(res.status).not.toBe(404);
+    expect(res.status).toBe(401);
   });
 
-  it('returns 404 for unmounted pharmacy routes', async () => {
+  it('verifies pharmacy routes are mounted and protected', async () => {
     const res = await request(app).get('/api/v1/pharmacy/drugs');
-    expect(res.status).toBe(404);
+    expect(res.status).not.toBe(404);
+    expect(res.status).toBe(401);
   });
 
-  it('returns 404 for unmounted inventory routes', async () => {
-    const res = await request(app).get('/api/v1/inventory');
-    expect(res.status).toBe(404);
+  it('verifies inventory routes are mounted and protected', async () => {
+    const res = await request(app).get('/api/v1/inventory/items');
+    expect(res.status).not.toBe(404);
+    expect(res.status).toBe(401);
   });
 
-  it('returns 404 for unmounted documents routes', async () => {
+  it('verifies documents routes are mounted and protected', async () => {
     const res = await request(app).get('/api/v1/documents');
-    expect(res.status).toBe(404);
+    expect(res.status).not.toBe(404);
+    expect(res.status).toBe(401);
   });
 
-  it('returns 404 for unmounted settings routes', async () => {
+  it('verifies settings routes are mounted and protected', async () => {
     const res = await request(app).get('/api/v1/settings');
-    expect(res.status).toBe(404);
+    expect(res.status).not.toBe(404);
+    expect(res.status).toBe(401);
   });
 
-  it('returns 404 for unmounted lab analytics', async () => {
+  it('verifies lab analytics route is mounted and protected', async () => {
     const res = await request(app).get('/api/v1/analytics/lab');
-    expect(res.status).toBe(404);
+    expect(res.status).not.toBe(404);
+    expect(res.status).toBe(401);
   });
 
-  it('returns 404 for unmounted prescription analytics', async () => {
+  it('verifies prescription analytics route is mounted and protected', async () => {
     const res = await request(app).get('/api/v1/analytics/prescriptions');
-    expect(res.status).toBe(404);
+    expect(res.status).not.toBe(404);
+    expect(res.status).toBe(401);
   });
 
-  it('retains core 4 module routes (health, appointments, billing)', async () => {
-    const healthRes = await request(app).get('/api/v1/health');
-    expect(healthRes.status).toBe(200);
-
+  it('verifies core appointments and billing routes are mounted and protected', async () => {
     const apptRes = await request(app).get('/api/v1/appointments');
-    // Returns 401 Unauthorized because it exists and is protected by authenticate, NOT 404
     expect(apptRes.status).not.toBe(404);
+    expect(apptRes.status).toBe(401);
 
     const billRes = await request(app).get('/api/v1/billing');
     expect(billRes.status).not.toBe(404);
+    expect(billRes.status).toBe(401);
+  });
+
+  it('returns 404 for truly non-existent routes', async () => {
+    const res = await request(app).get('/api/v1/unknown-service-route-xyz');
+    expect(res.status).toBe(404);
   });
 });

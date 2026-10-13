@@ -675,6 +675,326 @@ describe('Appointment Routes', () => {
       expect(res.status).toBe(403);
     });
   });
+
+  describe('Comprehensive Appointment Branch & Filter Coverage', () => {
+    it('retrieves appointment by ID and handles 404 for non-existent appointment', async () => {
+      const bookRes = await request(app)
+        .post('/api/v1/appointments')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({
+          doctorId: doctorProfileId,
+          patientId: patientProfileId,
+          date: '2026-12-08',
+          timeSlot: '09:00',
+          type: 'consultation',
+        });
+      const aptId = bookRes.body.data._id;
+
+      const res = await request(app)
+        .get(`/api/v1/appointments/${aptId}`)
+        .set('Authorization', `Bearer ${doctorToken}`);
+      expect(res.status).toBe(200);
+      expect(res.body.data._id).toBe(aptId);
+
+      const notFoundRes = await request(app)
+        .get(`/api/v1/appointments/${new mongoose.Types.ObjectId()}`)
+        .set('Authorization', `Bearer ${doctorToken}`);
+      expect(notFoundRes.status).toBe(404);
+    });
+
+    it('prevents another patient from viewing appointment details (403)', async () => {
+      const otherUser = await User.create({
+        firstName: 'Stranger',
+        lastName: 'Patient',
+        email: 'stranger_pat@test.com',
+        password: 'Password1!',
+        role: 'patient',
+      });
+      await Patient.create({ userId: otherUser._id });
+
+      const otherLoginRes = await request(app)
+        .post('/api/v1/auth/login')
+        .send({ email: 'stranger_pat@test.com', password: 'Password1!' });
+      const otherToken = otherLoginRes.body?.data?.accessToken;
+
+      const bookRes = await request(app)
+        .post('/api/v1/appointments')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({
+          doctorId: doctorProfileId,
+          patientId: patientProfileId,
+          date: '2026-12-08',
+          timeSlot: '09:30',
+          type: 'consultation',
+        });
+      const aptId = bookRes.body.data._id;
+
+      const res = await request(app)
+        .get(`/api/v1/appointments/${aptId}`)
+        .set('Authorization', `Bearer ${otherToken}`);
+      expect(res.status).toBe(403);
+    });
+
+    it('lists appointments with date, doctorId, patientId, status, and departmentId filters', async () => {
+      const bookRes = await request(app)
+        .post('/api/v1/appointments')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({
+          doctorId: doctorProfileId,
+          patientId: patientProfileId,
+          date: '2026-12-08',
+          timeSlot: '10:00',
+          type: 'consultation',
+        });
+      expect(bookRes.status).toBe(201);
+
+      const res = await request(app)
+        .get(`/api/v1/appointments?date=2026-12-08&doctorId=${doctorProfileId}&patientId=${patientProfileId}&status=scheduled,confirmed`)
+        .set('Authorization', `Bearer ${adminToken}`);
+      expect(res.status).toBe(200);
+      expect(res.body.data.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('rejects doctor trying to update another doctor appointment (403)', async () => {
+      // Create a second doctor
+      const secondDocUser = await User.create({
+        firstName: 'Dr',
+        lastName: 'Other',
+        email: 'other_doc@test.com',
+        password: 'DocPass1!',
+        role: 'doctor',
+      });
+      await Doctor.create({
+        userId: secondDocUser._id,
+        specialization: 'Dermatology',
+        availability: [{ day: 'tuesday', startTime: '09:00', endTime: '17:00' }],
+      });
+      const secondDocLogin = await request(app)
+        .post('/api/v1/auth/login')
+        .send({ email: 'other_doc@test.com', password: 'DocPass1!' });
+      const secondDocToken = secondDocLogin.body?.data?.accessToken;
+
+      const bookRes = await request(app)
+        .post('/api/v1/appointments')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({
+          doctorId: doctorProfileId,
+          patientId: patientProfileId,
+          date: '2026-12-08',
+          timeSlot: '11:00',
+          type: 'consultation',
+        });
+      const aptId = bookRes.body.data._id;
+
+      const res = await request(app)
+        .patch(`/api/v1/appointments/${aptId}/status`)
+        .set('Authorization', `Bearer ${secondDocToken}`)
+        .send({ status: 'completed' });
+      expect(res.status).toBe(403);
+    });
+
+    it('rejects patient trying to set status other than cancelled (403)', async () => {
+      const bookRes = await request(app)
+        .post('/api/v1/appointments')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({
+          doctorId: doctorProfileId,
+          patientId: patientProfileId,
+          date: '2026-12-08',
+          timeSlot: '11:30',
+          type: 'consultation',
+        });
+      const aptId = bookRes.body.data._id;
+
+      const res = await request(app)
+        .patch(`/api/v1/appointments/${aptId}/status`)
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({ status: 'completed' });
+      expect(res.status).toBe(403);
+    });
+
+    it('allows patient to cancel their own appointment via DELETE /:id', async () => {
+      const bookRes = await request(app)
+        .post('/api/v1/appointments')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({
+          doctorId: doctorProfileId,
+          patientId: patientProfileId,
+          date: '2026-12-08',
+          timeSlot: '14:00',
+          type: 'consultation',
+        });
+      const aptId = bookRes.body.data._id;
+
+      const res = await request(app)
+        .delete(`/api/v1/appointments/${aptId}`)
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({ cancelReason: 'Patient feeling better' });
+      expect(res.status).toBe(200);
+      expect(res.body.data.status).toBe('cancelled');
+    });
+
+    it('validates booking business rules: past date, inactive doctor, doctor on leave, outside availability', async () => {
+      // Past date
+      const pastRes = await request(app)
+        .post('/api/v1/appointments')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({
+          doctorId: doctorProfileId,
+          patientId: patientProfileId,
+          date: '2020-01-01',
+          timeSlot: '09:00',
+          type: 'consultation',
+        });
+      expect(pastRes.status).toBe(400);
+
+      // Inactive doctor
+      const inactiveDocUser = await User.create({
+        firstName: 'Inactive',
+        lastName: 'Doc',
+        email: 'inactive_doc@test.com',
+        password: 'DocPass1!',
+        role: 'doctor',
+      });
+      const inactiveDoc = await Doctor.create({
+        userId: inactiveDocUser._id,
+        specialization: 'Pediatrics',
+        isActive: false,
+        availability: [{ day: 'tuesday', startTime: '09:00', endTime: '17:00' }],
+      });
+
+      const inactiveRes = await request(app)
+        .post('/api/v1/appointments')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({
+          doctorId: inactiveDoc._id.toString(),
+          patientId: patientProfileId,
+          date: '2026-12-08',
+          timeSlot: '09:00',
+          type: 'consultation',
+        });
+      expect(inactiveRes.status).toBe(400);
+
+      // Doctor on leave
+      const leaveDocUser = await User.create({
+        firstName: 'Leave',
+        lastName: 'Doc',
+        email: 'leave_doc@test.com',
+        password: 'DocPass1!',
+        role: 'doctor',
+      });
+      const leaveDoc = await Doctor.create({
+        userId: leaveDocUser._id,
+        specialization: 'Surgery',
+        isActive: true,
+        leaves: [{ startDate: new Date('2026-12-08'), endDate: new Date('2026-12-08'), reason: 'Conference' }],
+        availability: [{ day: 'tuesday', startTime: '09:00', endTime: '17:00' }],
+      });
+
+      const leaveRes = await request(app)
+        .post('/api/v1/appointments')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({
+          doctorId: leaveDoc._id.toString(),
+          patientId: patientProfileId,
+          date: '2026-12-08',
+          timeSlot: '09:00',
+          type: 'consultation',
+        });
+      expect(leaveRes.status).toBe(400);
+
+      // Slot outside doctor availability
+      const slotOutsideRes = await request(app)
+        .post('/api/v1/appointments')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({
+          doctorId: doctorProfileId,
+          patientId: patientProfileId,
+          date: '2026-12-08',
+          timeSlot: '23:00',
+          type: 'consultation',
+        });
+      expect(slotOutsideRes.status).toBe(400);
+    });
+
+    it('handles getAvailableSlots for doctor on leave and non-existent doctor', async () => {
+      // Non-existent doctor -> 404
+      const notFoundRes = await request(app)
+        .get(`/api/v1/appointments/slots?doctorId=${new mongoose.Types.ObjectId()}&date=2026-12-08`)
+        .set('Authorization', `Bearer ${patientToken}`);
+      expect(notFoundRes.status).toBe(404);
+
+      // Leave doctor -> empty slots
+      const leaveDocUser = await User.create({
+        firstName: 'Vacation',
+        lastName: 'Doc',
+        email: 'vacation_doc@test.com',
+        password: 'DocPass1!',
+        role: 'doctor',
+      });
+      const leaveDoc = await Doctor.create({
+        userId: leaveDocUser._id,
+        specialization: 'Radiology',
+        isActive: true,
+        leaves: [{ startDate: new Date('2026-12-08'), endDate: new Date('2026-12-08'), reason: 'Holiday' }],
+        availability: [{ day: 'tuesday', startTime: '09:00', endTime: '17:00' }],
+      });
+
+      const leaveSlotsRes = await request(app)
+        .get(`/api/v1/appointments/slots?doctorId=${leaveDoc._id}&date=2026-12-08`)
+        .set('Authorization', `Bearer ${patientToken}`);
+      expect(leaveSlotsRes.status).toBe(200);
+      expect(leaveSlotsRes.body.data).toEqual([]);
+    });
+
+    it('returns own appointments when requested by patient, and empty array if patient profile missing', async () => {
+      // Patient with profile lists appointments
+      const res = await request(app)
+        .get('/api/v1/appointments')
+        .set('Authorization', `Bearer ${patientToken}`);
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+
+      // Patient without profile lists appointments
+      const noProfileUser = await User.create({
+        firstName: 'NoProfile',
+        lastName: 'Patient',
+        email: 'noprofile_pat@test.com',
+        password: 'Password1!',
+        role: 'patient',
+      });
+      const noProfileLogin = await request(app)
+        .post('/api/v1/auth/login')
+        .send({ email: 'noprofile_pat@test.com', password: 'Password1!' });
+      const noProfileToken = noProfileLogin.body?.data?.accessToken;
+
+      const noProfileRes = await request(app)
+        .get('/api/v1/appointments')
+        .set('Authorization', `Bearer ${noProfileToken}`);
+      expect(noProfileRes.status).toBe(200);
+      expect(noProfileRes.body.data).toEqual([]);
+    });
+
+    it('returns 400 validation error for invalid booking or status update payloads', async () => {
+      const invalidBookRes = await request(app)
+        .post('/api/v1/appointments')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({ doctorId: 'not-an-id' });
+      expect(invalidBookRes.status).toBe(400);
+
+      const invalidStatusRes = await request(app)
+        .patch(`/api/v1/appointments/${new mongoose.Types.ObjectId()}/status`)
+        .set('Authorization', `Bearer ${doctorToken}`)
+        .send({ status: 'invalid_status_enum' });
+      expect(invalidStatusRes.status).toBe(400);
+    });
+
+    it('retrieves upcoming appointments via AppointmentService', async () => {
+      const { getUpcomingAppointments } = await import('../service');
+      const upcoming = await getUpcomingAppointments(patientProfileId);
+      expect(Array.isArray(upcoming)).toBe(true);
+    });
+  });
 });
 
 // Suppress unused variable warning for setup variable

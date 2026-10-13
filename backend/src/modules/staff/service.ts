@@ -224,6 +224,20 @@ export async function getAvailableDoctors(date: string, specialization?: string)
   });
 }
 
+export async function getDoctorProfile(id: string) {
+  let doctor = null;
+  if (Types.ObjectId.isValid(id)) {
+    doctor = await Doctor.findOne({
+      $or: [{ _id: new Types.ObjectId(id) }, { userId: new Types.ObjectId(id) }],
+    })
+      .populate('userId', '-password -failedLoginAttempts -lockedUntil')
+      .populate('department')
+      .lean();
+  }
+  if (!doctor) throw new NotFoundError('Doctor');
+  return doctor;
+}
+
 export async function createDepartment(input: CreateDepartmentInput) {
   const existing = await Department.findOne({ name: input.name });
   if (existing) throw new ConflictError('Department with this name already exists');

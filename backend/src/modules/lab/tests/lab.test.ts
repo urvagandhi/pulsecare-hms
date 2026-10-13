@@ -162,8 +162,7 @@ afterEach(async () => {
   }
 });
 
-// Skipped in Task 2.1: Lab module unmounted for scope trimming (4 core modules only)
-describe.skip('Lab Routes', () => {
+describe('Lab Routes', () => {
   it('1. POST /api/v1/lab/orders — doctor creates order → 201, orderId matches /^LAB-\\d{4,}$/', async () => {
     const res = await createLabOrder(doctorToken, patientProfileId, doctorProfileId);
 
@@ -441,5 +440,62 @@ describe.skip('Lab Routes', () => {
     expect(res.body.success).toBe(true);
     expect(res.body.data.status).toBe('final');
     expect(res.body.data.verifiedBy).toBeTruthy();
+  });
+
+  it('17. Lab orders filter by priority and handles invalid status transition', async () => {
+    const createOrderRes = await createLabOrder(doctorToken, patientProfileId, doctorProfileId);
+    const labOrderId = createOrderRes.body.data._id;
+
+    // Filter by priority
+    const filterRes = await request(app)
+      .get('/api/v1/lab/orders?priority=routine')
+      .set('Authorization', `Bearer ${doctorToken}`);
+    expect(filterRes.status).toBe(200);
+    expect(filterRes.body.data.length).toBeGreaterThanOrEqual(1);
+
+    // Complete order
+    await request(app)
+      .patch(`/api/v1/lab/orders/${labOrderId}/status`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ status: 'in_progress' });
+    await request(app)
+      .patch(`/api/v1/lab/orders/${labOrderId}/status`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ status: 'completed' });
+
+    // Invalid transition from completed back to pending
+    const invalidTrans = await request(app)
+      .patch(`/api/v1/lab/orders/${labOrderId}/status`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ status: 'pending' });
+    expect(invalidTrans.status).toBe(400);
+  });
+
+  it('18. Re-verifying an already verified result returns 400', async () => {
+    const createOrderRes = await createLabOrder(doctorToken, patientProfileId, doctorProfileId);
+    const labOrderId = createOrderRes.body.data._id;
+
+    const createResultRes = await request(app)
+      .post('/api/v1/lab/results')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        labOrderId,
+        results: [{ testCode: 'CBC-001', testName: 'CBC', value: '14.0', unit: 'g/dL', isNormal: true }],
+      });
+    const resultId = createResultRes.body.data._id;
+
+    // First verification
+    await request(app)
+      .patch(`/api/v1/lab/results/${resultId}/verify`)
+      .set('Authorization', `Bearer ${doctorToken}`)
+      .send({ notes: 'First verification' });
+
+    // Second verification
+    const secondVerify = await request(app)
+      .patch(`/api/v1/lab/results/${resultId}/verify`)
+      .set('Authorization', `Bearer ${doctorToken}`)
+      .send({ notes: 'Second verification' });
+    expect(secondVerify.status).toBe(400);
+    expect(secondVerify.body.error.message).toMatch(/already been verified/i);
   });
 });

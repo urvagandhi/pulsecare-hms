@@ -179,8 +179,7 @@ const createDraftDocument = async (token: string, patientId: string, doctorId: s
     });
 };
 
-// Skipped in Task 2.1: Documents module unmounted for scope trimming (4 core modules only)
-describe.skip('Documents Routes', () => {
+describe('Documents Routes', () => {
   it('1. POST /api/v1/documents — doctor creates draft document → 201, documentId matches /^DOC-\\d{4,}$/', async () => {
     const res = await createDraftDocument(doctorToken, patientProfileId, doctorProfileId);
 

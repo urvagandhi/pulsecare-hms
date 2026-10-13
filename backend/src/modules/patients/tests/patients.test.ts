@@ -411,4 +411,114 @@ describe('Patient Routes', () => {
       expect(res.status).toBe(403);
     });
   });
+
+  describe('9. Comprehensive Patient Creation & Update Edge Cases', () => {
+    let adminToken: string;
+
+    beforeEach(async () => {
+      await createUser({ email: 'admin_pat_edge@test.com', password: 'AdminPass1!', role: 'admin' });
+      adminToken = await loginAs('admin_pat_edge@test.com', 'AdminPass1!');
+    });
+
+    it('creates patient profile for existing user with patient role', async () => {
+      const u = await createUser({ email: 'existing.pat@test.com', password: 'PatPass1!', role: 'patient' });
+
+      const res = await request(app)
+        .post('/api/v1/patients')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ userId: u._id.toString() });
+
+      expect(res.status).toBe(201);
+      expect(res.body.data.patient.userId).toBe(u._id.toString());
+
+      // Attempting second time returns 409 Conflict
+      const dupRes = await request(app)
+        .post('/api/v1/patients')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ userId: u._id.toString() });
+      expect(dupRes.status).toBe(409);
+    });
+
+    it('rejects creating patient profile for non-existent userId (404)', async () => {
+      const res = await request(app)
+        .post('/api/v1/patients')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ userId: new mongoose.Types.ObjectId().toString() });
+      expect(res.status).toBe(404);
+    });
+
+    it('rejects creating patient profile for a non-patient user role (409)', async () => {
+      const docUser = await createUser({ email: 'doc.role@test.com', password: 'DocPass1!', role: 'doctor' });
+      const res = await request(app)
+        .post('/api/v1/patients')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ userId: docUser._id.toString() });
+      expect(res.status).toBe(409);
+    });
+
+    it('rejects patient creation with duplicate email (409)', async () => {
+      await createUser({ email: 'dup.pat@test.com', password: 'PatPass1!', role: 'patient' });
+      const res = await request(app)
+        .post('/api/v1/patients')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          firstName: 'Dup',
+          lastName: 'Pat',
+          email: 'dup.pat@test.com',
+          password: 'PatPass1!',
+        });
+      expect(res.status).toBe(409);
+    });
+
+    it('allows admin to update patient and associated user fields', async () => {
+      const u = await createUser({ email: 'update.pat@test.com', password: 'PatPass1!', role: 'patient' });
+      const p = await Patient.create({ userId: u._id, bloodGroup: 'B+' });
+
+      const res = await request(app)
+        .patch(`/api/v1/patients/${p._id}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          bloodGroup: 'AB+',
+          phone: '+1-555-123-4567',
+          dob: '1995-05-15',
+          gender: 'female',
+          allergies: ['Dust', 'Pollen'],
+          insuranceInfo: {
+            provider: 'HealthCare Inc',
+            policyNumber: 'POL-12345',
+            expiryDate: '2028-01-01',
+          },
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.bloodGroup).toBe('AB+');
+      expect(res.body.data.allergies).toContain('Pollen');
+      expect(res.body.data.insuranceInfo.provider).toBe('HealthCare Inc');
+    });
+
+    it('returns 404 when updating non-existent patient ID', async () => {
+      const res = await request(app)
+        .patch(`/api/v1/patients/${new mongoose.Types.ObjectId()}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ bloodGroup: 'O+' });
+      expect(res.status).toBe(404);
+    });
+
+    it('returns 404 when patient accesses /patients/me without a profile', async () => {
+      const u = await createUser({ email: 'noprofile@test.com', password: 'PatPass1!', role: 'patient' });
+      const patToken = await loginAs('noprofile@test.com', 'PatPass1!');
+
+      const res = await request(app)
+        .get('/api/v1/patients/me')
+        .set('Authorization', `Bearer ${patToken}`);
+      expect(res.status).toBe(404);
+
+      const patchRes = await request(app)
+        .patch('/api/v1/patients/me')
+        .set('Authorization', `Bearer ${patToken}`)
+        .send({ bloodGroup: 'A+' });
+      expect(patchRes.status).toBe(404);
+    });
+  });
 });
+
