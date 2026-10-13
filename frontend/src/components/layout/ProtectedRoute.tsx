@@ -20,6 +20,16 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   }
 
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+    // Smart redirect for appointment paths
+    if (location.pathname.includes('/appointments')) {
+      if (user.role === 'doctor') return <Navigate to="/doctor/schedule" replace />;
+      if (user.role === 'patient') return <Navigate to="/patient/appointments" replace />;
+      if (user.role === 'admin' || user.role === 'receptionist') return <Navigate to="/admin/appointments" replace />;
+    }
+    // Smart redirect for patient directory paths
+    if (location.pathname.includes('/patients')) {
+      if (user.role === 'doctor') return <Navigate to="/doctor/patients" replace />;
+    }
     return <Navigate to="/unauthorized" replace />;
   }
 

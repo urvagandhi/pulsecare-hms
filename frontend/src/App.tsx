@@ -65,6 +65,33 @@ function DashboardRouter() {
   }
 }
 
+function AppointmentsRouter() {
+  const user = useAppSelector(s => s.auth.user);
+  if (!user) return <Navigate to="/sign-in" replace />;
+  switch (user.role) {
+    case 'admin':
+    case 'receptionist':
+      return <Navigate to="/admin/appointments" replace />;
+    case 'doctor':
+      return <Navigate to="/doctor/schedule" replace />;
+    case 'patient':
+      return <Navigate to="/patient/appointments" replace />;
+    default:
+      return <Navigate to="/dashboard" replace />;
+  }
+}
+
+function PatientsRouter() {
+  const user = useAppSelector(s => s.auth.user);
+  if (!user) return <Navigate to="/sign-in" replace />;
+  switch (user.role) {
+    case 'doctor':
+      return <Navigate to="/doctor/patients" replace />;
+    default:
+      return <Navigate to="/admin/patients" replace />;
+  }
+}
+
 export default function App() {
   return (
     <Provider store={store}>
@@ -88,6 +115,8 @@ export default function App() {
             >
               <Route path="/dashboard" element={<DashboardRouter />} />
               <Route path="/analytics" element={<AdminAnalytics />} />
+              <Route path="/appointments" element={<AppointmentsRouter />} />
+              <Route path="/patients" element={<PatientsRouter />} />
 
               <Route
                 path="/admin/*"
@@ -113,6 +142,8 @@ export default function App() {
                     <Routes>
                       <Route path="dashboard" element={<DoctorDashboard />} />
                       <Route path="schedule" element={<DoctorSchedule />} />
+                      <Route path="appointments" element={<DoctorSchedule />} />
+                      <Route path="patients" element={<AdminPatients />} />
                       <Route path="analytics" element={<AdminAnalytics />} />
                     </Routes>
                   </ProtectedRoute>

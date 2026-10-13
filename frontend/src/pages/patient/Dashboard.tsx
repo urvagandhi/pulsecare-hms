@@ -62,11 +62,15 @@ export function PatientDashboard() {
   const rxQ = useQuery<{ success: boolean; data: Prescription[] }>({
     queryKey: ['patient-dashboard', 'prescriptions'],
     queryFn: () => api.get('/pharmacy/prescriptions?status=active').then(r => r.data),
+    enabled: false,
+    initialData: { success: true, data: [] },
   });
 
   const labQ = useQuery<{ success: boolean; data: LabResult[] }>({
     queryKey: ['patient-dashboard', 'lab'],
     queryFn: () => api.get('/lab/results?limit=5').then(r => r.data),
+    enabled: false,
+    initialData: { success: true, data: [] },
   });
 
   const upcomingAppts   = apptQ.data?.data ?? [];
