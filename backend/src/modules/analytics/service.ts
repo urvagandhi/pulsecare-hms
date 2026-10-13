@@ -137,6 +137,7 @@ export async function getRevenueAnalytics() {
         $group: {
           _id: '$payments.method',
           amount: { $sum: '$payments.amount' },
+          total: { $sum: '$payments.amount' },
           count: { $sum: 1 },
         },
       },

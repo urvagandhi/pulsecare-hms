@@ -87,6 +87,7 @@ export default function App() {
               }
             >
               <Route path="/dashboard" element={<DashboardRouter />} />
+              <Route path="/analytics" element={<AdminAnalytics />} />
 
               <Route
                 path="/admin/*"
@@ -112,6 +113,7 @@ export default function App() {
                     <Routes>
                       <Route path="dashboard" element={<DoctorDashboard />} />
                       <Route path="schedule" element={<DoctorSchedule />} />
+                      <Route path="analytics" element={<AdminAnalytics />} />
                     </Routes>
                   </ProtectedRoute>
                 }
@@ -123,6 +125,7 @@ export default function App() {
                   <ProtectedRoute allowedRoles={['nurse']}>
                     <Routes>
                       <Route path="dashboard" element={<NurseDashboard />} />
+                      <Route path="analytics" element={<AdminAnalytics />} />
                     </Routes>
                   </ProtectedRoute>
                 }
@@ -138,6 +141,7 @@ export default function App() {
                       <Route path="appointments" element={<PatientAppointments />} />
                       <Route path="billing" element={<PatientBilling />} />
                       <Route path="billing/:id" element={<PatientInvoiceDetail />} />
+                      <Route path="analytics" element={<AdminAnalytics />} />
                     </Routes>
                   </ProtectedRoute>
                 }
