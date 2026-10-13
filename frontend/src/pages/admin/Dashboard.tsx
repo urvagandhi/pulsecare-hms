@@ -134,7 +134,7 @@ export function AdminDashboard() {
     }))),
     ...(pendingInvoices.slice(0, 1).map((inv) => ({
       dotColor: '#f59e0b',
-      text: `Invoice ${inv.invoiceId} awaiting settlement ($${inv.balance.toFixed(2)})`,
+      text: `Invoice ${inv.invoiceId} awaiting settlement (₹${inv.balance.toFixed(2)})`,
       time: 'Attention',
     }))),
     {
@@ -205,8 +205,8 @@ export function AdminDashboard() {
         {isAdmin ? (
           <KpiCard
             title="Revenue (MTD)"
-            value={revenueQ.isLoading ? '…' : revenueQ.isError ? '—' : `$${(mtdRevenue / 1000).toFixed(1)}K`}
-            trend={revenueQ.data?.data?.outstanding ? `$${revenueQ.data.data.outstanding.toLocaleString()} outstanding` : 'Up to date'}
+            value={revenueQ.isLoading ? '…' : revenueQ.isError ? '—' : `₹${(mtdRevenue / 1000).toFixed(1)}K`}
+            trend={revenueQ.data?.data?.outstanding ? `₹${revenueQ.data.data.outstanding.toLocaleString()} outstanding` : 'Up to date'}
             trendDir="up"
             color="amber"
             icon={<DollarSign className="w-5 h-5 text-amber-600 dark:text-amber-400" />}
@@ -406,7 +406,7 @@ export function AdminDashboard() {
                       {inv.invoiceId} · {patName}
                     </p>
                     <p className="text-[10px] text-slate-400 truncate">
-                      Total: ${inv.total.toFixed(2)} · Balance: ${inv.balance.toFixed(2)} · {createdLabel}
+                      Total: ₹{inv.total.toFixed(2)} · Balance: ₹{inv.balance.toFixed(2)} · {createdLabel}
                     </p>
                   </div>
                   <StatusBadge status={inv.status} />

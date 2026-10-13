@@ -115,28 +115,28 @@ export async function runSeed(isReset = false): Promise<void> {
 
   // 2. Receptionist User
   const receptionUser = await ensureUser({
-    firstName: 'Sarah',
-    lastName: 'Jenkins',
+    firstName: 'Pooja',
+    lastName: 'Verma',
     email: 'reception@pulsecare.test',
     role: 'receptionist',
-    phone: '+1-555-0101',
+    phone: '+91-98765-0101',
   });
 
   // 3. Doctors
   const doc1User = await ensureUser({
-    firstName: 'Alexander',
-    lastName: 'Smith',
+    firstName: 'Vikram',
+    lastName: 'Sharma',
     email: 'dr.smith@pulsecare.test',
     role: 'doctor',
-    phone: '+1-555-0102',
+    phone: '+91-98765-0102',
   });
 
   const doc2User = await ensureUser({
-    firstName: 'Emily',
-    lastName: 'Chen',
+    firstName: 'Ananya',
+    lastName: 'Iyer',
     email: 'dr.chen@pulsecare.test',
     role: 'doctor',
-    phone: '+1-555-0103',
+    phone: '+91-98765-0103',
   });
 
   const doc3User = await ensureUser({
@@ -144,7 +144,7 @@ export async function runSeed(isReset = false): Promise<void> {
     lastName: 'Patel',
     email: 'dr.patel@pulsecare.test',
     role: 'doctor',
-    phone: '+1-555-0104',
+    phone: '+91-98765-0104',
   });
 
   // 4. Departments
@@ -211,8 +211,8 @@ export async function runSeed(isReset = false): Promise<void> {
 
   const doc1 = await ensureDoctor(doc1User, cardioDept, {
     specialization: 'Cardiology',
-    qualification: ['MD', 'FACC'],
-    consultationFee: 150,
+    qualification: ['MD', 'DM (Cardio)'],
+    consultationFee: 800,
     availability: [
       { day: 'monday', startTime: '09:00', endTime: '17:00' },
       { day: 'tuesday', startTime: '09:00', endTime: '17:00' },
@@ -224,8 +224,8 @@ export async function runSeed(isReset = false): Promise<void> {
 
   const doc2 = await ensureDoctor(doc2User, pedsDept, {
     specialization: 'Pediatrics',
-    qualification: ['MD', 'FAAP'],
-    consultationFee: 120,
+    qualification: ['MD (Pediatrics)', 'DCH'],
+    consultationFee: 600,
     availability: [
       { day: 'tuesday', startTime: '10:00', endTime: '18:00' },
       { day: 'wednesday', startTime: '10:00', endTime: '18:00' },
@@ -237,8 +237,8 @@ export async function runSeed(isReset = false): Promise<void> {
 
   const doc3 = await ensureDoctor(doc3User, orthoDept, {
     specialization: 'Orthopedics',
-    qualification: ['MS (Ortho)', 'FRCS'],
-    consultationFee: 180,
+    qualification: ['MS (Ortho)', 'DNB (Ortho)'],
+    consultationFee: 1000,
     availability: [
       { day: 'monday', startTime: '08:30', endTime: '16:30' },
       { day: 'wednesday', startTime: '08:30', endTime: '16:30' },
@@ -269,24 +269,24 @@ export async function runSeed(isReset = false): Promise<void> {
   // 5. Patients
   const patientDataList = [
     {
-      user: { firstName: 'James', lastName: 'Wilson', email: 'patient1@pulsecare.test', phone: '+1-555-0201' },
-      profile: { bloodGroup: 'O+', allergies: ['Penicillin'], emergencyContact: { name: 'Mary Wilson', relationship: 'Spouse', phone: '+1-555-0202' } },
+      user: { firstName: 'Aarav', lastName: 'Sharma', email: 'patient1@pulsecare.test', phone: '+91-98765-0201' },
+      profile: { bloodGroup: 'O+', allergies: ['Penicillin'], emergencyContact: { name: 'Sunita Sharma', relationship: 'Mother', phone: '+91-98765-0202' } },
     },
     {
-      user: { firstName: 'Sophia', lastName: 'Martinez', email: 'patient2@pulsecare.test', phone: '+1-555-0203' },
-      profile: { bloodGroup: 'A+', allergies: ['Peanuts', 'Sulfa drugs'], emergencyContact: { name: 'Carlos Martinez', relationship: 'Father', phone: '+1-555-0204' } },
+      user: { firstName: 'Diya', lastName: 'Patel', email: 'patient2@pulsecare.test', phone: '+91-98765-0203' },
+      profile: { bloodGroup: 'A+', allergies: ['Peanuts', 'Sulfa drugs'], emergencyContact: { name: 'Ramesh Patel', relationship: 'Father', phone: '+91-98765-0204' } },
     },
     {
-      user: { firstName: 'Liam', lastName: 'Johnson', email: 'patient3@pulsecare.test', phone: '+1-555-0205' },
-      profile: { bloodGroup: 'B-', allergies: [], emergencyContact: { name: 'Emma Johnson', relationship: 'Mother', phone: '+1-555-0206' } },
+      user: { firstName: 'Rohan', lastName: 'Gupta', email: 'patient3@pulsecare.test', phone: '+91-98765-0205' },
+      profile: { bloodGroup: 'B-', allergies: [], emergencyContact: { name: 'Kavita Gupta', relationship: 'Mother', phone: '+91-98765-0206' } },
     },
     {
-      user: { firstName: 'Olivia', lastName: 'Davis', email: 'patient4@pulsecare.test', phone: '+1-555-0207' },
-      profile: { bloodGroup: 'AB+', allergies: ['Latex'], emergencyContact: { name: 'William Davis', relationship: 'Brother', phone: '+1-555-0208' } },
+      user: { firstName: 'Ananya', lastName: 'Deshmukh', email: 'patient4@pulsecare.test', phone: '+91-98765-0207' },
+      profile: { bloodGroup: 'AB+', allergies: ['Latex'], emergencyContact: { name: 'Aditya Deshmukh', relationship: 'Brother', phone: '+91-98765-0208' } },
     },
     {
-      user: { firstName: 'Noah', lastName: 'Brown', email: 'patient5@pulsecare.test', phone: '+1-555-0209' },
-      profile: { bloodGroup: 'O-', allergies: ['Aspirin'], emergencyContact: { name: 'Lucas Brown', relationship: 'Guardian', phone: '+1-555-0210' } },
+      user: { firstName: 'Kabir', lastName: 'Mehta', email: 'patient5@pulsecare.test', phone: '+91-98765-0209' },
+      profile: { bloodGroup: 'O-', allergies: ['Aspirin'], emergencyContact: { name: 'Meera Mehta', relationship: 'Spouse', phone: '+91-98765-0210' } },
     },
   ];
 
@@ -325,14 +325,14 @@ export async function runSeed(isReset = false): Promise<void> {
 
   const appointmentDefs = [
     // Completed past appointments
-    { patient: patients[0], doctor: doc1, date: pastMon, timeSlot: '09:00', status: 'completed', type: 'consultation', reason: 'Routine heart checkup' },
+    { patient: patients[0], doctor: doc1, date: pastMon, timeSlot: '09:00', status: 'completed', type: 'consultation', reason: 'Routine cardiovascular checkup' },
     { patient: patients[1], doctor: doc2, date: pastWed, timeSlot: '11:00', status: 'completed', type: 'consultation', reason: 'Annual pediatric checkup' },
-    { patient: patients[2], doctor: doc3, date: pastFri, timeSlot: '10:00', status: 'completed', type: 'procedure', reason: 'Knee joint assessment' },
+    { patient: patients[2], doctor: doc3, date: pastFri, timeSlot: '10:00', status: 'completed', type: 'procedure', reason: 'Knee joint rehabilitation assessment' },
     // Cancelled appointment
     { patient: patients[3], doctor: doc1, date: pastWed, timeSlot: '14:00', status: 'cancelled', type: 'consultation', reason: 'Hypertension follow-up', cancelReason: 'Patient rescheduled' },
     // Upcoming scheduled / confirmed appointments
-    { patient: patients[0], doctor: doc1, date: nextMon, timeSlot: '10:00', status: 'confirmed', type: 'follow-up', reason: 'ECG review' },
-    { patient: patients[1], doctor: doc2, date: nextTue, timeSlot: '14:00', status: 'scheduled', type: 'consultation', reason: 'Vaccination booster' },
+    { patient: patients[0], doctor: doc1, date: nextMon, timeSlot: '10:00', status: 'confirmed', type: 'follow-up', reason: 'ECG review consultation' },
+    { patient: patients[1], doctor: doc2, date: nextTue, timeSlot: '14:00', status: 'scheduled', type: 'consultation', reason: 'Vaccination booster shot' },
     { patient: patients[2], doctor: doc3, date: nextWed, timeSlot: '11:00', status: 'confirmed', type: 'follow-up', reason: 'Post-op physiotherapy check' },
     { patient: patients[4], doctor: doc1, date: nextThu, timeSlot: '11:30', status: 'scheduled', type: 'consultation', reason: 'Mild chest tightness consultation' },
   ];
@@ -362,7 +362,7 @@ export async function runSeed(isReset = false): Promise<void> {
     createdAppointments.push(appt);
   }
 
-  // 7. Invoices (3 invoices: 1 Draft, 1 Issued, 1 Paid)
+  // 7. Invoices (3 invoices: 1 Draft, 1 Issued, 1 Paid in Indian Rupees)
   // Invoice 1: Draft
   const existingInv1 = await Invoice.findOne({ patient: patients[0]._id, status: 'draft' });
   if (!existingInv1) {
@@ -370,14 +370,14 @@ export async function runSeed(isReset = false): Promise<void> {
       patient: patients[0]._id,
       appointment: createdAppointments[4]?._id,
       lineItems: [
-        { description: 'Cardiology Consultation', quantity: 1, unitPrice: 150 },
-        { description: 'ECG Test Diagnostic', quantity: 1, unitPrice: 75 },
+        { description: 'Cardiology Consultation', quantity: 1, unitPrice: 800 },
+        { description: 'ECG Test Diagnostic', quantity: 1, unitPrice: 400 },
       ],
-      taxRate: 10,
-      discount: 15,
+      taxRate: 5,
+      discount: 100,
       status: 'draft',
       issuedBy: adminUser._id,
-      notes: 'Initial consultation draft bill',
+      notes: 'Initial cardiology consultation draft bill',
     });
     await inv1.save();
   }
@@ -389,8 +389,8 @@ export async function runSeed(isReset = false): Promise<void> {
       patient: patients[1]._id,
       appointment: createdAppointments[1]?._id,
       lineItems: [
-        { description: 'Pediatric Wellness Exam', quantity: 1, unitPrice: 120 },
-        { description: 'Booster Immunization', quantity: 1, unitPrice: 45 },
+        { description: 'Pediatric Wellness Exam', quantity: 1, unitPrice: 600 },
+        { description: 'Booster Immunization', quantity: 1, unitPrice: 350 },
       ],
       taxRate: 5,
       discount: 0,
@@ -410,11 +410,11 @@ export async function runSeed(isReset = false): Promise<void> {
       patient: patients[2]._id,
       appointment: createdAppointments[2]?._id,
       lineItems: [
-        { description: 'Orthopedic Knee Joint Examination', quantity: 1, unitPrice: 180 },
-        { description: 'Joint Support Brace', quantity: 1, unitPrice: 60 },
+        { description: 'Orthopedic Knee Joint Examination', quantity: 1, unitPrice: 1000 },
+        { description: 'Joint Support Brace', quantity: 1, unitPrice: 500 },
       ],
-      taxRate: 10,
-      discount: 20,
+      taxRate: 5,
+      discount: 100,
       status: 'paid',
       issuedDate: new Date(Date.now() - 7 * 86400000),
       dueDate: new Date(Date.now() + 7 * 86400000),
@@ -422,14 +422,14 @@ export async function runSeed(isReset = false): Promise<void> {
       issuedBy: adminUser._id,
       payments: [
         {
-          amount: 242,
+          amount: 1475,
           method: 'card',
           paidAt: new Date(),
-          reference: 'TXN-CARD-99214',
+          reference: 'TXN-UPI-99214',
           recordedBy: receptionUser._id,
         },
       ],
-      notes: 'Fully settled at reception counter',
+      notes: 'Settled via UPI / Card at billing counter',
     });
     await inv3.save();
   }
@@ -442,15 +442,15 @@ export async function runSeed(isReset = false): Promise<void> {
   console.log('| Role         | Email                     | Name              |');
   console.log('------------------------------------------------------');
   console.log('| Admin        | admin@pulsecare.test      | System Admin      |');
-  console.log('| Receptionist | reception@pulsecare.test  | Sarah Jenkins     |');
-  console.log('| Doctor (Card)| dr.smith@pulsecare.test   | Dr. Alexander Smith|');
-  console.log('| Doctor (Peds)| dr.chen@pulsecare.test    | Dr. Emily Chen    |');
+  console.log('| Receptionist | reception@pulsecare.test  | Pooja Verma       |');
+  console.log('| Doctor (Card)| dr.smith@pulsecare.test   | Dr. Vikram Sharma |');
+  console.log('| Doctor (Peds)| dr.chen@pulsecare.test    | Dr. Ananya Iyer   |');
   console.log('| Doctor (Orth)| dr.patel@pulsecare.test   | Dr. Rajesh Patel  |');
-  console.log('| Patient 1    | patient1@pulsecare.test   | James Wilson      |');
-  console.log('| Patient 2    | patient2@pulsecare.test   | Sophia Martinez   |');
-  console.log('| Patient 3    | patient3@pulsecare.test   | Liam Johnson      |');
-  console.log('| Patient 4    | patient4@pulsecare.test   | Olivia Davis      |');
-  console.log('| Patient 5    | patient5@pulsecare.test   | Noah Brown        |');
+  console.log('| Patient 1    | patient1@pulsecare.test   | Aarav Sharma      |');
+  console.log('| Patient 2    | patient2@pulsecare.test   | Diya Patel        |');
+  console.log('| Patient 3    | patient3@pulsecare.test   | Rohan Gupta       |');
+  console.log('| Patient 4    | patient4@pulsecare.test   | Ananya Deshmukh   |');
+  console.log('| Patient 5    | patient5@pulsecare.test   | Kabir Mehta       |');
   console.log('======================================================\n');
 }
 

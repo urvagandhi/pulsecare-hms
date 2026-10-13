@@ -289,7 +289,7 @@ export function BookAppointment() {
                       </p>
                       <p className="text-sm text-muted-foreground">{doc.specialization}</p>
                     </div>
-                    <p className="text-sm font-medium">${doc.consultationFee}</p>
+                    <p className="text-sm font-medium">₹{doc.consultationFee}</p>
                   </div>
                 </div>
               ))}
@@ -423,7 +423,7 @@ export function BookAppointment() {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Fee</span>
-                <span className="font-medium">${selectedDoctor?.consultationFee}</span>
+                <span className="font-medium">₹{selectedDoctor?.consultationFee}</span>
               </div>
             </div>
 

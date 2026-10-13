@@ -285,11 +285,11 @@ export function Landing() {
                     </span>
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-bold text-slate-900 dark:text-white text-sm">Dr. Sarah Smith, MD</p>
+                        <p className="font-bold text-slate-900 dark:text-white text-sm">Dr. Vikram Sharma, MD</p>
                         <p className="text-xs text-slate-500">Chief of Cardiology • 12 Yrs Exp</p>
                       </div>
                       <span className="text-xs font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700">
-                        $120 / Visit
+                        ₹800 / Visit
                       </span>
                     </div>
                   </div>

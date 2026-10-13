@@ -213,7 +213,7 @@ export function AdminAnalytics() {
                 </div>
                 <div className="mt-3">
                   <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                    {revenueQuery.isLoading ? '…' : `$${totalRevenueMTD.toLocaleString()}`}
+                    {revenueQuery.isLoading ? '…' : `₹${totalRevenueMTD.toLocaleString()}`}
                   </p>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-1">
                     Current month billed volume
@@ -232,7 +232,7 @@ export function AdminAnalytics() {
                 </div>
                 <div className="mt-3">
                   <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                    {revenueQuery.isLoading ? '…' : `$${(revenue?.outstanding ?? 0).toLocaleString()}`}
+                    {revenueQuery.isLoading ? '…' : `₹${(revenue?.outstanding ?? 0).toLocaleString()}`}
                   </p>
                   <p className="text-[11px] text-amber-700 dark:text-amber-400 font-medium mt-1">
                     Total uncollected invoices
@@ -434,11 +434,11 @@ export function AdminAnalytics() {
                             tick={{ fontSize: 11, fill: '#64748b' }}
                             tickLine={false}
                             axisLine={false}
-                            tickFormatter={(v: number) => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
+                            tickFormatter={(v: number) => `₹${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
                           />
                           <Tooltip
                             contentStyle={{ backgroundColor: '#0f172a', borderRadius: '12px', border: 'none', color: '#fff', fontSize: '12px' }}
-                            formatter={(v: any) => [`$${Number(v ?? 0).toLocaleString()}`, 'Revenue']}
+                            formatter={(v: any) => [`₹${Number(v ?? 0).toLocaleString()}`, 'Revenue']}
                           />
                           <Line type="monotone" dataKey="revenue" stroke="#059669" strokeWidth={3} dot={{ fill: '#059669', r: 4 }} activeDot={{ r: 6 }} />
                         </LineChart>
@@ -458,7 +458,7 @@ export function AdminAnalytics() {
                     <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/60">
                       <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Total Unpaid Balance</p>
                       <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                        ${(revenue.outstanding ?? 0).toLocaleString()}
+                        ₹{(revenue.outstanding ?? 0).toLocaleString()}
                       </p>
                     </div>
 
@@ -478,7 +478,7 @@ export function AdminAnalytics() {
                               </span>
                               <div className="text-right">
                                 <span className="font-bold text-slate-900 dark:text-white">
-                                  ${Number(m.total ?? m.amount ?? 0).toLocaleString()}
+                                  ₹{Number(m.total ?? m.amount ?? 0).toLocaleString()}
                                 </span>
                                 <span className="text-[10px] text-slate-400 block">{m.count} txns</span>
                               </div>
