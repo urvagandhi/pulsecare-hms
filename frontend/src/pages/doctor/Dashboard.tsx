@@ -5,25 +5,25 @@ import api from '@/lib/api';
 import { useAppSelector } from '@/store/hooks';
 import { KpiCard } from '@/components/Shared/KpiCard';
 import { AppointmentRow } from '@/components/Shared/AppointmentRow';
-import { AlertItem } from '@/components/Shared/AlertItem';
 import { DashboardSkeleton } from '@/components/Shared/DashboardSkeleton';
-import { Calendar, FlaskConical, Pill, FileText, ClipboardList } from 'lucide-react';
+import { Calendar, Users, BarChart3, CheckCircle2, Clock } from 'lucide-react';
 
 interface Appointment {
-  _id: string; timeSlot?: string; status?: string; type?: string; reason?: string; tokenNumber?: number;
+  _id: string;
+  appointmentId?: string;
+  timeSlot?: string;
+  status?: string;
+  type?: string;
+  reason?: string;
+  tokenNumber?: number;
+  date?: string;
   patient?: { patientId?: string; userId?: { firstName?: string; lastName?: string } };
   doctor?: { specialization?: string };
 }
-interface LabOrder {
-  _id: string; orderId?: string; testName?: string;
-  priority?: string; status?: string; createdAt?: string;
-  patient?: { userId?: { firstName?: string; lastName?: string } };
-}
-interface Prescription { _id: string; status?: string; }
 
 const APPT_SPARK = [4, 6, 5, 8, 7, 9, 8, 12, 10, 12];
-const LAB_SPARK  = [2, 4, 3, 6, 5, 7, 6, 8, 7, 8];
-const RX_SPARK   = [1, 2, 2, 3, 4, 3, 4, 5, 5, 5];
+const QUEUE_SPARK = [2, 4, 3, 6, 5, 7, 6, 8, 7, 8];
+const COMPLETED_SPARK = [3, 5, 6, 7, 8, 9, 10, 11, 12, 14];
 
 function greetingByHour(): string {
   const h = new Date().getHours();
@@ -42,42 +42,42 @@ function getPatientName(appt: Appointment): string {
   return u ? `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() : 'Unknown Patient';
 }
 
-function labDotColor(lab: LabOrder): string {
-  if (lab.priority === 'urgent' || lab.status === 'critical') return '#ef4444';
-  if (lab.status === 'pending' || lab.status === 'processing') return '#f59e0b';
-  return '#22c55e';
-}
-
 export function DoctorDashboard() {
   const user = useAppSelector(s => s.auth.user);
   const today = useMemo(() => new Date().toISOString().split('T')[0], []);
 
+  // Today's appointments for this doctor/hospital
   const apptQ = useQuery<{ success: boolean; data: Appointment[] }>({
     queryKey: ['doctor-dashboard', 'appointments', today],
     queryFn: () => api.get(`/appointments?date=${today}`).then(r => r.data),
+    retry: 1,
   });
 
-  const labQ = useQuery<{ success: boolean; data: LabOrder[] }>({
-    queryKey: ['doctor-dashboard', 'lab'],
-    queryFn: () => api.get('/lab/orders?limit=5').then(r => r.data),
+  // Upcoming confirmed/scheduled appointments
+  const upcomingQ = useQuery<{ success: boolean; data: Appointment[] }>({
+    queryKey: ['doctor-dashboard', 'upcoming'],
+    queryFn: () => api.get('/appointments?status=scheduled,confirmed&limit=8').then(r => r.data),
+    retry: 1,
   });
 
-  const rxQ = useQuery<{ success: boolean; data: Prescription[] }>({
-    queryKey: ['doctor-dashboard', 'prescriptions'],
-    queryFn: () => api.get('/pharmacy/prescriptions?status=active').then(r => r.data),
+  // Completed consultations count
+  const completedQ = useQuery<{ success: boolean; data: Appointment[] }>({
+    queryKey: ['doctor-dashboard', 'completed'],
+    queryFn: () => api.get('/appointments?status=completed&limit=20').then(r => r.data),
+    retry: 1,
   });
 
   const todayAppts = apptQ.data?.data ?? [];
-  const labOrders  = labQ.data?.data ?? [];
-  const activePrescriptions = rxQ.data?.data ?? [];
+  const upcomingAppts = upcomingQ.data?.data ?? [];
+  const completedAppts = completedQ.data?.data ?? [];
 
-  const criticalLabs = labOrders.filter(l => l.priority === 'urgent' || l.status === 'critical');
+  const confirmedCount = todayAppts.filter(a => a.status === 'confirmed').length;
 
   const dateLabel = new Date().toLocaleDateString('en-US', {
     weekday: 'long', month: 'long', day: 'numeric',
   });
 
-  if (apptQ.isLoading && labQ.isLoading) {
+  if (apptQ.isLoading && upcomingQ.isLoading) {
     return <DashboardSkeleton />;
   }
 
@@ -91,7 +91,7 @@ export function DoctorDashboard() {
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {dateLabel} · {todayAppts.length} patients scheduled today
-            {criticalLabs.length > 0 && ` · ${criticalLabs.length} critical lab result${criticalLabs.length > 1 ? 's' : ''} need review`}
+            {confirmedCount > 0 && ` · ${confirmedCount} confirmed in consultation queue`}
           </p>
         </div>
         <div className="flex items-center gap-2 self-start sm:self-auto">
@@ -107,20 +107,35 @@ export function DoctorDashboard() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <KpiCard
-          title="Today's Patients"    value={apptQ.isLoading ? '…' : apptQ.isError ? '—' : todayAppts.length}
-          trend={`${todayAppts.filter(a => a.status === 'confirmed').length} confirmed`} trendDir="up"
-          color="green" icon={<Calendar className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />} sparklineData={APPT_SPARK} isLoading={apptQ.isLoading}
+          title="Today's Consultations"
+          value={apptQ.isLoading ? '…' : apptQ.isError ? '—' : todayAppts.length}
+          trend={`${confirmedCount} confirmed`}
+          trendDir="up"
+          color="green"
+          icon={<Calendar className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />}
+          sparklineData={APPT_SPARK}
+          isLoading={apptQ.isLoading}
         />
         <KpiCard
-          title="Pending Lab Orders"  value={labQ.isLoading ? '…' : labQ.isError ? '—' : labOrders.length}
-          subtitle={`${criticalLabs.length} critical`}
-          trend={criticalLabs.length > 0 ? `${criticalLabs.length} critical` : 'All normal'} trendDir={criticalLabs.length > 0 ? 'down' : 'neutral'}
-          color="purple" icon={<FlaskConical className="w-5 h-5 text-teal-600 dark:text-teal-400" />} sparklineData={LAB_SPARK} isLoading={labQ.isLoading}
+          title="Upcoming Queue"
+          value={upcomingQ.isLoading ? '…' : upcomingQ.isError ? '—' : upcomingAppts.length}
+          subtitle="Scheduled & Confirmed"
+          trend="In queue"
+          trendDir="neutral"
+          color="purple"
+          icon={<Clock className="w-5 h-5 text-teal-600 dark:text-teal-400" />}
+          sparklineData={QUEUE_SPARK}
+          isLoading={upcomingQ.isLoading}
         />
         <KpiCard
-          title="Active Prescriptions" value={rxQ.isLoading ? '…' : rxQ.isError ? '—' : activePrescriptions.length}
-          trend="Active" trendDir="neutral"
-          color="amber" icon={<Pill className="w-5 h-5 text-amber-600 dark:text-amber-400" />} sparklineData={RX_SPARK} isLoading={rxQ.isLoading}
+          title="Completed Consultations"
+          value={completedQ.isLoading ? '…' : completedQ.isError ? '—' : completedAppts.length}
+          trend="Attended"
+          trendDir="up"
+          color="amber"
+          icon={<CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />}
+          sparklineData={COMPLETED_SPARK}
+          isLoading={completedQ.isLoading}
         />
       </div>
 
@@ -137,7 +152,7 @@ export function DoctorDashboard() {
           <div className="px-5 divide-y divide-slate-100 dark:divide-slate-800">
             {apptQ.isLoading && (
               <div className="space-y-3 py-3">
-                {[1,2,3,4].map(i => <div key={i} className="h-10 bg-slate-100 dark:bg-slate-800/60 rounded-xl animate-pulse" />)}
+                {[1, 2, 3, 4].map(i => <div key={i} className="h-10 bg-slate-100 dark:bg-slate-800/60 rounded-xl animate-pulse" />)}
               </div>
             )}
             {apptQ.isError && <p className="text-sm text-rose-500 py-3">Failed to load schedule</p>}
@@ -156,10 +171,9 @@ export function DoctorDashboard() {
               />
             ))}
           </div>
-          {/* Footer */}
-          <div className="px-6 py-3 border-t border-slate-100 text-right">
-            <Link to="/doctor/schedule" className="text-xs font-medium text-emerald-600 hover:text-emerald-800">
-              Full schedule →
+          <div className="px-6 py-3 border-t border-slate-100 dark:border-slate-800 text-right">
+            <Link to="/doctor/schedule" className="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:underline">
+              Full schedule & queue →
             </Link>
           </div>
         </div>
@@ -171,13 +185,14 @@ export function DoctorDashboard() {
             <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-3">Quick Actions</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-2.5">
               {[
-                { icon: <Pill className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />, label: 'Prescribe',         sub: 'New prescription',    to: '/doctor/prescriptions/new' },
-                { icon: <FlaskConical className="w-4 h-4 text-teal-600 dark:text-teal-400" />, label: 'Order Lab',         sub: 'Request test',        to: '/doctor/lab/new' },
-                { icon: <FileText className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />, label: 'Certificate',     sub: 'Medical certificate', to: '/doctor/documents' },
-                { icon: <ClipboardList className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />, label: 'Patient Notes',     sub: 'Clinical notes',      to: '/doctor/patients' },
+                { icon: <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />, label: 'My Schedule', sub: 'Consultation queue', to: '/doctor/schedule' },
+                { icon: <Users className="w-4 h-4 text-teal-600 dark:text-teal-400" />, label: 'Patients', sub: 'Patient directory', to: '/doctor/patients' },
+                { icon: <BarChart3 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />, label: 'Analytics', sub: 'Clinical metrics', to: '/analytics' },
+                { icon: <Clock className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />, label: 'Appointments', sub: 'Today & upcoming', to: '/doctor/schedule' },
               ].map(({ icon, label, sub, to }) => (
                 <Link
-                  key={label} to={to}
+                  key={label}
+                  to={to}
                   className="flex items-center gap-3 p-3 rounded-xl border border-slate-200/70 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 transition-all group"
                 >
                   <div className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700 flex items-center justify-center shrink-0 group-hover:bg-white dark:group-hover:bg-slate-700">
@@ -192,35 +207,37 @@ export function DoctorDashboard() {
             </div>
           </div>
 
-          {/* Lab results feed */}
+          {/* Upcoming Consultations Feed */}
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden">
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2">
-                <FlaskConical className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <h2 className="text-sm font-bold text-slate-900 dark:text-white">Recent Lab Orders</h2>
+                <Clock className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white">Upcoming Queue</h2>
               </div>
-              <Link to="/doctor/lab" className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:underline">
+              <Link to="/doctor/schedule" className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:underline">
                 View all →
               </Link>
             </div>
-            <div className="px-5 py-3">
-              {labQ.isLoading && <div className="h-16 animate-pulse bg-slate-50 dark:bg-slate-800/60 rounded-xl my-2" />}
-              {labQ.isError && <p className="text-sm text-rose-500 py-3">Failed to load lab results</p>}
-              {!labQ.isLoading && !labQ.isError && labOrders.length === 0 && (
-                <p className="text-xs text-slate-400 py-4 text-center">No recent lab results</p>
+            <div className="px-5 py-3 divide-y divide-slate-100 dark:divide-slate-800">
+              {upcomingQ.isLoading && <div className="h-16 animate-pulse bg-slate-50 dark:bg-slate-800/60 rounded-xl my-2" />}
+              {upcomingQ.isError && <p className="text-sm text-rose-500 py-3">Failed to load queue</p>}
+              {!upcomingQ.isLoading && !upcomingQ.isError && upcomingAppts.length === 0 && (
+                <p className="text-xs text-slate-400 py-4 text-center">No upcoming appointments in queue</p>
               )}
-              {labOrders.slice(0, 4).map(lab => {
-                const dotColor = labDotColor(lab);
-                const patName = lab.patient?.userId
-                  ? `${lab.patient.userId.firstName ?? ''} ${lab.patient.userId.lastName ?? ''}`.trim()
-                  : '—';
+              {upcomingAppts.slice(0, 5).map(appt => {
+                const patName = getPatientName(appt);
                 return (
-                  <AlertItem key={lab._id} dotColor={dotColor}
-                    time={lab.createdAt ? new Date(lab.createdAt).toLocaleDateString() : undefined}
-                  >
-                    {(lab.priority === 'urgent' || lab.status === 'critical') && <strong>URGENT — </strong>}
-                    {lab.testName ?? 'Lab result'}{patName !== '—' && ` · ${patName}`}
-                  </AlertItem>
+                  <div key={appt._id} className="py-2.5 flex items-center justify-between gap-3 text-xs">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-slate-800 dark:text-slate-200 truncate">{patName}</p>
+                      <p className="text-[10px] text-slate-400 truncate">
+                        {appt.timeSlot ? `${appt.timeSlot} · ` : ''}{appt.reason || 'General Consultation'}
+                      </p>
+                    </div>
+                    <span className="shrink-0 font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
+                      {appt.tokenNumber ? `#${appt.tokenNumber}` : (appt.status ?? 'scheduled')}
+                    </span>
+                  </div>
                 );
               })}
             </div>

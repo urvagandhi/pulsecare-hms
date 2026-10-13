@@ -3,36 +3,31 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { useAppSelector } from '@/store/hooks';
 import { KpiCard } from '@/components/Shared/KpiCard';
-import { StatBar } from '@/components/Shared/StatBar';
 import { DashboardSkeleton } from '@/components/Shared/DashboardSkeleton';
-import { Pill, Package, FlaskConical, AlertTriangle } from 'lucide-react';
+import { Users, Calendar, CheckCircle2, Clock, Activity, BarChart3 } from 'lucide-react';
 
-interface Prescription {
-  _id: string; status?: string; medicationName?: string; dosage?: string;
-  quantity?: number; instructions?: string; patientId?: string;
+interface Patient {
+  _id: string;
+  patientId?: string;
+  userId?: { firstName?: string; lastName?: string; email?: string };
+}
+
+interface Appointment {
+  _id: string;
+  appointmentId?: string;
+  timeSlot?: string;
+  status?: string;
+  type?: string;
+  reason?: string;
+  tokenNumber?: number;
+  date?: string;
   patient?: { patientId?: string; userId?: { firstName?: string; lastName?: string } };
-  doctor?: { userId?: { firstName?: string; lastName?: string } };
+  doctor?: { specialization?: string; userId?: { firstName?: string; lastName?: string } };
 }
 
-interface InventoryItem {
-  _id: string; name?: string; quantity?: number; reorderLevel?: number; unit?: string;
-}
-
-interface LabOrder {
-  _id: string; orderId?: string; testName?: string; status?: string; priority?: string;
-}
-
-const DISPENSE_SPARK = [2, 3, 2, 4, 3, 5, 4, 4, 3, 4];
-const STOCK_SPARK    = [8, 7, 6, 5, 4, 3, 3, 2, 2, 2];
-const LAB_SPARK      = [3, 4, 5, 4, 6, 5, 7, 6, 7, 7];
-
-const PILL_STYLES: Record<string, string> = {
-  pending:   'bg-amber-50 text-amber-700',
-  active:    'bg-amber-50 text-amber-700',
-  dispensed: 'bg-slate-100 text-slate-500',
-  filled:    'bg-emerald-50 text-emerald-700',
-  ready:     'bg-emerald-50 text-emerald-700',
-};
+const CHECKIN_SPARK = [3, 5, 4, 6, 7, 8, 9, 10, 11, 12];
+const APPT_SPARK    = [5, 8, 7, 9, 8, 12, 11, 14, 13, 15];
+const TRIAGE_SPARK  = [2, 3, 2, 4, 3, 5, 4, 6, 5, 6];
 
 function greetingByHour(): string {
   const h = new Date().getHours();
@@ -44,26 +39,26 @@ function greetingByHour(): string {
 export function NurseDashboard() {
   const user = useAppSelector(s => s.auth.user);
 
-  const dispensingQ = useQuery<{ success: boolean; data: Prescription[] }>({
-    queryKey: ['pharmacy-dispensing'],
-    queryFn: () => api.get('/pharmacy/dispensing?status=pending,ready&limit=5').then(r => r.data),
+  const apptsQ = useQuery<{ success: boolean; data: Appointment[] }>({
+    queryKey: ['nurse-dashboard', 'appointments'],
+    queryFn: () => api.get('/appointments?limit=15').then(r => r.data),
+    retry: 1,
   });
 
-  const inventoryQ = useQuery<{ success: boolean; data: InventoryItem[] }>({
-    queryKey: ['nurse-dashboard', 'inventory-low'],
-    queryFn: () => api.get('/inventory?belowReorder=true&limit=5').then(r => r.data),
+  const patientsQ = useQuery<{ success: boolean; data: Patient[] }>({
+    queryKey: ['nurse-dashboard', 'patients'],
+    queryFn: () => api.get('/patients?limit=10').then(r => r.data),
+    retry: 1,
   });
 
-  const labQ = useQuery<{ success: boolean; data: LabOrder[] }>({
-    queryKey: ['nurse-dashboard', 'lab'],
-    queryFn: () => api.get('/lab/orders?status=pending,collected&limit=5').then(r => r.data),
-  });
+  const appointments: Appointment[] = apptsQ.data?.data ?? [];
+  const patients: Patient[] = patientsQ.data?.data ?? [];
 
-  const pendingRx: Prescription[]  = dispensingQ.data?.data ?? [];
-  const lowStock   = inventoryQ.data?.data ?? [];
-  const labOrders  = labQ.data?.data ?? [];
+  const confirmedAppts = appointments.filter(a => a.status === 'confirmed');
+  const inProgressAppts = appointments.filter(a => a.status === 'inProgress');
+  const completedAppts = appointments.filter(a => a.status === 'completed');
 
-  if (dispensingQ.isLoading && inventoryQ.isLoading) {
+  if (apptsQ.isLoading && patientsQ.isLoading) {
     return <DashboardSkeleton />;
   }
 
@@ -73,84 +68,101 @@ export function NurseDashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
         <div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            {greetingByHour()}, {user?.firstName}
+            {greetingByHour()}, Nurse {user?.firstName} {user?.lastName}
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            {pendingRx.length > 0
-              ? `${pendingRx.length} dispensing request${pendingRx.length > 1 ? 's' : ''} pending review`
-              : 'Dispensing queue is clear'}
-            {lowStock.length > 0 && ` · ${lowStock.length} item${lowStock.length > 1 ? 's' : ''} low on stock`} · Clinical Pharmacy
+            Clinical Nursing Station · {confirmedAppts.length} patients ready for intake & triage
           </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/analytics"
+            className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 px-4 py-2 rounded-xl transition-all border border-emerald-200/80 dark:border-emerald-800 inline-flex items-center gap-1.5"
+          >
+            <BarChart3 className="w-3.5 h-3.5" />
+            Station Analytics
+          </Link>
         </div>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <KpiCard
-          title="Pending Dispenses"     value={dispensingQ.isLoading ? '…' : dispensingQ.isError ? '—' : pendingRx.length}
-          trend={pendingRx.length > 0 ? `${pendingRx.length} waiting` : 'Queue clear'} trendDir={pendingRx.length > 0 ? 'down' : 'neutral'}
-          color="amber" icon={<Pill className="w-5 h-5 text-amber-600 dark:text-amber-400" />} sparklineData={DISPENSE_SPARK} isLoading={dispensingQ.isLoading}
+          title="Triage Intake Queue"
+          value={apptsQ.isLoading ? '…' : confirmedAppts.length}
+          trend={`${inProgressAppts.length} in consultation`}
+          trendDir="neutral"
+          color="amber"
+          icon={<Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />}
+          sparklineData={TRIAGE_SPARK}
+          isLoading={apptsQ.isLoading}
         />
         <KpiCard
-          title="Low Stock Items"      value={inventoryQ.isLoading ? '…' : inventoryQ.isError ? '—' : lowStock.length}
-          trend={lowStock.length > 0 ? `${lowStock.length} items low` : 'Stock OK'} trendDir={lowStock.length > 0 ? 'down' : 'neutral'}
-          color="purple" icon={<Package className="w-5 h-5 text-teal-600 dark:text-teal-400" />} sparklineData={STOCK_SPARK} isLoading={inventoryQ.isLoading}
+          title="Scheduled Visits Today"
+          value={apptsQ.isLoading ? '…' : appointments.length}
+          trend="Total in queue"
+          trendDir="up"
+          color="green"
+          icon={<Calendar className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />}
+          sparklineData={APPT_SPARK}
+          isLoading={apptsQ.isLoading}
         />
         <KpiCard
-          title="Lab Samples Collected"  value={labQ.isLoading ? '…' : labQ.isError ? '—' : labOrders.length}
-          trend="Awaiting results"     trendDir="neutral"
-          color="green" icon={<FlaskConical className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />} sparklineData={LAB_SPARK} isLoading={labQ.isLoading}
+          title="Attended Patients"
+          value={apptsQ.isLoading ? '…' : completedAppts.length}
+          trend="Discharged"
+          trendDir="up"
+          color="purple"
+          icon={<CheckCircle2 className="w-5 h-5 text-teal-600 dark:text-teal-400" />}
+          sparklineData={CHECKIN_SPARK}
+          isLoading={apptsQ.isLoading}
         />
       </div>
 
       {/* Main grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        {/* Dispensing queue */}
-        <div className="lg:col-span-7 xl:col-span-8 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden flex flex-col">
+        {/* Patient intake queue */}
+        <div className="lg:col-span-8 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden flex flex-col">
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-slate-800">
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white">Dispensing Queue</h2>
-            <Link to="/nurse/dispensing" className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:underline">
-              View all →
-            </Link>
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Activity className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              Patient Care & Intake Queue
+            </h2>
+            <span className="text-xs font-semibold text-slate-400">Live Intake</span>
           </div>
-          <div className="px-4 divide-y divide-slate-50">
-            {dispensingQ.isLoading && (
+          <div className="px-5 divide-y divide-slate-100 dark:divide-slate-800">
+            {apptsQ.isLoading && (
               <div className="space-y-3 py-3">
-                {[1,2,3].map(i => <div key={i} className="h-9 bg-slate-100 rounded-lg animate-pulse" />)}
+                {[1, 2, 3].map(i => <div key={i} className="h-10 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />)}
               </div>
             )}
-            {dispensingQ.isError && <p className="text-sm text-red-500 px-4 py-2">Failed to load dispensing queue</p>}
-            {!dispensingQ.isLoading && pendingRx.length === 0 && (
-              <p className="text-[12px] text-slate-400 py-8 text-center">No pending prescriptions</p>
+            {apptsQ.isError && <p className="text-sm text-rose-500 py-3">Failed to load intake queue</p>}
+            {!apptsQ.isLoading && appointments.length === 0 && (
+              <p className="text-xs text-slate-400 py-8 text-center">No patients currently in intake queue</p>
             )}
-            {pendingRx.map(rx => {
-              const patUser = rx.patient?.userId;
-              const initials = patUser
-                ? `${patUser.firstName?.[0] ?? ''}${patUser.lastName?.[0] ?? ''}`.toUpperCase()
-                : 'PT';
-              const patName = patUser
-                ? `${patUser.firstName ?? ''} ${patUser.lastName ?? ''}`.trim()
-                : rx.patient?.patientId ?? 'Unknown Patient';
-              const docUser = rx.doctor?.userId;
-              const docName = docUser
-                ? `Dr. ${docUser.firstName ?? ''} ${docUser.lastName ?? ''}`.trim()
-                : 'Unknown';
-              const drug = [rx.medicationName, rx.dosage, rx.quantity ? `×${rx.quantity}` : ''].filter(Boolean).join(' ');
-              const statusStyle = PILL_STYLES[rx.status ?? 'pending'] ?? PILL_STYLES.pending;
-              const statusLabel = (rx.status ?? 'pending').charAt(0).toUpperCase() + (rx.status ?? 'pending').slice(1);
+            {appointments.slice(0, 7).map(appt => {
+              const pat = appt.patient?.userId;
+              const patName = pat ? `${pat.firstName ?? ''} ${pat.lastName ?? ''}`.trim() : 'Patient';
+              const doc = appt.doctor?.userId;
+              const docName = doc ? `Dr. ${doc.firstName ?? ''} ${doc.lastName ?? ''}`.trim() : 'Attending Physician';
 
               return (
-                <div key={rx._id} className="flex items-center gap-3 py-2.5 border-b border-slate-50 last:border-0">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-red-500 flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0">
-                    {initials}
+                <div key={appt._id} className="flex items-center justify-between py-3 text-xs gap-3">
+                  <div className="min-w-0">
+                    <p className="font-bold text-slate-800 dark:text-slate-200 truncate">
+                      {patName}
+                      {appt.tokenNumber && (
+                        <span className="ml-2 font-mono text-[10px] text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-800">
+                          #{appt.tokenNumber}
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-[10px] text-slate-400 truncate">
+                      {appt.timeSlot ? `${appt.timeSlot} · ` : ''}{appt.reason || 'General Intake'} · {docName}
+                    </p>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[12px] font-semibold text-slate-900 truncate">{patName}</p>
-                    <div className="text-xs text-slate-400">{rx.patient?.patientId || rx.patientId || ''}</div>
-                    <p className="text-[10px] text-slate-400 truncate">{drug} · {docName}</p>
-                  </div>
-                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${statusStyle}`}>
-                    {statusLabel}
+                  <span className="shrink-0 capitalize font-medium text-[10px] px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                    {appt.status ?? 'scheduled'}
                   </span>
                 </div>
               );
@@ -159,64 +171,43 @@ export function NurseDashboard() {
         </div>
 
         {/* Right column */}
-        <div className="lg:col-span-5 xl:col-span-4 space-y-5">
-          {/* Low stock */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-slate-800">
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                <AlertTriangle className="w-4 h-4 text-amber-500" />
-                Inventory Stock Warnings
-              </h2>
-              <Link to="/nurse/inventory" className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:underline">
-                View →
+        <div className="lg:col-span-4 space-y-5">
+          {/* Quick tools */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs p-5">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-3">Nursing Station Tools</h2>
+            <div className="space-y-2">
+              <Link
+                to="/analytics"
+                className="flex items-center justify-between p-3 rounded-xl border border-emerald-200/70 dark:border-emerald-800/60 bg-emerald-50/50 dark:bg-emerald-950/20 hover:bg-emerald-100/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold transition-all"
+              >
+                <span>Station Analytics & Reports</span>
+                <span>→</span>
               </Link>
-            </div>
-            <div className="p-4 sm:p-5">
-              {inventoryQ.isLoading && <div className="h-16 animate-pulse bg-slate-50 dark:bg-slate-800/60 rounded-xl" />}
-              {inventoryQ.isError && <p className="text-xs text-rose-500 py-2">Failed to load inventory</p>}
-              {!inventoryQ.isLoading && lowStock.length === 0 && (
-                <p className="text-xs text-slate-400 py-3 text-center">All pharmaceutical stock levels OK</p>
-              )}
-              {lowStock.map(item => {
-                const reorder = item.reorderLevel ?? 50;
-                const pct = Math.round(((item.quantity ?? 0) / reorder) * 100);
-                const color = pct < 30 ? '#ef4444' : pct < 60 ? '#f59e0b' : '#10b981';
-                return (
-                  <StatBar
-                    key={item._id}
-                    label={item.name ?? '—'}
-                    value={item.quantity ?? 0}
-                    max={reorder}
-                    color={color}
-                    unit="qty"
-                    valueLabel={`${item.quantity ?? 0} / ${reorder}`}
-                  />
-                );
-              })}
             </div>
           </div>
 
-          {/* Quick actions */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs p-5">
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-3">Quick Actions</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-2.5">
-              {[
-                { icon: Pill, label: 'Dispense',    sub: 'Process script',  href: '/nurse/dispensing', color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40' },
-                { icon: Package, label: 'Stock Check', sub: 'Inventory view',  href: '/nurse/inventory', color: 'text-amber-600 bg-amber-50 dark:bg-amber-950/40' },
-              ].map(({ icon: Icon, label, sub, href, color }) => (
-                <Link
-                  key={label} to={href}
-                  className="flex items-center gap-3 p-3 rounded-xl border border-slate-200/70 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 transition-all group"
-                >
-                  <div className={`p-2 rounded-lg ${color}`}>
-                    <Icon className="w-4 h-4" />
+          {/* Recent patients admitted */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                Active Patient Records
+              </h2>
+            </div>
+            <div className="p-4 space-y-2.5">
+              {patientsQ.isLoading && <div className="h-16 animate-pulse bg-slate-50 dark:bg-slate-800/60 rounded-xl" />}
+              {patients.slice(0, 4).map(p => {
+                const name = p.userId ? `${p.userId.firstName ?? ''} ${p.userId.lastName ?? ''}`.trim() : 'Patient';
+                return (
+                  <div key={p._id} className="p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 text-xs flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">{name}</p>
+                      <p className="text-[10px] text-slate-400">{p.patientId || p._id}</p>
+                    </div>
+                    <span className="text-[10px] font-medium text-emerald-700 dark:text-emerald-400">Registered</span>
                   </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-emerald-700 dark:group-hover:text-emerald-400">{label}</p>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400">{sub}</p>
-                  </div>
-                </Link>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
