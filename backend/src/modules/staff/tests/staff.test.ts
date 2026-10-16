@@ -71,8 +71,8 @@ async function createAdminAndLogin() {
 async function createDoctorAndLogin() {
   // Create doctor user directly
   const doctor = await User.create({
-    firstName: 'Dr',
-    lastName: 'Smith',
+    firstName: 'Vikram',
+    lastName: 'Sharma',
     email: 'doctor@test.com',
     password: 'DoctorPass1!',
     role: 'doctor',
@@ -99,9 +99,9 @@ describe('Staff Routes', () => {
       .post('/api/v1/staff')
       .set('Authorization', `Bearer ${adminToken}`)
       .send({
-        firstName: 'Jane',
-        lastName: 'Doe',
-        email: 'jane.doe@hospital.com',
+        firstName: 'Priya',
+        lastName: 'Nair',
+        email: 'priya.nair@hospital.com',
         password: 'Password1!',
         role: 'doctor',
         specialization: 'Neurology',

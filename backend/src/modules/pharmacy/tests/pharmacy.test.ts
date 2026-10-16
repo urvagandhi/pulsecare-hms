@@ -64,8 +64,8 @@ beforeAll(async () => {
 
   // Create doctor user + Doctor profile
   const doctorUser = await User.create({
-    firstName: 'Doctor',
-    lastName: 'Smith',
+    firstName: 'Vikram',
+    lastName: 'Sharma',
     email: 'doctor@pharmacy.test',
     password: 'DoctorPass1!',
     role: 'doctor',
