@@ -31,6 +31,7 @@ const SEEDED_CREDENTIALS = [
   { role: 'Doctor (Cardio)', email: 'dr.smith@pulsecare.test', note: 'Schedule view, patient queue, consultation tokens' },
   { role: 'Doctor (Pediatrics)', email: 'dr.chen@pulsecare.test', note: 'Schedule & queue management' },
   { role: 'Doctor (Orthopedics)', email: 'dr.patel@pulsecare.test', note: 'Schedule & leave tracking' },
+  { role: 'Doctor (Medicine)', email: 'dr.mehta@pulsecare.test', note: 'General medicine schedule & queue' },
   { role: 'Patient', email: 'patient1@pulsecare.test', note: 'Self-booking, appointments slip, bills & ID card' },
 ];
 
