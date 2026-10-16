@@ -147,6 +147,14 @@ export async function runSeed(isReset = false): Promise<void> {
     phone: '+91-98765-0104',
   });
 
+  const doc4User = await ensureUser({
+    firstName: 'Vedant',
+    lastName: 'Mehta',
+    email: 'dr.mehta@pulsecare.test',
+    role: 'doctor',
+    phone: '+91-98765-0105',
+  });
+
   // 4. Departments
   async function ensureDepartment(data: {
     name: string;
@@ -248,6 +256,20 @@ export async function runSeed(isReset = false): Promise<void> {
     ], // Tuesday and Sunday off
   });
 
+  const doc4 = await ensureDoctor(doc4User, cardioDept, {
+    specialization: 'General Medicine',
+    qualification: ['MBBS', 'MD (Medicine)'],
+    consultationFee: 700,
+    availability: [
+      { day: 'monday', startTime: '09:00', endTime: '17:00' },
+      { day: 'tuesday', startTime: '09:00', endTime: '17:00' },
+      { day: 'wednesday', startTime: '09:00', endTime: '17:00' },
+      { day: 'thursday', startTime: '09:00', endTime: '17:00' },
+      { day: 'friday', startTime: '09:00', endTime: '17:00' },
+      { day: 'saturday', startTime: '09:00', endTime: '14:00' },
+    ],
+  });
+
   // Assign head doctors to departments
   cardioDept.head = doc1._id as mongoose.Types.ObjectId;
   await cardioDept.save();
@@ -334,6 +356,8 @@ export async function runSeed(isReset = false): Promise<void> {
     { patient: patients[0], doctor: doc1, date: nextMon, timeSlot: '10:00', status: 'confirmed', type: 'follow-up', reason: 'ECG review consultation' },
     { patient: patients[1], doctor: doc2, date: nextTue, timeSlot: '14:00', status: 'scheduled', type: 'consultation', reason: 'Vaccination booster shot' },
     { patient: patients[2], doctor: doc3, date: nextWed, timeSlot: '11:00', status: 'confirmed', type: 'follow-up', reason: 'Post-op physiotherapy check' },
+    { patient: patients[3], doctor: doc4, date: nextMon, timeSlot: '11:00', status: 'confirmed', type: 'consultation', reason: 'Seasonal viral fever & general wellness check' },
+    { patient: patients[4], doctor: doc4, date: nextTue, timeSlot: '10:30', status: 'scheduled', type: 'consultation', reason: 'Annual health checkup' },
     { patient: patients[4], doctor: doc1, date: nextThu, timeSlot: '11:30', status: 'scheduled', type: 'consultation', reason: 'Mild chest tightness consultation' },
   ];
 
@@ -446,6 +470,7 @@ export async function runSeed(isReset = false): Promise<void> {
   console.log('| Doctor (Card)| dr.smith@pulsecare.test   | Dr. Vikram Sharma |');
   console.log('| Doctor (Peds)| dr.chen@pulsecare.test    | Dr. Ananya Iyer   |');
   console.log('| Doctor (Orth)| dr.patel@pulsecare.test   | Dr. Rajesh Patel  |');
+  console.log('| Doctor (Med) | dr.mehta@pulsecare.test   | Dr. Vedant Mehta  |');
   console.log('| Patient 1    | patient1@pulsecare.test   | Aarav Sharma      |');
   console.log('| Patient 2    | patient2@pulsecare.test   | Diya Patel        |');
   console.log('| Patient 3    | patient3@pulsecare.test   | Rohan Gupta       |');

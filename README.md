@@ -150,6 +150,7 @@ All seeded accounts use the password: `Password@123`
 | **Doctor (Cardiology)** | `dr.smith@pulsecare.test` | Dr. Vikram Sharma | Outpatient schedule, daily queue tokens, patient consultations |
 | **Doctor (Pediatrics)** | `dr.chen@pulsecare.test` | Dr. Ananya Iyer | Pediatric consultations, schedule, queue management |
 | **Doctor (Orthopedics)**| `dr.patel@pulsecare.test` | Dr. Rajesh Patel | Orthopedic schedule, consultations, leave tracking |
+| **Doctor (Medicine)**   | `dr.mehta@pulsecare.test` | Dr. Vedant Mehta | General medicine schedule, daily queue tokens, consultations |
 | **Patient 1** | `patient1@pulsecare.test` | Aarav Sharma | Self-service appointment booking, view slips, ID card, pay invoices |
 | **Patient 2** | `patient2@pulsecare.test` | Diya Patel | Booking, appointments, invoices, ID card |
 | **Patient 3** | `patient3@pulsecare.test` | Rohan Gupta | Booking, appointments, invoices, ID card |
