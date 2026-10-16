@@ -146,13 +146,13 @@ All seeded accounts use the password: `Password@123`
 | Role | Email | Name | Capabilities |
 |---|---|---|---|
 | **Admin** | `admin@pulsecare.test` | System Administrator | Hospital oversight, user roles, staff leaves, analytics, billing |
-| **Receptionist** | `reception@pulsecare.test` | Sarah Jenkins | Patient registration, walk-in appointments, invoice creation & issue |
-| **Doctor (Cardiology)** | `dr.smith@pulsecare.test` | Dr. Alexander Smith | Outpatient schedule, daily queue tokens, patient consultations |
-| **Doctor (Pediatrics)** | `dr.chen@pulsecare.test` | Dr. Emily Chen | Pediatric consultations, schedule, queue management |
+| **Receptionist** | `reception@pulsecare.test` | Pooja Verma | Patient registration, walk-in appointments, invoice creation & issue |
+| **Doctor (Cardiology)** | `dr.smith@pulsecare.test` | Dr. Vikram Sharma | Outpatient schedule, daily queue tokens, patient consultations |
+| **Doctor (Pediatrics)** | `dr.chen@pulsecare.test` | Dr. Ananya Iyer | Pediatric consultations, schedule, queue management |
 | **Doctor (Orthopedics)**| `dr.patel@pulsecare.test` | Dr. Rajesh Patel | Orthopedic schedule, consultations, leave tracking |
-| **Patient 1** | `patient1@pulsecare.test` | James Wilson | Self-service appointment booking, view slips, ID card, pay invoices |
-| **Patient 2** | `patient2@pulsecare.test` | Sophia Martinez | Booking, appointments, invoices, ID card |
-| **Patient 3** | `patient3@pulsecare.test` | Liam Johnson | Booking, appointments, invoices, ID card |
+| **Patient 1** | `patient1@pulsecare.test` | Aarav Sharma | Self-service appointment booking, view slips, ID card, pay invoices |
+| **Patient 2** | `patient2@pulsecare.test` | Diya Patel | Booking, appointments, invoices, ID card |
+| **Patient 3** | `patient3@pulsecare.test` | Rohan Gupta | Booking, appointments, invoices, ID card |
 
 ---
 

@@ -74,8 +74,8 @@ beforeAll(async () => {
 
   // Doctor 1
   const doctorUser = await User.create({
-    firstName: 'Doctor',
-    lastName: 'Smith',
+    firstName: 'Vikram',
+    lastName: 'Sharma',
     email: 'doctor@test.com',
     password: 'DoctorPass1!',
     role: 'doctor',
@@ -88,8 +88,8 @@ beforeAll(async () => {
 
   // Doctor 2
   const doctorUser2 = await User.create({
-    firstName: 'Doctor',
-    lastName: 'Jones',
+    firstName: 'Ananya',
+    lastName: 'Iyer',
     email: 'doctor2@test.com',
     password: 'DoctorPass2!',
     role: 'doctor',

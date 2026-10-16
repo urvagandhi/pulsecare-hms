@@ -44,15 +44,15 @@ describe('PDF and Email Services Unit Tests', () => {
         patientId: 'PAT-0001',
         bloodGroup: 'B+',
         userId: {
-          firstName: 'John',
-          lastName: 'Doe',
-          email: 'john.doe@test.com',
+          firstName: 'Aarav',
+          lastName: 'Sharma',
+          email: 'aarav.sharma@test.com',
           phone: '+91 9876543210',
           dob: new Date('1990-05-15'),
           gender: 'male',
         },
         emergencyContact: {
-          name: 'Jane Doe',
+          name: 'Sunita Sharma',
           relationship: 'Spouse',
           phone: '+91 9876543211',
         },
@@ -67,8 +67,8 @@ describe('PDF and Email Services Unit Tests', () => {
       const patient = {
         patientId: 'PAT-0002',
         userId: {
-          firstName: 'Alice',
-          lastName: 'Smith',
+          firstName: 'Ananya',
+          lastName: 'Iyer',
         },
       } as any;
 
@@ -91,8 +91,8 @@ describe('PDF and Email Services Unit Tests', () => {
         patient: {
           patientId: 'PAT-0001',
           userId: {
-            firstName: 'John',
-            lastName: 'Doe',
+            firstName: 'Aarav',
+            lastName: 'Sharma',
             phone: '9876543210',
           },
         },
@@ -100,8 +100,8 @@ describe('PDF and Email Services Unit Tests', () => {
           doctorId: 'DOC-0001',
           specialization: 'Cardiology',
           userId: {
-            firstName: 'Sarah',
-            lastName: 'Jenkins',
+            firstName: 'Vikram',
+            lastName: 'Sharma',
           },
         },
         department: {

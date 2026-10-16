@@ -140,7 +140,7 @@ else
   fail "Doctor listing" "Could not extract doctor ID"
 fi
 
-# Doctor leave check: Attempt to book on Dr. Smith's leave date (2026-10-16)
+# Doctor leave check: Attempt to book on Dr. Vikram Sharma's leave date (2026-10-16)
 LEAVE_DATE="2026-10-16"
 LEAVE_BOOK_RES=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/appointments" \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
