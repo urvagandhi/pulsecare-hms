@@ -26,10 +26,18 @@ export const logger = winston.createLogger({
 export function requestLogger(req: Request, res: Response, next: NextFunction): void {
   const start = Date.now();
   res.on('finish', () => {
-    logger.info(`${req.method} ${req.originalUrl} ${res.statusCode} ${Date.now() - start}ms`, {
+    const duration = Date.now() - start;
+    const msg = `${req.method} ${req.originalUrl} ${res.statusCode} ${duration}ms`;
+    const meta = {
       ip: req.ip,
       userAgent: req.headers['user-agent'],
-    });
+    };
+
+    if (res.statusCode >= 400) {
+      logger.error(msg, meta);
+    } else {
+      logger.info(msg, meta);
+    }
   });
   next();
 }
