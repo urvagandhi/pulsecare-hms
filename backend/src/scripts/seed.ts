@@ -9,8 +9,9 @@ import { Patient, IPatient } from '../models/Patient';
 import { Receptionist } from '../models/Receptionist';
 import { Appointment } from '../models/Appointment';
 import { Invoice } from '../models/Invoice';
+import { RefreshToken } from '../models/RefreshToken';
 
-const SEED_PASSWORD = 'Hospital@123';
+const SEED_PASSWORD = 'Test@123';
 
 function getUpcomingWeekday(dayName: string, weeksAhead = 0): Date {
   const dayIndexMap: Record<string, number> = {
@@ -71,6 +72,7 @@ export async function runSeed(isReset = false): Promise<void> {
       Receptionist.deleteMany({}),
       Department.deleteMany({}),
       User.deleteMany({}),
+      RefreshToken.deleteMany({}),
     ]);
     console.log('✅ Collections cleared.');
   }

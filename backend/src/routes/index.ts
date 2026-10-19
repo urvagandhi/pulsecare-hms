@@ -11,6 +11,7 @@ import { pharmacyRouter } from '../modules/pharmacy/router';
 import { inventoryRouter } from '../modules/inventory/router';
 import { documentsRouter } from '../modules/documents/router';
 import { settingsRouter } from '../modules/settings/router';
+import { notificationRouter } from '../modules/notifications/router';
 
 const router = Router();
 router.use('/auth', authRouter);
@@ -24,5 +25,6 @@ router.use('/pharmacy', pharmacyRouter);
 router.use('/inventory', inventoryRouter);
 router.use('/documents', documentsRouter);
 router.use('/settings', settingsRouter);
+router.use('/notifications', notificationRouter);
 
 export { router };

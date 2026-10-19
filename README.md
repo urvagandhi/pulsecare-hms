@@ -141,7 +141,7 @@ Open your browser at **`http://localhost:5173`** to access the PulseCare HMS por
 
 ## 👥 Seeded Credentials Table
 
-All seeded accounts use the password: `Password@123`
+All seeded accounts use the password: `Test@123`
 
 | Role | Email | Name | Capabilities |
 |---|---|---|---|

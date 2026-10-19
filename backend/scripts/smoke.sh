@@ -60,7 +60,7 @@ login_user() {
 }
 
 # Admin
-ADMIN_RES=$(login_user "admin@pulsecare.test" "Password@123")
+ADMIN_RES=$(login_user "admin@pulsecare.test" "Test@123")
 ADMIN_TOKEN=$(echo "$ADMIN_RES" | grep -o '"accessToken":"[^"]*' | cut -d'"' -f4 || echo "")
 if [[ -n "$ADMIN_TOKEN" ]]; then
   pass "Admin authentication (admin@pulsecare.test)"
@@ -69,7 +69,7 @@ else
 fi
 
 # Receptionist
-RECEP_RES=$(login_user "reception@pulsecare.test" "Password@123")
+RECEP_RES=$(login_user "reception@pulsecare.test" "Test@123")
 RECEP_TOKEN=$(echo "$RECEP_RES" | grep -o '"accessToken":"[^"]*' | cut -d'"' -f4 || echo "")
 if [[ -n "$RECEP_TOKEN" ]]; then
   pass "Receptionist authentication (reception@pulsecare.test)"
@@ -78,7 +78,7 @@ else
 fi
 
 # Doctor
-DOC_RES=$(login_user "dr.smith@pulsecare.test" "Password@123")
+DOC_RES=$(login_user "dr.smith@pulsecare.test" "Test@123")
 DOC_TOKEN=$(echo "$DOC_RES" | grep -o '"accessToken":"[^"]*' | cut -d'"' -f4 || echo "")
 if [[ -n "$DOC_TOKEN" ]]; then
   pass "Doctor authentication (dr.smith@pulsecare.test)"
@@ -87,7 +87,7 @@ else
 fi
 
 # Patient 1
-PAT1_RES=$(login_user "patient1@pulsecare.test" "Password@123")
+PAT1_RES=$(login_user "patient1@pulsecare.test" "Test@123")
 PAT1_TOKEN=$(echo "$PAT1_RES" | grep -o '"accessToken":"[^"]*' | cut -d'"' -f4 || echo "")
 if [[ -n "$PAT1_TOKEN" ]]; then
   pass "Patient 1 authentication (patient1@pulsecare.test)"
@@ -96,7 +96,7 @@ else
 fi
 
 # Patient 2
-PAT2_RES=$(login_user "patient2@pulsecare.test" "Password@123")
+PAT2_RES=$(login_user "patient2@pulsecare.test" "Test@123")
 PAT2_TOKEN=$(echo "$PAT2_RES" | grep -o '"accessToken":"[^"]*' | cut -d'"' -f4 || echo "")
 if [[ -n "$PAT2_TOKEN" ]]; then
   pass "Patient 2 authentication (patient2@pulsecare.test)"

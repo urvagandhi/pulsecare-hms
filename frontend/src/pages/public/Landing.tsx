@@ -37,7 +37,7 @@ const SEEDED_CREDENTIALS = [
 
 const SPECIALTY_HIGHLIGHTS = [
   { name: 'Cardiology', doctors: '6 Specialists', icon: HeartPulse, color: 'text-rose-600 bg-rose-50 border-rose-100 dark:bg-rose-950/40 dark:border-rose-900' },
-  { name: 'Pediatrics', doctors: '4 Specialists', icon: Users, color: 'text-emerald-600 bg-emerald-50/70 border-emerald-100 dark:bg-emerald-950/40 dark:border-emerald-900' },
+  { name: 'Pediatrics', doctors: '4 Specialists', icon: Users, color: 'text-emerald-600 bg-emerald-50 border-emerald-100 dark:bg-emerald-950/40 dark:border-emerald-900' },
   { name: 'Orthopedics', doctors: '5 Specialists', icon: Activity, color: 'text-blue-600 bg-blue-50 border-blue-100 dark:bg-blue-950/40 dark:border-blue-900' },
   { name: 'General Medicine', doctors: '8 Specialists', icon: Stethoscope, color: 'text-emerald-600 bg-emerald-50 border-emerald-100 dark:bg-emerald-950/40 dark:border-emerald-900' },
 ];
@@ -109,10 +109,10 @@ export function Landing() {
   const fadeIn = shouldReduceMotion
     ? { initial: {}, animate: {} }
     : {
-        initial: { opacity: 0, y: 16 },
-        animate: { opacity: 1, y: 0 },
-        transition: { duration: 0.5 },
-      };
+      initial: { opacity: 0, y: 16 },
+      animate: { opacity: 1, y: 0 },
+      transition: { duration: 0.5 },
+    };
 
   return (
     <div className="min-h-screen bg-[#fafbfc] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col selection:bg-emerald-600 selection:text-white font-sans antialiased">
@@ -123,7 +123,7 @@ export function Landing() {
             <div className="flex items-center justify-between font-medium text-emerald-100 mb-2">
               <span className="flex items-center gap-1.5 font-semibold text-white">
                 <KeyRound className="w-4 h-4 text-emerald-300" />
-                Seeded Demo Accounts (Password for all roles: <code className="bg-emerald-900/80 text-emerald-200 px-1.5 py-0.5 rounded font-mono border border-emerald-700/80">Password@123</code>)
+                Seeded Demo Accounts (Password for all roles: <code className="bg-emerald-900/80 text-emerald-200 px-1.5 py-0.5 rounded font-mono border border-emerald-700/80">Test@123</code>)
               </span>
               <button
                 onClick={() => setShowCreds(false)}
@@ -135,7 +135,7 @@ export function Landing() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
               {SEEDED_CREDENTIALS.map((c) => (
-                <div key={c.email} className="p-2.5 bg-emerald-950/70 rounded-lg border border-emerald-800/80/80">
+                <div key={c.email} className="p-2.5 bg-emerald-950/70 rounded-lg border border-emerald-800/80">
                   <span className="font-bold text-emerald-300 block">{c.role}</span>
                   <code className="font-mono text-[11px] text-emerald-100 truncate block mt-0.5">{c.email}</code>
                 </div>
@@ -195,14 +195,14 @@ export function Landing() {
       <section className="relative overflow-hidden pt-12 pb-20 lg:pt-20 lg:pb-32 bg-gradient-to-b from-teal-50/50 via-[#fafbfc] to-[#fafbfc] dark:from-slate-900/40 dark:via-slate-950 dark:to-slate-950">
         {/* Subtle decorative radial gradients */}
         <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[900px] h-[450px] bg-gradient-to-tr from-teal-300/15 via-emerald-200/10 to-transparent blur-3xl pointer-events-none rounded-full" />
-        <div className="absolute top-40 right-10 w-72 h-72 bg-emerald-50/700/5 blur-2xl pointer-events-none rounded-full" />
+        <div className="absolute top-40 right-10 w-72 h-72 bg-emerald-500/5 blur-2xl pointer-events-none rounded-full" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Left Column: Headings & Call to actions */}
             <div className="lg:col-span-7 space-y-6 text-left">
-              <motion.div {...fadeIn} className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80/80 dark:border-emerald-800/80 shadow-sm">
-                <span className="w-2 h-2 rounded-full bg-emerald-50/700 animate-ping" />
+              <motion.div {...fadeIn} className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 shadow-sm">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                 <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                 <span>Next-Generation Healthcare Hospital Suite</span>
               </motion.div>
@@ -265,7 +265,7 @@ export function Landing() {
                 {/* Header widget */}
                 <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/60 border border-emerald-100 dark:border-emerald-900 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-100 dark:border-emerald-900 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                       <Stethoscope className="w-6 h-6" />
                     </div>
                     <div>
@@ -297,7 +297,7 @@ export function Landing() {
 
                   {/* Token Highlight */}
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3.5 rounded-xl bg-emerald-50/700/10 border border-emerald-500/20 text-center">
+                    <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
                       <p className="text-[11px] text-emerald-800 dark:text-emerald-300 font-medium">Next Available Token</p>
                       <p className="text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-0.5">#07</p>
                       <p className="text-[10px] text-slate-500">Today, 02:30 PM</p>
@@ -503,8 +503,8 @@ export function Landing() {
       </section>
 
       {/* Call to Action Banner */}
-      <section className="py-20 bg-gradient-to-br from-teal-900 via-teal-950 to-slate-950 text-white border-t border-emerald-800/80/80 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-50/700/10 rounded-full blur-3xl pointer-events-none" />
+      <section className="py-20 bg-gradient-to-br from-teal-900 via-teal-950 to-slate-950 text-white border-t border-emerald-800/80 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 relative z-10">
           <span className="px-3.5 py-1 rounded-full text-xs font-bold bg-emerald-900/80 text-emerald-200 border border-emerald-700/80 inline-block">
             Start Your Consultation
@@ -517,12 +517,16 @@ export function Landing() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
             <Link to="/sign-up">
-              <Button size="lg" className="bg-white text-teal-900 hover:bg-emerald-50/70 font-bold px-8 rounded-full shadow-xl h-12 text-base">
+              <Button size="lg" className="bg-white text-teal-950 hover:bg-emerald-50 font-bold px-8 rounded-full shadow-xl h-12 text-base transition-all">
                 Register as Patient
               </Button>
             </Link>
             <Link to="/sign-in">
-              <Button size="lg" variant="outline" className="text-white border-emerald-500/50 hover:bg-emerald-900/50 font-bold px-8 rounded-full h-12 text-base">
+              <Button
+                size="lg"
+                variant="outline"
+                className="bg-transparent hover:bg-emerald-900/60 text-white border-2 border-emerald-400/60 hover:border-emerald-300 hover:text-white font-bold px-8 rounded-full h-12 text-base backdrop-blur-sm transition-all"
+              >
                 Sign In to Portal
               </Button>
             </Link>
