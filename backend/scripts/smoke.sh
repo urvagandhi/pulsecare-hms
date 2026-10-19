@@ -78,10 +78,10 @@ else
 fi
 
 # Doctor
-DOC_RES=$(login_user "dr.smith@pulsecare.test" "Test@123")
+DOC_RES=$(login_user "dr.sharma@pulsecare.test" "Test@123")
 DOC_TOKEN=$(echo "$DOC_RES" | grep -o '"accessToken":"[^"]*' | cut -d'"' -f4 || echo "")
 if [[ -n "$DOC_TOKEN" ]]; then
-  pass "Doctor authentication (dr.smith@pulsecare.test)"
+  pass "Doctor authentication (dr.sharma@pulsecare.test)"
 else
   fail "Doctor login" "No access token in response"
 fi

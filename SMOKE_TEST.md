@@ -15,7 +15,7 @@ This report records the complete verification checklist across API endpoints, da
 | **ST-01** | System Health Ping (`GET /api/v1/health`) | HTTP 200 with `{ status: "ok" }` | HTTP 200, system healthy | API test (`smoke.sh` & `health.test.ts`) | **PASS** |
 | **ST-02** | Admin Login (`admin@pulsecare.test`) | HTTP 200, valid JWT Bearer access token | Token issued, role verified as `admin` | API test (`smoke.sh` & `auth.test.ts`) | **PASS** |
 | **ST-03** | Receptionist Login (`reception@pulsecare.test`) | HTTP 200, valid JWT Bearer access token | Token issued, role verified as `receptionist` | API test (`smoke.sh` & `auth.test.ts`) | **PASS** |
-| **ST-04** | Doctor Login (`dr.smith@pulsecare.test`) | HTTP 200, valid JWT Bearer access token | Token issued, role verified as `doctor` | API test (`smoke.sh` & `auth.test.ts`) | **PASS** |
+| **ST-04** | Doctor Login (`dr.sharma@pulsecare.test`) | HTTP 200, valid JWT Bearer access token | Token issued, role verified as `doctor` | API test (`smoke.sh` & `auth.test.ts`) | **PASS** |
 | **ST-05** | Patient Login (`patient1@pulsecare.test`) | HTTP 200, valid JWT Bearer access token | Token issued, role verified as `patient` | API test (`smoke.sh` & `auth.test.ts`) | **PASS** |
 | **ST-06** | Patient Safe Search (`GET /patients?search=James`) | HTTP 200, returns James Wilson, handles regex characters safely | Safe regex search matches name, email, phone, and patientId | API test (`smoke.sh` & `patients.test.ts`) | **PASS** |
 | **ST-07** | Doctor Leave Booking Lockout (D-022) | Booking on doctor leave date (`2026-10-16`) rejected with HTTP 400 | HTTP 400 with "Doctor is on leave on this date" | API test (`smoke.sh` & `appointments.test.ts`) | **PASS** |

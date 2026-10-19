@@ -26,13 +26,13 @@ import {
 } from 'lucide-react';
 
 const SEEDED_CREDENTIALS = [
-  { role: 'Admin', email: 'admin@pulsecare.test', note: 'Full hospital system access, staff, analytics & billing' },
-  { role: 'Receptionist', email: 'reception@pulsecare.test', note: 'Patient registration, walk-in appointments, billing' },
-  { role: 'Doctor (Cardio)', email: 'dr.smith@pulsecare.test', note: 'Schedule view, patient queue, consultation tokens' },
-  { role: 'Doctor (Pediatrics)', email: 'dr.chen@pulsecare.test', note: 'Schedule & queue management' },
-  { role: 'Doctor (Orthopedics)', email: 'dr.patel@pulsecare.test', note: 'Schedule & leave tracking' },
-  { role: 'Doctor (Medicine)', email: 'dr.mehta@pulsecare.test', note: 'General medicine schedule & queue' },
-  { role: 'Patient', email: 'patient1@pulsecare.test', note: 'Self-booking, appointments slip, bills & ID card' },
+  { role: 'Admin', email: 'admin@pulsecare.test', note: 'Rajesh Malhotra - Hospital system access, staff & analytics' },
+  { role: 'Receptionist', email: 'reception@pulsecare.test', note: 'Pooja Verma - Patient registration, queue & billing' },
+  { role: 'Doctor (Cardio)', email: 'dr.sharma@pulsecare.test', note: 'Dr. Arvind Sharma - Cardiac consultations & queue tokens' },
+  { role: 'Doctor (Pediatrics)', email: 'dr.kulkarni@pulsecare.test', note: 'Dr. Sneha Kulkarni - Child healthcare & NICU' },
+  { role: 'Doctor (Orthopedics)', email: 'dr.patel@pulsecare.test', note: 'Dr. Rajesh Patel - Joint replacement & leave engine' },
+  { role: 'Doctor (Medicine)', email: 'dr.mehta@pulsecare.test', note: 'Dr. Vedant Mehta - Internal medicine & triage' },
+  { role: 'Patient', email: 'patient1@pulsecare.test', note: 'Aarav Sharma - Appointments, tokens & medical records' },
 ];
 
 const SPECIALTY_HIGHLIGHTS = [
