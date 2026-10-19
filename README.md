@@ -145,10 +145,10 @@ All seeded accounts use the password: `Test@123`
 
 | Role | Email | Name | Capabilities |
 |---|---|---|---|
-| **Admin** | `admin@pulsecare.test` | System Administrator | Hospital oversight, user roles, staff leaves, analytics, billing |
+| **Admin** | `admin@pulsecare.test` | Rajesh Malhotra | Hospital oversight, user roles, staff leaves, analytics, billing |
 | **Receptionist** | `reception@pulsecare.test` | Pooja Verma | Patient registration, walk-in appointments, invoice creation & issue |
-| **Doctor (Cardiology)** | `dr.smith@pulsecare.test` | Dr. Vikram Sharma | Outpatient schedule, daily queue tokens, patient consultations |
-| **Doctor (Pediatrics)** | `dr.chen@pulsecare.test` | Dr. Ananya Iyer | Pediatric consultations, schedule, queue management |
+| **Doctor (Cardiology)** | `dr.sharma@pulsecare.test` | Dr. Arvind Sharma | Outpatient schedule, daily queue tokens, patient consultations |
+| **Doctor (Pediatrics)** | `dr.kulkarni@pulsecare.test` | Dr. Sneha Kulkarni | Pediatric consultations, schedule, queue management |
 | **Doctor (Orthopedics)**| `dr.patel@pulsecare.test` | Dr. Rajesh Patel | Orthopedic schedule, consultations, leave tracking |
 | **Doctor (Medicine)**   | `dr.mehta@pulsecare.test` | Dr. Vedant Mehta | General medicine schedule, daily queue tokens, consultations |
 | **Patient 1** | `patient1@pulsecare.test` | Aarav Sharma | Self-service appointment booking, view slips, ID card, pay invoices |

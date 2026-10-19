@@ -66,7 +66,7 @@ export function SignIn() {
               </button>
               <button
                 type="button"
-                onClick={() => fillDemo('dr.smith@pulsecare.test')}
+                onClick={() => fillDemo('dr.sharma@pulsecare.test')}
                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 text-left font-medium transition-colors"
               >
                 <Stethoscope className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
