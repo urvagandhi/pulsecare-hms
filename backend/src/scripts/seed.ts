@@ -284,6 +284,7 @@ export async function runSeed(isReset = false): Promise<void> {
     consultationFee: 900,
     availability: [
       { day: 'monday', startTime: '13:00', endTime: '18:00' },
+      { day: 'tuesday', startTime: '13:00', endTime: '18:00' },
       { day: 'wednesday', startTime: '13:00', endTime: '18:00' },
       { day: 'friday', startTime: '13:00', endTime: '18:00' },
       { day: 'saturday', startTime: '09:00', endTime: '14:00' },
@@ -350,6 +351,7 @@ export async function runSeed(isReset = false): Promise<void> {
     consultationFee: 1100,
     availability: [
       { day: 'monday', startTime: '08:30', endTime: '14:30' },
+      { day: 'tuesday', startTime: '08:30', endTime: '14:30' },
       { day: 'wednesday', startTime: '08:30', endTime: '14:30' },
       { day: 'thursday', startTime: '08:30', endTime: '14:30' },
       { day: 'friday', startTime: '08:30', endTime: '14:30' },
@@ -653,7 +655,8 @@ export async function runSeed(isReset = false): Promise<void> {
   const pastMonday = getWeekdayDate('monday', -1);
   const pastTuesday = getWeekdayDate('tuesday', -1);
   const pastThursday = getWeekdayDate('thursday', -1);
-  const todayMonday = getWeekdayDate('monday', 0); // Focus date for active daily queue token demonstration!
+  const now = new Date();
+  const todayMonday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0)); // Focus date for active daily queue token demonstration!
   const nextMonday = getWeekdayDate('monday', 1);
   const nextTuesday = getWeekdayDate('tuesday', 1);
   const nextWednesday = getWeekdayDate('wednesday', 1);
