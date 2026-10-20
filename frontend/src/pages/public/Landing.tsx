@@ -26,13 +26,14 @@ import {
 } from 'lucide-react';
 
 const SEEDED_CREDENTIALS = [
-  { role: 'Admin', email: 'admin@pulsecare.test', note: 'Rajesh Malhotra - Hospital system access, staff & analytics' },
-  { role: 'Receptionist', email: 'reception@pulsecare.test', note: 'Pooja Verma - Patient registration, queue & billing' },
-  { role: 'Doctor (Cardio)', email: 'dr.sharma@pulsecare.test', note: 'Dr. Arvind Sharma - Cardiac consultations & queue tokens' },
-  { role: 'Doctor (Pediatrics)', email: 'dr.kulkarni@pulsecare.test', note: 'Dr. Sneha Kulkarni - Child healthcare & NICU' },
-  { role: 'Doctor (Orthopedics)', email: 'dr.patel@pulsecare.test', note: 'Dr. Rajesh Patel - Joint replacement & leave engine' },
-  { role: 'Doctor (Medicine)', email: 'dr.mehta@pulsecare.test', note: 'Dr. Vedant Mehta - Internal medicine & triage' },
-  { role: 'Patient', email: 'patient1@pulsecare.test', note: 'Aarav Sharma - Appointments, tokens & medical records' },
+  { role: 'Admin', name: 'Rajesh Malhotra', email: 'admin@pulsecare.test', note: 'Hospital administration & analytics' },
+  { role: 'Receptionist', name: 'Pooja Verma', email: 'reception@pulsecare.test', note: 'Walk-ins, queues & billing' },
+  { role: 'Senior Cardio', name: 'Dr. Arvind Sharma', email: 'dr.sharma@pulsecare.test', note: 'Interventional Cardiology, Queue #1-#4' },
+  { role: 'Junior Cardio', name: 'Dr. Vikram Iyer', email: 'dr.viyer@pulsecare.test', note: 'Electrophysiology, Token #1' },
+  { role: 'Chief Pediatrics', name: 'Dr. Sneha Kulkarni', email: 'dr.kulkarni@pulsecare.test', note: 'Pediatric care & NICU' },
+  { role: 'Senior Ortho', name: 'Dr. Rajesh Patel', email: 'dr.patel@pulsecare.test', note: 'Joint Replacement & Leave Roster' },
+  { role: 'Senior Physician', name: 'Dr. Vedant Mehta', email: 'dr.mehta@pulsecare.test', note: 'Internal Medicine & Critical Care' },
+  { role: 'Patient', name: 'Aarav Sharma', email: 'patient1@pulsecare.test', note: 'Self-booking, token slip & bills' },
 ];
 
 const SPECIALTY_HIGHLIGHTS = [
@@ -133,11 +134,17 @@ export function Landing() {
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
               {SEEDED_CREDENTIALS.map((c) => (
-                <div key={c.email} className="p-2.5 bg-emerald-950/70 rounded-lg border border-emerald-800/80">
-                  <span className="font-bold text-emerald-300 block">{c.role}</span>
-                  <code className="font-mono text-[11px] text-emerald-100 truncate block mt-0.5">{c.email}</code>
+                <div key={c.email} className="p-2.5 bg-emerald-950/70 rounded-lg border border-emerald-800/80 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between gap-1 mb-0.5">
+                      <span className="font-bold text-emerald-300">{c.role}</span>
+                      <span className="text-[11px] text-emerald-100 font-medium truncate">{c.name}</span>
+                    </div>
+                    <code className="font-mono text-[11px] text-emerald-200/90 truncate block">{c.email}</code>
+                  </div>
+                  <span className="text-[10px] text-emerald-300/70 mt-1.5 block truncate">{c.note}</span>
                 </div>
               ))}
             </div>

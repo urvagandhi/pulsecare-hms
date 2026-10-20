@@ -55,38 +55,50 @@ export function SignIn() {
               <span>Quick Demo Sign-In</span>
               <span className="font-mono text-[11px] bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded text-emerald-600 dark:text-emerald-400 font-bold">PW: Test@123</span>
             </p>
-            <div className="grid grid-cols-2 gap-1.5 text-xs">
+            <div className="grid grid-cols-2 gap-2 text-xs">
               <button
                 type="button"
                 onClick={() => fillDemo('admin@pulsecare.test')}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 text-left font-medium transition-colors"
+                className="flex flex-col p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-slate-700/50 text-left transition-all"
               >
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <span>Admin</span>
+                <div className="flex items-center gap-1.5 font-semibold text-slate-800 dark:text-slate-100">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span>Admin</span>
+                </div>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">Rajesh Malhotra</span>
               </button>
               <button
                 type="button"
                 onClick={() => fillDemo('dr.sharma@pulsecare.test')}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 text-left font-medium transition-colors"
+                className="flex flex-col p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-slate-700/50 text-left transition-all"
               >
-                <Stethoscope className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-                <span>Doctor</span>
+                <div className="flex items-center gap-1.5 font-semibold text-slate-800 dark:text-slate-100">
+                  <Stethoscope className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                  <span>Doctor</span>
+                </div>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">Dr. Arvind Sharma</span>
               </button>
               <button
                 type="button"
                 onClick={() => fillDemo('reception@pulsecare.test')}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 text-left font-medium transition-colors"
+                className="flex flex-col p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-slate-700/50 text-left transition-all"
               >
-                <ClipboardList className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                <span>Reception</span>
+                <div className="flex items-center gap-1.5 font-semibold text-slate-800 dark:text-slate-100">
+                  <ClipboardList className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                  <span>Reception</span>
+                </div>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">Pooja Verma</span>
               </button>
               <button
                 type="button"
                 onClick={() => fillDemo('patient1@pulsecare.test')}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 text-left font-medium transition-colors"
+                className="flex flex-col p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-slate-700/50 text-left transition-all"
               >
-                <User className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
-                <span>Patient</span>
+                <div className="flex items-center gap-1.5 font-semibold text-slate-800 dark:text-slate-100">
+                  <User className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
+                  <span>Patient</span>
+                </div>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">Aarav Sharma</span>
               </button>
             </div>
           </div>
