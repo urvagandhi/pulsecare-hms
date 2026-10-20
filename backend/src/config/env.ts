@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  PORT: z.coerce.number().default(4451),
+  PORT: z.coerce.number().default(5001),
   CORS_ORIGINS: z.string().default('http://localhost:5173'),
   // Log level
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
