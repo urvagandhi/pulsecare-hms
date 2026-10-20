@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Backend (`cd backend`)
 ```bash
-npm run dev          # Start dev server (nodemon + ts-node, port 4451)
+npm run dev          # Start dev server (nodemon + ts-node, port 5001)
 npm test             # Run all Jest tests (MongoMemoryServer, no external DB needed)
 npm run test:coverage  # Tests with coverage (targets 80% lines, 70% branches)
 npm run lint         # ESLint
@@ -95,7 +95,7 @@ Permissions are defined in a single matrix in `authorize.ts`. Role enum: `admin`
 ### Environment Variables
 | Variable | Default | Purpose |
 |---|---|---|
-| `PORT` | 4451 | API port |
+| `PORT` | 5001 | API port |
 | `CORS_ORIGINS` | http://localhost:5173 | Comma-separated allowed origins |
 | `AWS_REGION` | us-east-1 | Secrets Manager region |
 | `AWS_SECRET_NAME` | hms/app-secrets | Secrets Manager key |

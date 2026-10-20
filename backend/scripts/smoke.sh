@@ -8,7 +8,7 @@
 
 set -euo pipefail
 
-API_URL="${API_URL:-http://localhost:5000/api/v1}"
+API_URL="${API_URL:-http://localhost:5001/api/v1}"
 PASSED=0
 FAILED=0
 
