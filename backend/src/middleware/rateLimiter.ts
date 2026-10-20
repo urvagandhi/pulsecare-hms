@@ -52,9 +52,11 @@ export async function rateLimiter(req: Request, res: Response, next: NextFunctio
   const identifier = req.ip ?? 'unknown';
   const key = `ratelimit:${identifier}`;
 
-  // In development, remote cloud Redis adds 300-1000ms latency to every single request.
-  // Use ultra-fast in-memory rate limiting during development unless explicitly requested.
-  const useRedis = isRedisAvailable() && (process.env.NODE_ENV !== 'development' || process.env.REDIS_RATE_LIMIT === 'true');
+  // When running with local Redis (localhost/127.0.0.1) or in production, latency is sub-millisecond (<0.2ms).
+  // Remote cloud Redis adds 300-1000ms latency, so remote dev instances fallback to in-memory store.
+  const redisUrl = process.env.REDIS_URL || '';
+  const isLocalRedis = redisUrl.includes('localhost') || redisUrl.includes('127.0.0.1');
+  const useRedis = isRedisAvailable() && (process.env.NODE_ENV !== 'development' || process.env.REDIS_RATE_LIMIT === 'true' || isLocalRedis);
 
   if (useRedis) {
     try {
