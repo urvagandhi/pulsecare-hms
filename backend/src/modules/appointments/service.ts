@@ -277,7 +277,29 @@ export async function listAppointments(filters: {
   const query: Record<string, unknown> = {};
 
   if (filters.date) {
-    query.date = new Date(filters.date + 'T00:00:00.000Z');
+    const raw = String(filters.date).trim();
+    const lower = raw.toLowerCase();
+
+    if (lower === 'today') {
+      const now = new Date();
+      const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+      const endOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
+      query.date = { $gte: startOfDay, $lte: endOfDay };
+    } else if (lower === 'tomorrow') {
+      const now = new Date();
+      const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0, 0));
+      const endOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 23, 59, 59, 999));
+      query.date = { $gte: startOfDay, $lte: endOfDay };
+    } else {
+      const cleanDateStr = raw.includes('T') ? raw.split('T')[0] : raw;
+      const parsed = new Date(`${cleanDateStr}T00:00:00.000Z`);
+      if (!isNaN(parsed.getTime())) {
+        const startOfDay = parsed;
+        const endOfDay = new Date(parsed);
+        endOfDay.setUTCHours(23, 59, 59, 999);
+        query.date = { $gte: startOfDay, $lte: endOfDay };
+      }
+    }
   }
   if (filters.doctorId) {
     query.doctor = new Types.ObjectId(filters.doctorId);

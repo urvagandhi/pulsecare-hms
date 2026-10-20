@@ -11,7 +11,7 @@ export const DAY_NAMES = [
 export type DayOfWeek = (typeof DAY_NAMES)[number];
 
 /**
- * Normalizes any date string (YYYY-MM-DD or ISO) or Date object to a UTC midnight Date.
+ * Normalizes any date string (YYYY-MM-DD, ISO, 'today', 'tomorrow') or Date object to a UTC midnight Date.
  */
 export function parseUtcMidnight(dateInput: string | Date): Date {
   if (dateInput instanceof Date) {
@@ -19,8 +19,22 @@ export function parseUtcMidnight(dateInput: string | Date): Date {
     d.setUTCHours(0, 0, 0, 0);
     return d;
   }
+  const clean = String(dateInput).trim().toLowerCase();
+  if (clean === 'today') {
+    const now = new Date();
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+  }
+  if (clean === 'tomorrow') {
+    const now = new Date();
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0, 0));
+  }
   const str = dateInput.includes('T') ? dateInput.split('T')[0] : dateInput;
-  return new Date(`${str}T00:00:00.000Z`);
+  const parsed = new Date(`${str}T00:00:00.000Z`);
+  if (isNaN(parsed.getTime())) {
+    const fallback = new Date();
+    return new Date(Date.UTC(fallback.getUTCFullYear(), fallback.getUTCMonth(), fallback.getUTCDate(), 0, 0, 0, 0));
+  }
+  return parsed;
 }
 
 /**
