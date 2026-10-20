@@ -130,6 +130,8 @@ const InvoiceSchema = new Schema<IInvoice>(
 
 // Compound index for common query pattern
 InvoiceSchema.index({ patient: 1, status: 1 });
+InvoiceSchema.index({ status: 1, createdAt: -1 });
+InvoiceSchema.index({ createdAt: -1 });
 
 // Pre-save hook: compute all derived fields and auto-generate invoiceId
 InvoiceSchema.pre('save', async function (next) {

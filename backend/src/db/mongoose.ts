@@ -11,6 +11,9 @@ export async function connectDB(uri?: string): Promise<void> {
     try {
       await mongoose.connect(mongoUri, {
         serverSelectionTimeoutMS: 5000,
+        maxPoolSize: 20,
+        minPoolSize: 5,
+        socketTimeoutMS: 45000,
       });
       logger.info('MongoDB connected');
       return;

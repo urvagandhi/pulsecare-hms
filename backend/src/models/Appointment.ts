@@ -51,6 +51,11 @@ AppointmentSchema.index(
   { unique: true, partialFilterExpression: { status: { $nin: ['cancelled', 'noShow'] } } }
 );
 
+// Performance indexes for listing, sorting, and dashboard filtering
+AppointmentSchema.index({ date: 1, timeSlot: 1 });
+AppointmentSchema.index({ date: 1, status: 1 });
+AppointmentSchema.index({ createdAt: -1 });
+
 // Auto-generate appointmentId and doctor-date daily tokenNumber using atomic counter
 AppointmentSchema.pre('save', async function (next) {
   if (!this.appointmentId) {

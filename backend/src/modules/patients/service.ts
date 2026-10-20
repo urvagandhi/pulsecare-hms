@@ -77,15 +77,20 @@ export async function listPatients(filters: { search?: string; page?: number; li
   const { search, page = 1, limit = 20 } = filters;
   const skip = (page - 1) * limit;
 
-  const patientUserIds = await User.find({ role: 'patient' }).distinct('_id');
-  const query: Record<string, unknown> = {};
+  // Exclude stray profiles linked to staff/non-patient accounts
+  const nonPatientUsers = await User.find({ role: { $ne: 'patient' } }).select('_id').lean();
+  const excludedUserIds = nonPatientUsers.map((u) => u._id);
+
+  const query: Record<string, unknown> = {
+    userId: { $nin: excludedUserIds },
+  };
 
   if (search && search.trim()) {
     const safePattern = escapeRegex(search.trim());
     const safeRegex = new RegExp(safePattern, 'i');
 
     const matchingUsers = await User.find({
-      _id: { $in: patientUserIds },
+      role: 'patient',
       $or: [
         { firstName: safeRegex },
         { lastName: safeRegex },
@@ -97,7 +102,7 @@ export async function listPatients(filters: { search?: string; page?: number; li
     const userIds = matchingUsers.map(u => u._id);
 
     query.$and = [
-      { userId: { $in: patientUserIds } },
+      { userId: { $nin: excludedUserIds } },
       {
         $or: [
           { userId: { $in: userIds } },
@@ -106,8 +111,7 @@ export async function listPatients(filters: { search?: string; page?: number; li
         ],
       },
     ];
-  } else {
-    query.userId = { $in: patientUserIds };
+    delete query.userId;
   }
 
   const [data, total] = await Promise.all([

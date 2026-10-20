@@ -52,7 +52,11 @@ export async function rateLimiter(req: Request, res: Response, next: NextFunctio
   const identifier = req.ip ?? 'unknown';
   const key = `ratelimit:${identifier}`;
 
-  if (isRedisAvailable()) {
+  // In development, remote cloud Redis adds 300-1000ms latency to every single request.
+  // Use ultra-fast in-memory rate limiting during development unless explicitly requested.
+  const useRedis = isRedisAvailable() && (process.env.NODE_ENV !== 'development' || process.env.REDIS_RATE_LIMIT === 'true');
+
+  if (useRedis) {
     try {
       const redis = getRedisClient();
       const current = (await redis.eval(RATE_LIMIT_LUA, 1, key, String(WINDOW_SECONDS))) as number;

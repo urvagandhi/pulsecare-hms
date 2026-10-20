@@ -5,6 +5,8 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
       retry: (failureCount, error) => {
         // Don't retry on 401/403
         if (axios.isAxiosError(error)) {
