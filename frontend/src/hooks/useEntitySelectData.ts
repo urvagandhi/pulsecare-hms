@@ -39,9 +39,10 @@ export function usePatientsSelectQuery(enabled: boolean) {
   return useQuery({
     queryKey: ['entity-select', 'patients'],
     queryFn: async () => {
-      const res = await api.get<{ success: boolean; data: PatientSelectRow[] }>('/patients?limit=500');
+      const res = await api.get<{ success: boolean; data: PatientSelectRow[] }>('/patients?limit=100');
       return res.data.data ?? [];
     },
+    staleTime: 10 * 60 * 1000,
     enabled,
   });
 }
@@ -51,10 +52,11 @@ export function useDoctorsSelectQuery(enabled: boolean) {
     queryKey: ['entity-select', 'doctors'],
     queryFn: async () => {
       const res = await api.get<{ success: boolean; data: DoctorSelectRow[] }>(
-        '/doctors?isActive=true&limit=500'
+        '/doctors?isActive=true&limit=100'
       );
       return res.data.data ?? [];
     },
+    staleTime: 10 * 60 * 1000,
     enabled,
   });
 }
@@ -66,6 +68,7 @@ export function useDrugsSelectQuery(enabled: boolean) {
       const res = await api.get<{ success: boolean; data: Drug[] }>('/pharmacy/drugs');
       return res.data.data ?? [];
     },
+    staleTime: 10 * 60 * 1000,
     enabled,
   });
 }
@@ -76,10 +79,11 @@ export function useNurseUsersSelectQuery(enabled: boolean) {
     queryKey: ['entity-select', 'nurses'],
     queryFn: async () => {
       const res = await api.get<{ success: boolean; data: NurseStaffRow[] }>(
-        '/staff?role=nurse&isActive=true&limit=500'
+        '/staff?role=nurse&isActive=true&limit=100'
       );
       return res.data.data ?? [];
     },
+    staleTime: 10 * 60 * 1000,
     enabled,
   });
 }

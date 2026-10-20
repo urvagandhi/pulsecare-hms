@@ -101,7 +101,7 @@ This repository is a TypeScript-rebuilt MERN stack Hospital Management System (H
 - **Database Engine:** MongoDB 7 / Mongoose 8.0.0 (`backend/package.json:35` [VERIFIED]).
 - **Cache / Session Store:** Redis 7 via `ioredis@^5.0.0` (`backend/package.json:33` [VERIFIED]) used for rate limiting and Socket.io cluster adapter.
 - **Environment Variables Required:**
-  - `PORT`: API server port (default: `4451`) [VERIFIED `backend/src/config/env.ts:5`].
+  - `PORT`: API server port (default: `5001`) [VERIFIED `backend/src/config/env.ts:5`].
   - `NODE_ENV`: Runtime environment (`development` | `test` | `production`, default: `development`) [VERIFIED `backend/src/config/env.ts:4`].
   - `CORS_ORIGINS`: Allowed origins comma-separated (default: `http://localhost:5173`) [VERIFIED `backend/src/config/env.ts:6`].
   - `MONGODB_URI`: MongoDB connection string (default: `mongodb://localhost:27017/hms`) [VERIFIED `backend/src/config/secrets.ts:18`].
@@ -212,8 +212,8 @@ npm run dev
 ```
 *Working Output:*
 - Server boots via `nodemon --watch src --ext ts --exec ts-node src/server.ts` [VERIFIED `backend/package.json:9`].
-- Binds to port `4451` [VERIFIED `backend/src/config/env.ts:5`].
-- Winston logger outputs: `HMS API running on port 4451 [development]` [VERIFIED `backend/src/server.ts:28`].
+- Binds to port `5001` [VERIFIED `backend/src/config/env.ts:5`].
+- Winston logger outputs: `HMS API running on port 5001 [development]` [VERIFIED `backend/src/server.ts:28`].
 
 #### Step 4: Install & Start Frontend
 ```bash
@@ -223,12 +223,12 @@ npm run dev
 ```
 *Working Output:*
 - Vite dev server starts on `http://localhost:5173` [VERIFIED `frontend/vite.config.ts:11`].
-- Automatic reverse-proxy forwards `/api` requests to `http://localhost:4451` [VERIFIED `frontend/vite.config.ts:13`].
+- Automatic reverse-proxy forwards `/api` requests to `http://localhost:5001` [VERIFIED `frontend/vite.config.ts:13`].
 
 ### 3.2 Ports & Network Topology
 - **Frontend Web UI:** `http://localhost:5173`
-- **Backend API:** `http://localhost:4451`
-- **API Base Route:** `http://localhost:4451/api/v1`
+- **Backend API:** `http://localhost:5001`
+- **API Base Route:** `http://localhost:5001/api/v1`
 - **MongoDB:** `localhost:27017`
 - **Redis Server:** `localhost:6379`
 

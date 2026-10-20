@@ -78,9 +78,9 @@ export function AdminDashboard() {
   const isAdmin = user?.role === 'admin';
   const [apptTab, setApptTab] = useState<'today' | 'upcoming'>('today');
 
-  const patientsQ = useQuery<{ success: boolean; data: Patient[] }>({
+  const patientsQ = useQuery<{ success: boolean; data: Patient[]; meta?: { total: number } }>({
     queryKey: ['admin-dash', 'patients'],
-    queryFn: () => api.get('/patients?limit=1000').then(r => r.data),
+    queryFn: () => api.get('/patients?limit=1').then(r => r.data),
   });
 
   const apptQ = useQuery<{ success: boolean; data: Appointment[] }>({
@@ -116,7 +116,7 @@ export function AdminDashboard() {
     queryFn: () => api.get('/billing?status=issued,partial,draft&limit=5').then(r => r.data),
   });
 
-  const totalPatients   = patientsQ.data?.data?.length ?? 0;
+  const totalPatients   = patientsQ.data?.meta?.total ?? patientsQ.data?.data?.length ?? 0;
   const todayAppts      = apptQ.data?.data ?? [];
   const upcomingAppts   = upcomingQ.data?.data ?? [];
   const pendingInvoices = invoicesQ.data?.data ?? [];
