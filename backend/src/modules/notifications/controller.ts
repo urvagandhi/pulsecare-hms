@@ -26,7 +26,7 @@ const INITIAL_DEMO_NOTIFICATIONS = [
 export async function listNotifications(req: Request, res: Response): Promise<void> {
   const userId = req.user!._id;
 
-  let items = await Notification.find({ user: userId }).sort({ createdAt: -1 }).limit(50);
+  let items = await Notification.find({ user: userId }).sort({ createdAt: -1 }).limit(50).lean();
 
   // If user has no notifications yet, initialize with sample alerts
   if (items.length === 0) {
@@ -36,7 +36,7 @@ export async function listNotifications(req: Request, res: Response): Promise<vo
         user: userId as any,
       }))
     );
-    items = await Notification.find({ user: userId }).sort({ createdAt: -1 }).limit(50);
+    items = await Notification.find({ user: userId }).sort({ createdAt: -1 }).limit(50).lean();
   }
 
   res.json({

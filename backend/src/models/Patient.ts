@@ -53,6 +53,8 @@ const PatientSchema = new Schema<IPatient>(
   { timestamps: true }
 );
 
+PatientSchema.index({ createdAt: -1 });
+
 // Auto-generate patientId before save using atomic counter
 PatientSchema.pre('save', async function (next) {
   if (!this.patientId) {
