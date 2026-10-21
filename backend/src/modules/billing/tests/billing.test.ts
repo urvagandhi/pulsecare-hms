@@ -27,6 +27,8 @@ jest.mock('../../../socket', () => ({
 import { app } from '../../../app';
 import { User } from '../../../models/User';
 import { Patient } from '../../../models/Patient';
+import { Doctor } from '../../../models/Doctor';
+import { Appointment } from '../../../models/Appointment';
 import { calculateInvoiceTotals } from '../calculator';
 
 let mongoServer: MongoMemoryServer;
@@ -158,6 +160,35 @@ describe('Billing Routes', () => {
     expect(res.body.data.status).toBe('draft');
   });
 
+  it('3a. POST /api/v1/billing — receptionist creates a draft invoice with patient field instead of patientId', async () => {
+    const res = await request(app)
+      .post('/api/v1/billing')
+      .set('Authorization', `Bearer ${receptionistToken}`)
+      .send({
+        patient: patientProfileId,
+        lineItems: [{ description: 'Consultation', quantity: 1, unitPrice: 200 }],
+      });
+
+    expect(res.status).toBe(201);
+    expect(res.body.data.status).toBe('draft');
+  });
+
+  it('3b. POST /api/v1/billing — receptionist creates invoice using patientId formatted as PAT-XXXX', async () => {
+    const p = await Patient.findById(patientProfileId);
+    expect(p?.patientId).toBeDefined();
+
+    const res = await request(app)
+      .post('/api/v1/billing')
+      .set('Authorization', `Bearer ${receptionistToken}`)
+      .send({
+        patientId: p!.patientId,
+        lineItems: [{ description: 'Doctor Consultation', quantity: 1, unitPrice: 600 }],
+      });
+
+    expect(res.status).toBe(201);
+    expect(res.body.data.status).toBe('draft');
+  });
+
   it('4. GET /api/v1/billing — admin lists all invoices', async () => {
     // Create one invoice first
     await createDraftInvoice(adminToken, patientProfileId);
@@ -210,16 +241,24 @@ describe('Billing Routes', () => {
     expect(res.body.data.issuedDate).toBeTruthy();
   });
 
-  it('7. PATCH /api/v1/billing/:id/issue — receptionist gets 403 (only admin can issue)', async () => {
+  it('7. PATCH /api/v1/billing/:id/issue — receptionist can issue invoice; patient gets 403', async () => {
     const createRes = await createDraftInvoice(adminToken, patientProfileId);
     expect(createRes.status).toBe(201);
     const invoiceMongoId = createRes.body.data._id;
 
+    // Patient cannot issue invoice
+    const patRes = await request(app)
+      .patch(`/api/v1/billing/${invoiceMongoId}/issue`)
+      .set('Authorization', `Bearer ${patientToken}`);
+    expect(patRes.status).toBe(403);
+
+    // Receptionist can issue invoice
     const res = await request(app)
       .patch(`/api/v1/billing/${invoiceMongoId}/issue`)
       .set('Authorization', `Bearer ${receptionistToken}`);
 
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(200);
+    expect(res.body.data.status).toBe('issued');
   });
 
   it('8. POST /api/v1/billing/:id/payments — admin records a partial payment', async () => {
@@ -560,6 +599,79 @@ describe('Billing Routes', () => {
         .get(`/api/v1/billing/${new mongoose.Types.ObjectId()}`)
         .set('Authorization', `Bearer ${adminToken}`);
       expect(notFoundRes.status).toBe(404);
+    });
+
+    it('processes online checkout payment (FR-E2-1 / DEF-014)', async () => {
+      // Create draft invoice
+      const createRes = await request(app)
+        .post('/api/v1/billing')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          patientId: patientProfileId,
+          lineItems: [{ description: 'Emergency Consultation', quantity: 1, unitPrice: 1200 }],
+        });
+      const invId = createRes.body.data._id;
+
+      // Issue invoice
+      await request(app)
+        .patch(`/api/v1/billing/${invId}/issue`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({});
+
+      // Patient pays online via /checkout
+      const payRes = await request(app)
+        .post(`/api/v1/billing/${invId}/checkout`)
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({ amount: 1200, method: 'card' });
+
+      expect(payRes.status).toBe(200);
+      expect(payRes.body.success).toBe(true);
+      expect(payRes.body.data.status).toBe('success');
+      expect(payRes.body.data.paymentReference).toMatch(/^RAZORPAY_PAY_/);
+      expect(payRes.body.data.invoice.status).toBe('paid');
+      expect(payRes.body.data.invoice.balance).toBe(0);
+    });
+
+    it('auto-populates doctor consultation fee when line items are omitted (FR-E1-2 / DEF-008)', async () => {
+      // Create doctor with consultation fee
+      const docUser = await User.create({
+        firstName: 'Fee',
+        lastName: 'Doctor',
+        email: `docfee-${Date.now()}@test.com`,
+        password: 'DocPass1!',
+        role: 'doctor',
+      });
+      const doctor = await Doctor.create({
+        userId: docUser._id,
+        specialization: 'Cardiology',
+        consultationFee: 750,
+      });
+
+      // Create appointment
+      const appt = await Appointment.create({
+        patient: patientProfileId,
+        doctor: doctor._id,
+        date: new Date('2026-11-20'),
+        timeSlot: '11:00',
+        type: 'consultation',
+        status: 'completed',
+        createdBy: docUser._id,
+      });
+
+      // Create invoice with appointmentId but empty lineItems
+      const invRes = await request(app)
+        .post('/api/v1/billing')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          patientId: patientProfileId,
+          appointmentId: appt._id.toString(),
+        });
+
+      expect(invRes.status).toBe(201);
+      expect(invRes.body.success).toBe(true);
+      expect(invRes.body.data.lineItems.length).toBe(1);
+      expect(invRes.body.data.lineItems[0].unitPrice).toBe(750);
+      expect(invRes.body.data.subtotal).toBe(750);
     });
   });
 });

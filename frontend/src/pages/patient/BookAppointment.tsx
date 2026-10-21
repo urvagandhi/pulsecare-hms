@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import api from '@/lib/api';
 import { useAppSelector } from '@/store/hooks';
@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Download, Check, AlertTriangle } from 'lucide-react';
 import { downloadPdf } from '@/lib/downloadPdf';
 import toast from 'react-hot-toast';
+import { formatDate } from '@/lib/format';
 
 interface DoctorProfile {
   _id: string;
@@ -32,6 +33,10 @@ interface DoctorsResponse {
 interface SlotsResponse {
   success: boolean;
   data: string[];
+  meta?: {
+    bookedSlots?: string[];
+    allSlots?: string[];
+  };
 }
 
 interface PatientProfileResponse {
@@ -55,6 +60,7 @@ const tomorrowDate = (() => {
 export function BookAppointment() {
   const user = useAppSelector((s) => s.auth.user);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [selectedSpecialization, setSelectedSpecialization] = useState('');
@@ -108,7 +114,11 @@ export function BookAppointment() {
     enabled: !!selectedDoctorId && !!selectedDate && step === 2,
   });
 
-  const slots = slotsData?.data ?? [];
+  const availableSlots = slotsData?.data ?? [];
+  const bookedSlots = new Set(slotsData?.meta?.bookedSlots ?? []);
+  const allSlots = slotsData?.meta?.allSlots && slotsData.meta.allSlots.length > 0
+    ? slotsData.meta.allSlots
+    : availableSlots;
 
   const bookMutation = useMutation({
     mutationFn: async () => {
@@ -126,6 +136,9 @@ export function BookAppointment() {
     },
     onSuccess: (res) => {
       const appt = res.data;
+      void queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      void queryClient.invalidateQueries({ queryKey: ['patient-dashboard'] });
+      void queryClient.invalidateQueries({ queryKey: ['doctor-dashboard'] });
       setConfirmedBooking({
         _id: appt._id,
         appointmentId: appt.appointmentId,
@@ -182,7 +195,7 @@ export function BookAppointment() {
               </p>
               <p className="text-xs text-muted-foreground">{selectedDoctor?.specialization}</p>
               <p className="text-xs font-medium text-emerald-700 dark:text-emerald-300 pt-1">
-                {confirmedBooking.date} at {confirmedBooking.timeSlot}
+                {formatDate(confirmedBooking.date, { withDayOfWeek: true })} at {confirmedBooking.timeSlot}
               </p>
             </div>
           </div>
@@ -332,11 +345,11 @@ export function BookAppointment() {
 
             {slotsLoading && <p className="text-sm text-muted-foreground">Loading available slots...</p>}
 
-            {!slotsLoading && slots.length === 0 && (
+            {!slotsLoading && allSlots.length === 0 && (
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-amber-300">
                 <p className="font-semibold flex items-center gap-1.5">
                   <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                  Doctor Unavailable on {selectedDate}
+                  Doctor Unavailable on {formatDate(selectedDate)}
                 </p>
                 <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">
                   {selectedDoctor?.leaves?.some((l) => {
@@ -345,41 +358,80 @@ export function BookAppointment() {
                     return selectedDate >= startStr && selectedDate <= endStr;
                   })
                     ? `Dr. ${selectedDoctor?.userId?.firstName} ${selectedDoctor?.userId?.lastName} is scheduled on leave / time off on this date.`
-                    : `Dr. ${selectedDoctor?.userId?.firstName} ${selectedDoctor?.userId?.lastName} has no available consultation slots on this date.`}
+                    : `Dr. ${selectedDoctor?.userId?.firstName} ${selectedDoctor?.userId?.lastName} has no scheduled consultation slots on this date.`}
                   {' '}Please select another date.
                 </p>
               </div>
             )}
 
-            {slots.length > 0 && (
-              <div>
-                <Label>Available Slots</Label>
-                <div className="mt-2 grid grid-cols-4 gap-2">
-                  {slots.map((slot) => (
-                    <button
-                      key={slot}
-                      className={`border rounded p-2 text-sm font-medium transition-colors ${
-                        selectedSlot === slot
-                          ? 'border-primary bg-primary text-primary-foreground'
-                          : 'hover:border-primary/50'
-                      }`}
-                      onClick={() => setSelectedSlot(slot)}
-                    >
-                      {slot}
-                    </button>
-                  ))}
+            {allSlots.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label>Time Slots</Label>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
+                      Available ({availableSlots.length})
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-slate-400 dark:bg-slate-600 inline-block" />
+                      Booked ({bookedSlots.size})
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
+                  {allSlots.map((slot) => {
+                    const isBooked = bookedSlots.has(slot);
+                    const isSelected = selectedSlot === slot;
+
+                    if (isBooked) {
+                      return (
+                        <div
+                          key={slot}
+                          className="flex flex-col items-center justify-center p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/60 text-slate-400 dark:text-slate-500 cursor-not-allowed select-none opacity-60 transition-all shadow-xs"
+                          title="This slot is already booked"
+                        >
+                          <span className="font-mono text-sm font-semibold line-through decoration-slate-400 dark:decoration-slate-500">
+                            {slot}
+                          </span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mt-0.5">
+                            Booked
+                          </span>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <button
+                        key={slot}
+                        type="button"
+                        className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-sm font-medium transition-all ${
+                          isSelected
+                            ? 'border-emerald-600 bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-600/30 font-semibold'
+                            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 hover:border-emerald-500 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/20'
+                        }`}
+                        onClick={() => setSelectedSlot(slot)}
+                      >
+                        <span className="font-mono text-sm font-semibold">{slot}</span>
+                        <span className={`text-[10px] font-medium mt-0.5 ${isSelected ? 'text-emerald-100' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                          Available
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 pt-2">
               <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
                 Back
               </Button>
               <Button
-                disabled={!selectedSlot}
+                disabled={!selectedSlot || bookedSlots.has(selectedSlot)}
                 onClick={() => setStep(3)}
-                className="flex-1"
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
               >
                 Next: Confirm
               </Button>
@@ -409,12 +461,7 @@ export function BookAppointment() {
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Date</span>
                 <span className="font-medium">
-                  {new Date(selectedDate + 'T12:00:00Z').toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
+                  {formatDate(selectedDate, { withDayOfWeek: true, fullMonth: true })}
                 </span>
               </div>
               <div className="flex justify-between text-sm">

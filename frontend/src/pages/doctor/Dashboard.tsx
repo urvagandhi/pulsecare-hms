@@ -7,6 +7,8 @@ import { KpiCard } from '@/components/Shared/KpiCard';
 import { AppointmentRow } from '@/components/Shared/AppointmentRow';
 import { DashboardSkeleton } from '@/components/Shared/DashboardSkeleton';
 import { Calendar, Users, BarChart3, CheckCircle2, Clock } from 'lucide-react';
+import { formatDateShort } from '@/lib/format';
+
 
 interface Appointment {
   _id: string;
@@ -231,7 +233,7 @@ export function DoctorDashboard() {
                     <div className="min-w-0">
                       <p className="font-semibold text-slate-800 dark:text-slate-200 truncate">{patName}</p>
                       <p className="text-[10px] text-slate-400 truncate">
-                        {appt.timeSlot ? `${appt.timeSlot} · ` : ''}{appt.reason || 'General Consultation'}
+                        {appt.date ? `${formatDateShort(appt.date)} · ` : ''}{appt.timeSlot ? `${appt.timeSlot} · ` : ''}{appt.reason || 'General Consultation'}
                       </p>
                     </div>
                     <span className="shrink-0 font-mono text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">

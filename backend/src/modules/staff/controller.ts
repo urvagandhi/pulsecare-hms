@@ -5,6 +5,7 @@ import { successResponse } from '../../types/api';
 import {
   CreateStaffSchema,
   UpdateStaffSchema,
+  DoctorLeaveSchema,
   CreateDepartmentSchema,
   UpdateDepartmentSchema,
 } from './schema';
@@ -123,6 +124,19 @@ export async function getDoctorProfile(req: Request, res: Response, next: NextFu
     const { id } = req.params;
     const profile = await StaffService.getDoctorProfile(id);
     res.json(successResponse(profile));
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function addDoctorLeave(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { id } = req.params;
+    const parsed = DoctorLeaveSchema.safeParse(req.body);
+    if (!parsed.success) return next(parseZodError(parsed.error));
+
+    const doctor = await StaffService.addDoctorLeave(id, parsed.data);
+    res.status(201).json(successResponse(doctor));
   } catch (err) {
     next(err);
   }

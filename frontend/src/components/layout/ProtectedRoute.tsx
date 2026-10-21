@@ -26,10 +26,16 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
       if (user.role === 'patient') return <Navigate to="/patient/appointments" replace />;
       if (user.role === 'admin' || user.role === 'receptionist') return <Navigate to="/admin/appointments" replace />;
     }
-    // Smart redirect for patient directory paths
-    if (location.pathname.includes('/patients')) {
-      if (user.role === 'doctor') return <Navigate to="/doctor/patients" replace />;
+    // If user is trying to access another role's section, gracefully redirect them to their own dashboard
+    if (
+      location.pathname.startsWith('/admin') ||
+      location.pathname.startsWith('/doctor') ||
+      location.pathname.startsWith('/patient') ||
+      location.pathname.startsWith('/nurse')
+    ) {
+      return <Navigate to="/dashboard" replace />;
     }
+
     return <Navigate to="/unauthorized" replace />;
   }
 

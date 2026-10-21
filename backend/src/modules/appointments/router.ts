@@ -23,6 +23,9 @@ router.get('/:id', authenticate, authorize('appointments', 'read'), AppointmentC
 // Update appointment status (role-based)
 router.patch('/:id/status', authenticate, authorize('appointments', 'write'), AppointmentController.updateAppointmentStatus);
 
+// Reschedule appointment
+router.patch('/:id/reschedule', authenticate, authorize('appointments', 'write'), AppointmentController.rescheduleAppointment);
+
 // Cancel appointment
 router.delete('/:id', authenticate, authorize('appointments', 'write'), AppointmentController.cancelAppointment);
 

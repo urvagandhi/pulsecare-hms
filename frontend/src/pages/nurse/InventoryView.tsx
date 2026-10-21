@@ -4,6 +4,7 @@ import api from '@/lib/api';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { DataTable, ColumnDef } from '@/components/Shared/DataTable';
+import { formatDate } from '@/lib/format';
 import type { InventoryItem } from '@/types/inventory';
 
 interface ItemsResponse {
@@ -53,8 +54,7 @@ export function NurseInventoryView() {
     {
       header: 'Expiry Date',
       accessorKey: 'expiryDate',
-      cell: (row) =>
-        row.expiryDate ? new Date(row.expiryDate).toLocaleDateString() : '—',
+      cell: (row) => formatDate(row.expiryDate),
     },
   ];
 

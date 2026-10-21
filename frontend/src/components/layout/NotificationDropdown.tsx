@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAppSelector } from '@/store/hooks';
 import { getSocket } from '@/lib/socket';
 import api from '@/lib/api';
+import { formatDate } from '@/lib/format';
 
 export interface NotificationItem {
   _id?: string;
@@ -32,6 +33,7 @@ export interface NotificationItem {
 function formatTimeAgo(dateString?: string): string {
   if (!dateString) return 'Just now';
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'Just now';
   const diffSec = Math.floor((Date.now() - date.getTime()) / 1000);
   if (diffSec < 60) return 'Just now';
   const diffMin = Math.floor(diffSec / 60);
@@ -39,8 +41,10 @@ function formatTimeAgo(dateString?: string): string {
   const diffHours = Math.floor(diffMin / 60);
   if (diffHours < 24) return `${diffHours}h ago`;
   const diffDays = Math.floor(diffHours / 24);
-  return `${diffDays}d ago`;
+  if (diffDays <= 7) return `${diffDays}d ago`;
+  return formatDate(dateString);
 }
+
 
 export function NotificationDropdown() {
   const user = useAppSelector((s) => s.auth.user);

@@ -12,6 +12,7 @@ import { Select } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { downloadPdf } from '@/lib/downloadPdf';
 import toast from 'react-hot-toast';
+import { formatDate } from '@/lib/format';
 
 interface PatientUser {
   _id: string;
@@ -78,7 +79,7 @@ const columns: ColumnDef<PatientRecord>[] = [
   {
     header: 'Registered',
     accessorKey: 'createdAt',
-    cell: (row) => new Date(row.createdAt).toLocaleDateString(),
+    cell: (row) => formatDate(row.createdAt),
   },
   {
     header: 'Actions',
@@ -113,6 +114,9 @@ export function AdminPatients() {
   const [dob, setDob] = useState('');
   const [gender, setGender] = useState<'male' | 'female' | 'other' | ''>('');
   const [bloodGroup, setBloodGroup] = useState<string>('');
+  const [allergies, setAllergies] = useState<string>('');
+  const [emergencyName, setEmergencyName] = useState<string>('');
+  const [emergencyPhone, setEmergencyPhone] = useState<string>('');
 
   const resetCreateForm = () => {
     setFirstName('');
@@ -123,6 +127,9 @@ export function AdminPatients() {
     setDob('');
     setGender('');
     setBloodGroup('');
+    setAllergies('');
+    setEmergencyName('');
+    setEmergencyPhone('');
   };
 
   const { data, isLoading } = useQuery<PatientsResponse>({
@@ -140,6 +147,17 @@ export function AdminPatients() {
 
   const createMutation = useMutation({
     mutationFn: async () => {
+      const allergiesList = allergies.trim()
+        ? allergies.split(',').map((s) => s.trim()).filter(Boolean)
+        : [];
+      const emergencyContactObj = (emergencyName.trim() || emergencyPhone.trim())
+        ? {
+            name: emergencyName.trim() || 'Emergency Contact',
+            relationship: 'Emergency Contact',
+            phone: emergencyPhone.trim() || '',
+          }
+        : undefined;
+
       const body: Record<string, unknown> = {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
@@ -149,6 +167,8 @@ export function AdminPatients() {
         ...(dob ? { dob } : {}),
         ...(gender ? { gender } : {}),
         ...(bloodGroup ? { bloodGroup } : {}),
+        ...(allergiesList.length > 0 ? { allergies: allergiesList } : {}),
+        ...(emergencyContactObj ? { emergencyContact: emergencyContactObj } : {}),
       };
       const res = await api.post('/patients', body);
       return res.data;
@@ -263,8 +283,8 @@ export function AdminPatients() {
             <DialogTitle>Register new patient</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-3.5">
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label htmlFor="fn">First name</Label>
                 <Input
@@ -272,6 +292,7 @@ export function AdminPatients() {
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   className="mt-1"
+                  placeholder="e.g. Kavya"
                   autoComplete="given-name"
                 />
               </div>
@@ -282,10 +303,12 @@ export function AdminPatients() {
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   className="mt-1"
+                  placeholder="e.g. Patel"
                   autoComplete="family-name"
                 />
               </div>
             </div>
+
             <div>
               <Label htmlFor="em">Email</Label>
               <Input
@@ -294,9 +317,11 @@ export function AdminPatients() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="mt-1"
+                placeholder="kavya.patel@test.com"
                 autoComplete="email"
               />
             </div>
+
             <div>
               <Label htmlFor="pw">Temporary password</Label>
               <Input
@@ -305,46 +330,99 @@ export function AdminPatients() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="mt-1"
+                placeholder="••••••••"
                 autoComplete="new-password"
               />
               <p className="text-xs text-muted-foreground mt-1">Minimum 8 characters. Patient can change after login.</p>
             </div>
-            <div>
-              <Label htmlFor="ph">Phone (optional)</Label>
-              <Input
-                id="ph"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="mt-1"
-              />
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="ph">Phone (optional)</Label>
+                <Input
+                  id="ph"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="mt-1"
+                  placeholder="+91 98765 43210"
+                />
+              </div>
+              <div>
+                <Label htmlFor="dob">Date of birth (optional)</Label>
+                <Input id="dob" type="date" value={dob} onChange={(e) => setDob(e.target.value)} className="mt-1" />
+              </div>
             </div>
-            <div>
-              <Label htmlFor="dob">Date of birth (optional)</Label>
-              <Input id="dob" type="date" value={dob} onChange={(e) => setDob(e.target.value)} className="mt-1" />
-            </div>
+
             <div>
               <Label htmlFor="gen">Gender (optional)</Label>
               <Select id="gen" value={gender} onChange={(e) => setGender(e.target.value as typeof gender)} className="mt-1">
-                <option value="">—</option>
+                <option value="">— Select Gender —</option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
                 <option value="other">Other</option>
               </Select>
             </div>
-            <div>
-              <Label htmlFor="bg">Blood group (optional)</Label>
-              <Select id="bg" value={bloodGroup} onChange={(e) => setBloodGroup(e.target.value)} className="mt-1">
-                <option value="">—</option>
-                {BLOOD_GROUPS.map((g) => (
-                  <option key={g} value={g}>
-                    {g}
-                  </option>
-                ))}
-              </Select>
+
+            {/* Clinical Essentials (Module 1: Patient Registration & Profile Management) */}
+            <div className="pt-3 border-t border-slate-200/80 dark:border-slate-800 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                  Clinical Essentials (Module 1)
+                </span>
+                <span className="text-[10px] text-muted-foreground">Optional</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="bg">Blood Group</Label>
+                  <Select id="bg" value={bloodGroup} onChange={(e) => setBloodGroup(e.target.value)} className="mt-1">
+                    <option value="">Select Blood Group</option>
+                    {BLOOD_GROUPS.map((g) => (
+                      <option key={g} value={g}>
+                        {g}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="allergies">Known Drug Allergies</Label>
+                  <Input
+                    id="allergies"
+                    value={allergies}
+                    onChange={(e) => setAllergies(e.target.value)}
+                    placeholder="e.g. Penicillin, Sulfa"
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="emergencyName">Emergency Contact</Label>
+                  <Input
+                    id="emergencyName"
+                    value={emergencyName}
+                    onChange={(e) => setEmergencyName(e.target.value)}
+                    placeholder="e.g. Rajesh Patel (Father)"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="emergencyPhone">Emergency Phone</Label>
+                  <Input
+                    id="emergencyPhone"
+                    value={emergencyPhone}
+                    onChange={(e) => setEmergencyPhone(e.target.value)}
+                    placeholder="e.g. +91 98765 43210"
+                    className="mt-1"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className="gap-2 sm:gap-0 mt-4">
             <Button variant="outline" onClick={() => setCreateOpen(false)}>
               Cancel
             </Button>

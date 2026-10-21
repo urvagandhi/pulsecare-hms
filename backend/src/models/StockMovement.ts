@@ -5,6 +5,7 @@ export type StockMovementType = 'in' | 'out' | 'adjustment' | 'waste';
 export interface IStockMovement {
   _id: Types.ObjectId;
   itemId: Types.ObjectId;
+  itemModel?: 'InventoryItem' | 'Drug';
   type: StockMovementType;
   quantity: number;
   previousQuantity: number;
@@ -16,7 +17,8 @@ export interface IStockMovement {
 
 const StockMovementSchema = new Schema<IStockMovement>(
   {
-    itemId: { type: Schema.Types.ObjectId, ref: 'InventoryItem', required: true },
+    itemId: { type: Schema.Types.ObjectId, required: true, refPath: 'itemModel' },
+    itemModel: { type: String, enum: ['InventoryItem', 'Drug'], default: 'InventoryItem' },
     type: { type: String, enum: ['in', 'out', 'adjustment', 'waste'], required: true },
     quantity: { type: Number, required: true, min: 1 },
     previousQuantity: { type: Number, required: true },
@@ -26,5 +28,8 @@ const StockMovementSchema = new Schema<IStockMovement>(
   },
   { timestamps: { createdAt: true, updatedAt: false } }
 );
+
+// Compound index for historical stock queries and audit trails
+StockMovementSchema.index({ itemId: 1, createdAt: -1 });
 
 export const StockMovement = model<IStockMovement>('StockMovement', StockMovementSchema);

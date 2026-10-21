@@ -4,7 +4,9 @@ import { usePermissions } from '@/hooks/usePermissions';
 import type { AuthUser } from '@/store/authSlice';
 import {
   LayoutDashboard, Users, Calendar, FileText,
-  Award, BarChart3, LogOut, Menu, ChevronRight
+  Award, BarChart3, LogOut, Menu, ChevronRight,
+  // Optional 5th module & Phase 2 icons (uncomment if re-enabling):
+  // Pill, FlaskConical, Boxes, Settings
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useState } from 'react';
@@ -19,15 +21,57 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'doctor', 'nurse', 'receptionist', 'patient'] },
+
+  // =========================================================================
+  // CORE 4 MODULES (Outpatient Clinical Workflow)
+  // =========================================================================
+
+  // 1. Patient Registration & Profile Management (PAT-XXXX)
   { label: 'Patients', href: '/admin/patients', icon: Users, roles: ['admin', 'receptionist'] },
-  { label: 'Staff', href: '/admin/staff', icon: Award, roles: ['admin'] },
+
+  // 2. Doctor & Staff / Department Management (DOC-XXXX)
+  { label: 'Staff & Doctors', href: '/admin/staff', icon: Award, roles: ['admin'] },
+
+  // 3. Outpatient Appointment Scheduling & Queue Management (APT-XXXX)
   { label: 'Book Appointment', href: '/patient/book-appointment', icon: Calendar, roles: ['patient'] },
   { label: 'Appointments', href: '/patient/appointments', icon: Calendar, roles: ['patient'] },
   { label: 'Appointments', href: '/admin/appointments', icon: Calendar, roles: ['admin', 'receptionist'] },
   { label: 'Appointments', href: '/doctor/schedule', icon: Calendar, roles: ['doctor'] },
-  { label: 'Schedule', href: '/doctor/schedule', icon: Calendar, roles: [] },
-  { label: 'Billing', href: '/admin/billing', icon: FileText, roles: ['admin', 'receptionist'] },
+
+  // 4. Billing, Invoicing & POS Payment Settlement (INV-XXXX)
+  { label: 'Billing & Invoices', href: '/admin/billing', icon: FileText, roles: ['admin', 'receptionist'] },
   { label: 'My Bills', href: '/patient/billing', icon: FileText, roles: ['patient'] },
+
+  // =========================================================================
+  // OPTIONAL 5th MODULE: Pharmacy & Prescriptions (Uncomment if presenting 5)
+  // =========================================================================
+  // { label: 'Pharmacy', href: '/admin/pharmacy', icon: Pill, roles: ['admin'] },
+  // { label: 'Prescriptions', href: '/doctor/prescriptions', icon: Pill, roles: ['doctor'] },
+  // { label: 'Dispensing', href: '/nurse/dispensing', icon: Pill, roles: ['nurse'] },
+  // { label: 'Prescriptions', href: '/patient/prescriptions', icon: Pill, roles: ['patient'] },
+
+  // =========================================================================
+  // DE-SCOPED EXTENSION MODULES (Preserved for Phase 2 Enterprise Roadmap)
+  // =========================================================================
+
+  // [DE-SCOPED 1] Laboratory Management
+  // { label: 'Lab Orders', href: '/doctor/lab', icon: FlaskConical, roles: ['doctor'] },
+  // { label: 'Lab Tests', href: '/admin/lab', icon: FlaskConical, roles: ['admin'] },
+  // { label: 'Lab Results', href: '/patient/lab', icon: FlaskConical, roles: ['patient'] },
+
+  // [DE-SCOPED 2] Hospital Consumable Inventory
+  // { label: 'Inventory', href: '/admin/inventory', icon: Boxes, roles: ['admin'] },
+  // { label: 'Inventory', href: '/nurse/inventory', icon: Boxes, roles: ['nurse'] },
+
+  // [DE-SCOPED 3] Medical Document Management
+  // { label: 'Documents', href: '/admin/documents', icon: FileText, roles: ['admin'] },
+  // { label: 'Documents', href: '/doctor/documents', icon: FileText, roles: ['doctor'] },
+  // { label: 'My Documents', href: '/patient/documents', icon: FileText, roles: ['patient'] },
+
+  // [DE-SCOPED 4] Settings Module
+  // { label: 'Settings', href: '/admin/settings', icon: Settings, roles: ['admin'] },
+
+  // Reporting & Performance Analytics Dashboard (Summarizes Core 4)
   { label: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['admin', 'doctor', 'nurse', 'receptionist'] },
 ];
 

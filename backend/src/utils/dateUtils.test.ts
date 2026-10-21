@@ -54,4 +54,19 @@ describe('Timezone-Safe Date Utilities (Task 1.4)', () => {
     // Friday (2026-10-09) -> Available
     expect(checkDoctorAvailable('2026-10-09')).toBe(true);
   });
+
+  it('handles "today", "tomorrow", and invalid date strings with fallback', () => {
+    const today = parseUtcMidnight('today');
+    expect(today.getUTCHours()).toBe(0);
+
+    const tomorrow = parseUtcMidnight('tomorrow');
+    expect(tomorrow.getUTCHours()).toBe(0);
+    expect(tomorrow.getTime()).toBeGreaterThan(today.getTime());
+
+    const fallback = parseUtcMidnight('invalid-date-string');
+    expect(fallback.getUTCHours()).toBe(0);
+
+    const dateObj = parseUtcMidnight(new Date('2026-10-08T15:30:00Z'));
+    expect(dateObj.toISOString()).toBe('2026-10-08T00:00:00.000Z');
+  });
 });

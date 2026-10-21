@@ -1,0 +1,596 @@
+NIRMA UNIVERSITY — INSTITUTE OF TECHNOLOGY
+Department of Computer Science and Engineering
+Software Project Management (4CS504ME25) — Semester IV B.Tech
+Project Title:
+
+PulseCare HMS — Outpatient Clinical Management System
+
+Team Members:
+
+1. Gandhi Urva Yogeshkumar (23BCE078) — Backend, DB & SCM Lead
+2. Gajnotar Rakshit (23BCE077) — Frontend, UI/UX & QA Lead
+
+Submission Artifact:
+
+Demonstration Video Script & Formal Operational Workflows
+
+Video File Name:
+
+23BCE078_23BCE077_PulseCare_HMS.mp4 (Duration: 10–12 Mins)
+
+PROJECT DEMONSTRATION SCRIPT & MERMAID
+WORKFLOWS
+1. Executive Demonstration Structure & Tutorial Traceability
+This script and synchronized workflow document serves as the official recording script for the 30-mark SPM
+Innovative Assignment demonstration. Both group members are visibly present in the video (dual webcam view)
+alongside the shared screen demonstration. All features directly demonstrate the practical outcomes of Tutorials
+T1 through T15.
+Tutorial
+
+SPM Theoretical Concept & Technique
+
+Live Demonstration Evidence in PulseCare HMS
+
+Stakeholder Analysis, Project Scope & Role
+
+Division of responsibilities: Urva (Backend/DB) & Rakshit
+
+Matrix
+
+(Frontend/QA); Outpatient clinic scope.
+
+T2 & T4
+
+Agile Scrum Process Model & Work
+Breakdown Structure (WBS)
+
+Scoping and implementing 4 Core Outpatient Clinical Modules
+into focused user stories and sprints.
+
+T5 & T10
+
+AON Network Diagram, 16-Week CPM &
+Milestone Tracking
+
+Progress tracking from Phase 0 to Phase 9; Milestone schedule
+adherence.
+
+T6, T7, T8
+
+Software Metrics, COCOMO Estimation &
+
+Clean architectural sizing, modular separation, and pure
+
+Use Case Points
+
+calculation engines.
+
+Risk Register (R1–R11) & Hazard
+
+Double-booking lockout (R7), secrets guard (R2), and atomic
+
+Mitigation
+
+sequence counters (R9).
+
+T11 & T12
+
+Software Quality Audit (ISO 9001/IEEE
+1028) & SQA Testing
+
+Live execution of 14 Jest integration suites (156 tests passing
+green under Asia/Kolkata timezone).
+
+T13
+
+Maintenance Management & Defect
+Tracking
+
+Live proof of defect fixes: D-019 (stale invoice recalculation)
+& D-022 (doctor leave blackout).
+
+T14
+
+Software Configuration Management
+
+Demonstration of atomic semantic commits, branch protection,
+
+(SCM) & Git Strategy
+
+pull requests, and semantic versioning.
+
+Capstone Portfolio & System
+Demonstration
+
+End-to-end integration walkthrough across all 4 roles (Admin,
+Receptionist, Doctor, Patient).
+
+T1 & T3
+
+T9
+
+T15
+
+1
+
+OVERALL DEMONSTRATION WORKFLOW ARCHITECTURE
+
+Start: Team Intro & SPM Framework
+
+SCM & SQA Automated Test Suites
+
+Module 1: Patient Registration & Profile
+
+Module 2: Doctor & Leave Management
+
+Module 3: Appointment Booking & Queue Token
+
+Module 4: Itemized Invoicing & Recalculation
+
+Executive Analytics & SQA Audit Wrap-up
+
+End: Video Conclusion & Faculty Thanks
+
+2
+
+SCENE 1: Introduction, Project Overview & SPM Framework (0:00 – 1:45)
+On-Screen Video Action:
+• Display public Landing Page (http://localhost:5173) with clean PulseCare HMS brand and navigation.
+• Both Urva and Rakshit visible in top corners of video feed.
+• Scroll through the 4 Core Clinical Modules overview cards on the landing page.
+SCENE 1 WORKFLOW: PROJECT INITIATION & STAKEHOLDER SCOPING
+SPM Coursework Initiation
+
+T1/T3: Stakeholder Analysis
+
+T2: Agile Scrum Process Selection
+
+T4: WBS Scoping to 4 Core Outpatient Modules
+
+T5: 16-Week CPM Milestone Scheduling
+
+Urva (23BCE078):
+"Namaste and hello everyone! I am Urva Gandhi, Roll Number 23BCE078, and with me is my project
+partner..."
+Rakshit (23BCE077):
+"...Rakshit Gajnotar, Roll Number 23BCE077. Welcome to our final project demonstration for Software
+Project Management (4CS504ME25)."
+Urva:
+"Throughout this semester, spanning Tutorials T1 through T15, we have applied engineering and management
+principles to build PulseCare HMS — a specialized, highly resilient outpatient hospital management system.
+In Tutorial 1 and 3, we carried out stakeholder analysis and allocated clear team responsibilities: I led the
+Backend Architecture, Mongoose schemas, and Configuration Management, while Rakshit engineered the
+Frontend React UI/UX, Component Architecture, and Quality Assurance."
+Rakshit:
+"Following Tutorial 2 and Tutorial 4, we selected the Agile Scrum lifecycle and mapped our Work Breakdown
+Structure (WBS) against a 16-week CPM schedule. Rather than creating a wide and shallow prototype, we
+engineered 4 Core Mission-Critical Clinical Modules: 1. Patient Registration & Management (PAT-XXXX)
+2. Doctor & Department Management (DOC-XXXX) 3. Appointment Booking & Queue Management (APTXXXX) 4. Itemized Billing & Invoicing (INV-XXXX) Let us now demonstrate the software tools and
+engineering standards used."
+
+SCENE 2: SPM Tools, SCM & Automated Testing (1:45 – 3:30)
+On-Screen Video Action:
+• Switch to GitHub repository tab: Show commit history with semantic commit messages and branch structure.
+• Open VS Code terminal in backend/ directory and run: npm test.
+• Point out 14 active suites and 156 passing tests running under TZ=Asia/Kolkata.
+
+3
+
+SCENE 2 WORKFLOW: SCM PIPELINE & SQA VERIFICATION
+Developer Git Commits
+
+T14: Branching & SCM Standards
+
+Pull Request Code Review
+
+T11/T12: SQA Test Suite Execution
+
+14 Suites / 156 Tests Pass Green
+
+Urva:
+"Demonstrating our work for Tutorial 14 (Software Configuration Management): on our GitHub
+repository, we enforced strict semantic commits, atomic task milestones, and branch protection. Every single
+pull request was linked to concrete requirements and peer-reviewed before merging into the main branch."
+Rakshit:
+"Connecting to Tutorial 11 and Tutorial 12 on SQA and Project Audit, quality control was not an
+afterthought. In Tutorial 9, we developed our Risk Register (R1 to R11) addressing healthcare security and
+data concurrency. Urva, let's run the backend test suite live."
+Urva: *(Runs npm test in terminal)*
+"As you can see, our automated test framework executes 14 integration test suites using Supertest and an
+isolated in-memory MongoDB server. All 156 test cases pass green with zero failures under Indian Standard
+Time (Asia/Kolkata). This satisfies our Defect Removal Efficiency (DRE) benchmarks from Tutorial 6."
+
+4
+
+SCENE 3: Module 1 — Patient Registration & Management (3:30 – 5:15)
+On-Screen Video Action:
+• Navigate to /sign-up and register a new patient: Kavya Patel (Phone: 9876543210, Blood Group: B+).
+• View Patient Dashboard and click 'Download ID Card PDF'.
+• Log out; log in as Receptionist (reception@pulsecare.test / Test@123).
+• Go to /admin/patients and use search bar to search by phone and name with regex escaping.
+MODULE 1 WORKFLOW: PATIENT REGISTRATION, ID GENERATION & SAFE SEARCH
+PulseCare Frontend
+Patient (Kavya)
+1
+
+Express Auth/Patient API
+
+Submit Self-Registration Form
+
+2
+
+POST /api/v1/auth/register (Role locked to Patient)
+
+3
+
+JWT Access Token & Created Profile
+
+5
+
+Atomic Counter Increment (PAT-0006)
+
+4
+
+Click 'Download ID Card'
+GET /api/v1/patients/me/id-card
+
+6
+
+Render & Stream PDF Document
+
+8
+
+9
+
+7
+
+Login & Open Patients Directory
+Search by Phone/Name/ID
+
+10
+
+GET /api/v1/patients?search=9876543210
+
+11
+
+Escaped Regex Query across Users & Patients
+
+Instant Sanitized Results Table
+
+PulseCare Frontend
+Patient (Kavya)
+
+MongoDB (Counter & Users)
+
+Receptionist (Pooja)
+
+Express Auth/Patient API
+
+12
+
+MongoDB (Counter & Users)
+
+Receptionist (Pooja)
+
+Rakshit:
+"Now let us examine our First Core Module: Patient Registration and Profile Management. On our
+public portal, let us register a new patient, Kavya Patel. The registration form captures essential clinical
+parameters: blood group, emergency contact details, and known drug allergies. Upon submission, Zod schema
+validation passes and the account is securely created."
+Urva:
+"Under the hood, this implements Risk Mitigation R9 from our risk register. We replaced unreliable
+document counting with an atomic Counter collection using findOneAndUpdate, ensuring deterministic
+sequential IDs like PAT-0006 without collisions under concurrent load. Furthermore, Kavya can download
+her official Patient ID Card PDF directly, rendered server-side using pdf-lib."
+Rakshit:
+"Now switching to the hospital front desk, I log in as our Receptionist, Pooja Verma. When Pooja opens the
+Patients Directory, she has access to all outpatient records. In earlier testing, entering special characters like
+parentheses would trigger an unhandled error. As part of our SQA audit, we implemented sanitizing regex
+escaping in patients/service.ts, enabling safe searching across names, emails, phones, and patient
+IDs."
+
+5
+
+SCENE 4: Module 2 — Doctor & Department Management & Leave Blackouts (5:15 –
+7:00)
+On-Screen Video Action:
+• Log in as Admin (admin@pulsecare.test / Test@123) and navigate to /admin/staff.
+• Show Department catalog and select Dr. Arvind Sharma (Cardiology, ₹600 fee).
+• Click 'Manage Leave / Time Off': Add scheduled leave for tomorrow.
+• Log in as Patient Kavya Patel; navigate to /patient/book-appointment.
+• Pick Dr. Sharma on the leave date: Show blackout banner and disabled booking slots.
+MODULE 2 WORKFLOW: DOCTOR LEAVE SCHEDULING & AUTOMATIC SLOT BLACKOUT
+PulseCare Frontend
+Admin (Rajesh)
+
+Staff & Appointments API
+
+MongoDB (Doctor Collection)
+
+Patient (Kavya)
+Open Staff Management & Select Dr. Sharma
+
+1
+
+Submit Leave Window (Tomorrow: Medical Conference)
+2
+
+POST /api/v1/staff/doctors/:id/leaves
+3
+
+Append Leave Range to Doctor Schema
+4
+
+Leave Saved Successfully
+5
+
+Select Cardiology -> Dr. Sharma -> Leave Date
+6
+
+GET /api/v1/appointments/slots?doctorId=...&date=...
+7
+
+Intersect Date with Doctor.leaves & Working Hours
+8
+
+Return Empty Slots [] + Leave Notice
+9
+
+Render Warning: 'Doctor on Approved Leave'
+10
+
+PulseCare Frontend
+Admin (Rajesh)
+
+Staff & Appointments API
+
+MongoDB (Doctor Collection)
+
+Patient (Kavya)
+
+Urva:
+"Our Second Core Module is Doctor and Department Management, directly addressing Defect D-022
+from our Tutorial 13 Maintenance Report. In outpatient healthcare, specialist scheduling is dynamic.
+Administrators manage department catalogs and consultation rates, but critically, they must handle physician
+leaves."
+Rakshit:
+"To demonstrate: Admin logs in, selects Dr. Arvind Sharma in Cardiology, and schedules approved leave for
+tomorrow to attend a medical conference in Ahmedabad. When our patient Kavya Patel attempts to book an
+appointment with Dr. Sharma for that date, watch what happens."
+Urva:
+"Our timezone-safe slot engine evaluates Dr. Sharma's leave array using UTC-normalized dates. The slots for
+tomorrow are completely locked out, and any direct API booking request is rejected with HTTP 400: Doctor
+is on leave. This guarantees hospital operational integrity."
+
+6
+
+SCENE 5: Module 3 — Appointment Scheduling & Daily Queue Tokens (7:00 – 8:45)
+On-Screen Video Action:
+• On patient portal, select an available date for Dr. Sharma at 10:00 AM.
+• Confirm booking: Show confirmation modal with **Queue Token Badge #1**.
+• Click **'Download Appointment Slip'**: Open generated PDF with token badge.
+• Briefly show double-booking lockout (409 Conflict if same slot is booked).
+• Log in as Dr. Sharma: Show OPD queue on /doctor/schedule displaying Token #1.
+MODULE 3 WORKFLOW: CONCURRENCY-GUARDED BOOKING & DAILY QUEUE TOKEN
+PulseCare Frontend
+Patient (Kavya)
+1
+
+Appointments Service
+
+Select 10:00 AM Slot & Reason
+
+2
+
+POST /api/v1/appointments (Date, Slot, Doctor)
+
+3
+
+alt
+
+Check Unique Index {doctor, date, timeSlot}
+
+[Slot Available]
+
+4
+
+5
+
+201 Created with Token
+
+7
+
+MongoDB (Index & Counter)
+
+Doctor (Dr. Sharma)
+
+Atomic Increment token:{doctorId}:{date}
+Insert Appointment Record (APT-0009, Token
+
+6
+
+Download Appointment Slip PDF
+[Concurrent Booking Conflict]
+409 Conflict ('Slot already booked')
+
+9
+
+Display OPD Patient Queue Sorted by Token
+
+10
+
+PulseCare Frontend
+Patient (Kavya)
+
+8
+
+Open Doctor Schedule Dashboard
+
+Appointments Service
+
+MongoDB (Index & Counter)
+
+Doctor (Dr. Sharma)
+
+Rakshit:
+"This leads us to our Third Core Module: Appointment Booking and Outpatient Queue Management.
+Kavya selects an available clinic date at 10:00 AM for an ECG consultation. Upon booking, she receives
+confirmation with a prominent badge: Queue Token #1."
+Urva:
+"This fulfills Feature Requirement F3 from our Tutorial 10 Milestone Plan. Indian outpatient departments
+rely heavily on sequential queue tokens. Our backend generates atomic daily tokens scoped strictly to
+{doctorId}:{date}, so each physician's OPD queue starts fresh from `#1`, `#2`, `#3` every morning.
+Kavya can also download her printable Appointment Slip PDF displaying her token badge and appointment
+barcode placeholder."
+Rakshit:
+"Regarding Risk R7 (Double-Booking Prevention): if two patients attempt to claim the exact same 10:00
+AM slot concurrently, our database-level partial unique compound index prevents duplicate insertion,
+returning a friendly HTTP 409 Conflict. On Dr. Sharma's dashboard, Kavya Patel appears at the head of the
+morning queue, ready for consultation."
+
+7
+
+SCENE 6: Module 4 — Itemized Billing, Recalculation & Invoice PDFs (8:45 – 10:30)
+On-Screen Video Action:
+• Log in as Receptionist; navigate to /admin/billing.
+• Click 'Create Invoice' for Kavya Patel: Add Consultation (₹600), ECG (₹450), and Medicine (₹160).
+• Set Tax: 5% and Discount: ₹50. Save as Draft.
+• Demonstrate Defect D-019 fix: Delete the ECG item from draft; show instant recalculation of subtotal, tax, and net
+payable amount.
+• Click 'Issue Invoice', then 'Record Payment' (Status transitions to Paid).
+• Click 'Download Tax Invoice PDF': Display itemized printable tax invoice.
+MODULE 4 WORKFLOW: ITEMIZED BILLING, PURE RECALCULATION & PDF GENERATION
+
+Billing Frontend
+Receptionist (Pooja)
+
+Billing Service & Calculator
+
+MongoDB (Invoice Model)
+
+Patient (Kavya)
+
+Create Draft Invoice with Categorized Items
+1
+
+POST /api/v1/billing (Items, Tax 5%, Discount)
+2
+
+calculateInvoiceTotals() pure function
+3
+
+Save Invoice (INV-0004, Status: draft)
+4
+
+Delete ECG Item from Draft
+
+5
+
+DELETE /api/v1/billing/:id/items/:itemIndex
+6
+
+Pure Recalculation of Subtotal, Tax & Total
+7
+
+Update Invoice & Audit Log
+8
+
+200 OK with Recalculated Financials
+
+9
+
+Issue Invoice & Record Full Payment
+10
+
+PATCH /api/v1/billing/:id/issue & POST /pay
+11
+
+Status transitions: draft -> issued -> paid
+12
+
+13
+
+Download Tax Invoice PDF
+GET /api/v1/billing/:id/pdf
+14
+
+Render & Stream Itemized Invoice PDF
+
+Billing Frontend
+Receptionist (Pooja)
+
+15
+
+Billing Service & Calculator
+
+MongoDB (Invoice Model)
+
+Patient (Kavya)
+
+Rakshit:
+"Our Fourth Core Module is Itemized Billing and Invoicing. Following the consultation, Receptionist
+Pooja creates an invoice for Kavya. PulseCare supports granular categories: consultations, diagnostics, and
+medicines. We add Dr. Sharma's consultation fee of ₹600, an ECG test of ₹450, and prescribed medication."
+
+8
+
+Urva:
+"Here we demonstrate our resolution to Defect D-019 from our Tutorial 13 Maintenance Plan. Previously,
+deleting an item from a draft left stale tax and subtotal figures in the database. We built a pure calculation
+engine in billing/calculator.ts and exposed a protected item removal endpoint. Watch as Rakshit
+deletes the ECG test: subtotal, 5% tax, and total payable instantly recalculate with exact two-decimal financial
+precision."
+Rakshit:
+"Once verified, Pooja issues the invoice and records payment via UPI or cash. Both staff and patients can
+download the official, printable Tax Invoice PDF, generated with institutional headers and GST
+breakdowns."
+
+9
+
+SCENE 7: Executive Analytics & Project Conclusion (10:30 – 11:45)
+On-Screen Video Action:
+• Log in as Admin and navigate to /analytics.
+• Display high-contrast charts: Daily appointment volume, departmental revenue breakdown, and patient demographics.
+• Bring both webcams full screen for final remarks and acknowledgments.
+SCENE 7 WORKFLOW: CAPSTONE SYNTHESIS & SPM EVALUATION WRAP-UP
+
+Module 1 Data
+
+Module 2 Data
+Executive Analytics Dashboard
+
+T15: Final SPM Capstone Portfolio & Defense
+
+Module 3 Data
+
+Module 4 Data
+
+Urva:
+"To conclude our system tour, our Analytics Dashboard synthesizes data from all 4 core modules — giving
+hospital administrators real-time visibility into OPD appointment load, revenue trends, and departmental
+performance."
+Rakshit:
+"In summary, as required by our 30-mark SPM Innovative Assignment: • We executed and connected the
+academic deliverables of all 15 tutorials (T1–T15). • We utilized industry-standard Project Management
+and SCM tools via Git branching, automated Jest test suites, and strict risk governance. • And we engineered
+a fully functional, production-ready healthcare application scoped around 4 Core Outpatient Modules."
+Urva:
+"The complete source code, seed scripts, audit report, and traceability matrix are submitted and documented
+in our repository. We sincerely thank our tutorial batch faculty for their continuous mentorship throughout the
+semester. Aabhar and thank you!"
+Rakshit:
+"Thank you very much, and have a great day!"
+
+10
+
+3. Video Recording Checklist & Submission Rules
+File Name Format: 23BCE078_23BCE077_PulseCare_HMS.mp4
+Visibility Requirement: Both Urva and Rakshit must remain visibly present on camera (picture-in-picture or
+side-by-side) throughout the demonstration.
+Audio Quality: Ensure microphones are clear, without background echo.
+Seed Script Command: Run cd backend && npm run seed before recording to populate test data.
+Submission Link: Upload to LMS along with tutorial reports T1 through T15.
+
+11
+
+

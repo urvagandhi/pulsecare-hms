@@ -18,6 +18,7 @@ import { StatusBadge } from '@/components/Shared/StatusBadge';
 import { DataTable, ColumnDef } from '@/components/Shared/DataTable';
 import type { Document, DocumentStatus, DocumentType } from '@/types/documents';
 import toast from 'react-hot-toast';
+import { formatDate, formatDateTime } from '@/lib/format';
 
 interface DocumentsResponse {
   success: boolean;
@@ -213,7 +214,7 @@ export function AdminDocumentManagement() {
     {
       header: 'Created',
       accessorKey: 'createdAt',
-      cell: (row) => new Date(row.createdAt).toLocaleDateString(),
+      cell: (row) => formatDate(row.createdAt),
     },
     {
       header: 'Status',
@@ -323,7 +324,7 @@ export function AdminDocumentManagement() {
                       <span>
                         Type: {DOCUMENT_TYPES.find((t) => t.value === detailDocument.type)?.label ?? detailDocument.type}
                       </span>
-                      <span>Created: {new Date(detailDocument.createdAt).toLocaleDateString()}</span>
+                      <span>Created: {formatDate(detailDocument.createdAt)}</span>
                       <span>
                         Patient:{' '}
                         {`${detailDocument.patientId?.userId?.firstName ?? ''} ${detailDocument.patientId?.userId?.lastName ?? ''}`.trim() || '—'}
@@ -339,7 +340,7 @@ export function AdminDocumentManagement() {
 
                 {detailDocument.issuedAt && (
                   <p className="text-xs text-muted-foreground">
-                    Issued at: {new Date(detailDocument.issuedAt).toLocaleString()}
+                    Issued at: {formatDateTime(detailDocument.issuedAt)}
                   </p>
                 )}
 
@@ -387,7 +388,7 @@ export function AdminDocumentManagement() {
 
                 {detailDocument.voidedAt && (
                   <p className="text-xs text-muted-foreground">
-                    Voided at: {new Date(detailDocument.voidedAt).toLocaleString()}
+                    Voided at: {formatDateTime(detailDocument.voidedAt)}
                   </p>
                 )}
 

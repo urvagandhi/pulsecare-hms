@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { downloadPdf } from '@/lib/downloadPdf';
 import { Calendar, Clock, Download, Plus, Search, CheckCircle2, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { formatDate } from '@/lib/format';
 
 interface DoctorUser {
   firstName: string;
@@ -53,6 +54,13 @@ export interface StaffAppointmentRecord {
   reason?: string;
   notes?: string;
   cancelReason?: string;
+  cancelledBy?: {
+    _id?: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    role?: string;
+  };
   doctor: DoctorRecord;
   patient: PatientRecord;
   createdAt: string;
@@ -72,17 +80,21 @@ interface AppointmentsResponse {
 interface SlotsResponse {
   success: boolean;
   data: string[];
+  meta?: {
+    bookedSlots?: string[];
+    allSlots?: string[];
+  };
 }
 
-function formatDate(date: Date): string {
+function formatDateForInput(date: Date): string {
   return date.toISOString().split('T')[0];
 }
 
-const todayStr = formatDate(new Date());
+const todayStr = formatDateForInput(new Date());
 const tomorrowStr = (() => {
   const d = new Date();
   d.setDate(d.getDate() + 1);
-  return formatDate(d);
+  return formatDateForInput(d);
 })();
 
 export function AdminAppointments() {
@@ -148,7 +160,12 @@ export function AdminAppointments() {
     },
     enabled: !!selectedDoctorId && !!bookingDate && bookModalOpen,
   });
+
   const availableSlots = slotsData?.data ?? [];
+  const bookedSlots = new Set(slotsData?.meta?.bookedSlots ?? []);
+  const allSlots = slotsData?.meta?.allSlots && slotsData.meta.allSlots.length > 0
+    ? slotsData.meta.allSlots
+    : availableSlots;
 
   // Fetch appointments list
   const { data: appointmentsData, isLoading: appointmentsLoading } = useQuery<AppointmentsResponse>({
@@ -296,7 +313,7 @@ export function AdminAppointments() {
       accessorKey: 'date',
       cell: (row) => (
         <div>
-          <div className="font-medium text-slate-900 dark:text-slate-100">{row.date}</div>
+          <div className="font-medium text-slate-900 dark:text-slate-100">{formatDate(row.date)}</div>
           <div className="text-xs text-muted-foreground flex items-center gap-1">
             <Clock className="w-3 h-3 inline" /> {row.timeSlot}
           </div>
@@ -315,7 +332,28 @@ export function AdminAppointments() {
     {
       header: 'Status',
       accessorKey: 'status',
-      cell: (row) => <StatusBadge status={row.status} />,
+      cell: (row) => (
+        <div className="space-y-1">
+          <StatusBadge status={row.status} />
+          {row.status === 'cancelled' && (
+            <div className="text-[11px] leading-tight text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 p-1.5 rounded border border-rose-200/70 dark:border-rose-900/50 max-w-[190px]">
+              <div className="font-semibold flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+                <span>
+                  {row.cancelledBy?.firstName
+                    ? `By ${row.cancelledBy.firstName} (${row.cancelledBy.role})`
+                    : 'Audit: Cancelled'}
+                </span>
+              </div>
+              {row.cancelReason && (
+                <div className="text-[10px] text-muted-foreground mt-0.5 italic truncate" title={row.cancelReason}>
+                  "{row.cancelReason}"
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      ),
     },
     {
       header: 'Actions',
@@ -622,29 +660,55 @@ export function AdminAppointments() {
                 </p>
               ) : slotsLoading ? (
                 <p className="text-xs text-muted-foreground p-3 border rounded">Checking schedule...</p>
-              ) : availableSlots.length === 0 ? (
+              ) : allSlots.length === 0 ? (
                 <div className="p-3 border rounded border-amber-200 bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 text-xs flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>No slots available for this doctor on {bookingDate} (doctor may be on leave, off duty, or fully booked).</span>
                 </div>
               ) : (
-                <div className="grid grid-cols-4 gap-2 max-h-36 overflow-y-auto p-1">
-                  {availableSlots.map((slot) => (
-                    <Button
-                      key={slot}
-                      type="button"
-                      size="sm"
-                      variant={selectedSlot === slot ? 'default' : 'outline'}
-                      className={`h-9 text-xs font-mono font-medium ${
-                        selectedSlot === slot
-                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                          : 'hover:border-teal-500'
-                      }`}
-                      onClick={() => setSelectedSlot(slot)}
-                    >
-                      {slot}
-                    </Button>
-                  ))}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-end gap-3 text-[11px] text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+                      Available ({availableSlots.length})
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-slate-400 dark:bg-slate-600 inline-block" />
+                      Booked ({bookedSlots.size})
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2 max-h-40 overflow-y-auto p-1">
+                    {allSlots.map((slot) => {
+                      const isBooked = bookedSlots.has(slot);
+                      if (isBooked) {
+                        return (
+                          <div
+                            key={slot}
+                            className="h-9 px-2 text-xs font-mono font-medium rounded-md border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/60 text-slate-400 dark:text-slate-500 flex items-center justify-center line-through cursor-not-allowed select-none opacity-60"
+                            title="Slot is already booked"
+                          >
+                            {slot}
+                          </div>
+                        );
+                      }
+                      return (
+                        <Button
+                          key={slot}
+                          type="button"
+                          size="sm"
+                          variant={selectedSlot === slot ? 'default' : 'outline'}
+                          className={`h-9 text-xs font-mono font-medium ${
+                            selectedSlot === slot
+                              ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                              : 'hover:border-teal-500'
+                          }`}
+                          onClick={() => setSelectedSlot(slot)}
+                        >
+                          {slot}
+                        </Button>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>
@@ -681,7 +745,7 @@ export function AdminAppointments() {
               Cancel
             </Button>
             <Button
-              disabled={!selectedPatientId || !selectedDoctorId || !selectedSlot || bookMutation.isPending}
+              disabled={!selectedPatientId || !selectedDoctorId || !selectedSlot || bookedSlots.has(selectedSlot) || bookMutation.isPending}
               onClick={() => bookMutation.mutate()}
               className="bg-emerald-600 hover:bg-emerald-700 text-white"
             >
@@ -718,7 +782,7 @@ export function AdminAppointments() {
                 </p>
                 <p className="text-xs text-muted-foreground">{confirmedBooking.doctor?.specialization}</p>
                 <p className="text-xs font-medium text-emerald-700 dark:text-emerald-300 mt-1">
-                  {confirmedBooking.date} at {confirmedBooking.timeSlot}
+                  {formatDate(confirmedBooking.date, { withDayOfWeek: true })} at {confirmedBooking.timeSlot}
                 </p>
               </div>
             </div>
@@ -759,6 +823,25 @@ export function AdminAppointments() {
                   Patient: {selectedAppointment.patient?.userId?.firstName} {selectedAppointment.patient?.userId?.lastName} • Token #{selectedAppointment.tokenNumber ?? '—'}
                 </p>
               </div>
+
+              {selectedAppointment.status === 'cancelled' && (
+                <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-xs text-rose-800 dark:text-rose-300">
+                  <div className="font-bold flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+                    <span>Audit Record: Cancelled</span>
+                    {selectedAppointment.cancelledBy?.firstName ? (
+                      <span className="font-normal text-rose-700 dark:text-rose-400">
+                        by <span className="font-semibold">{selectedAppointment.cancelledBy.firstName} {selectedAppointment.cancelledBy.lastName || ''}</span> ({selectedAppointment.cancelledBy.role})
+                      </span>
+                    ) : null}
+                  </div>
+                  {selectedAppointment.cancelReason && (
+                    <div className="mt-1 text-[11px] italic text-rose-700 dark:text-rose-400">
+                      Reason: "{selectedAppointment.cancelReason}"
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="space-y-1.5">
                 <Label className="font-semibold text-sm">Status</Label>

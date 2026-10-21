@@ -113,7 +113,15 @@ export async function getRevenueAnalytics() {
               date: { $ifNull: ['$issuedDate', '$createdAt'] },
             },
           },
-          revenue: { $sum: '$total' },
+          // Accurate revenue accounting: sum actual received payments rather than total invoice value for partials
+          revenue: {
+            $sum: {
+              $ifNull: [
+                '$amountPaid',
+                { $cond: [{ $eq: ['$status', 'paid'] }, '$total', { $subtract: ['$total', '$balance'] }] }
+              ],
+            },
+          },
           count: { $sum: 1 },
         },
       },

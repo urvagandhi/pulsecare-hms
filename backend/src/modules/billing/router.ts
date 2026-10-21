@@ -20,8 +20,13 @@ router.get('/:id', authenticate, authorize('billing', 'read'), BillingController
 // Issue invoice
 router.patch('/:id/issue', authenticate, authorize('billing', 'issue'), BillingController.issueInvoice);
 
-// Record payment
+// Record payment (offline/staff)
 router.post('/:id/payments', authenticate, authorize('billing', 'write'), BillingController.recordPayment);
+router.post('/:id/pay', authenticate, authorize('billing', 'write'), BillingController.recordPayment);
+
+// Online payment checkout (patients/staff online gateway)
+router.post('/:id/pay-online', authenticate, BillingController.payOnline);
+router.post('/:id/checkout', authenticate, BillingController.payOnline);
 
 // Remove item from draft invoice
 router.delete('/:id/items/:itemIndex', authenticate, authorize('billing', 'write'), BillingController.removeLineItem);

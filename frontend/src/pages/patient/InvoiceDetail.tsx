@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Download } from 'lucide-react';
 import api from '@/lib/api';
-import { fmt } from '@/lib/format';
+import { fmt, formatDate, formatDateTime } from '@/lib/format';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/Shared/StatusBadge';
@@ -76,13 +76,13 @@ export function PatientInvoiceDetail() {
               <CardTitle className="text-xl">{inv.invoiceId}</CardTitle>
               <div className="mt-1 flex flex-wrap gap-4 text-sm text-muted-foreground">
                 {inv.issuedDate && (
-                  <span>Issued: {new Date(inv.issuedDate).toLocaleDateString()}</span>
+                  <span>Issued: {formatDate(inv.issuedDate)}</span>
                 )}
                 {inv.dueDate && (
-                  <span>Due: {new Date(inv.dueDate).toLocaleDateString()}</span>
+                  <span>Due: {formatDate(inv.dueDate)}</span>
                 )}
                 {!inv.issuedDate && (
-                  <span>Created: {new Date(inv.createdAt).toLocaleDateString()}</span>
+                  <span>Created: {formatDate(inv.createdAt)}</span>
                 )}
               </div>
             </div>
@@ -217,7 +217,7 @@ export function PatientInvoiceDetail() {
                 <tbody className="divide-y">
                   {inv.payments.map((pmt, idx) => (
                     <tr key={pmt._id ?? idx}>
-                      <td className="py-2 pr-4">{new Date(pmt.paidAt).toLocaleDateString()}</td>
+                      <td className="py-2 pr-4">{formatDateTime(pmt.paidAt)}</td>
                       <td className="py-2 pr-4 capitalize">{pmt.method}</td>
                       <td className="py-2 pr-4 text-muted-foreground">{pmt.reference ?? '—'}</td>
                       <td className="py-2 text-right font-medium">{fmt(pmt.amount)}</td>

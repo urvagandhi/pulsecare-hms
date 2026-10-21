@@ -2,6 +2,7 @@ import { StatusBadge } from '@/components/Shared/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { downloadPdf } from '@/lib/downloadPdf';
+import { formatDate } from '@/lib/format';
 
 export interface AppointmentRecord {
   _id: string;
@@ -13,6 +14,14 @@ export interface AppointmentRecord {
   status: string;
   reason?: string;
   notes?: string;
+  cancelReason?: string;
+  cancelledBy?: {
+    _id?: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    role?: string;
+  };
   doctor?: {
     _id: string;
     specialization: string;
@@ -50,12 +59,7 @@ export function AppointmentCard({
   onComplete,
   onCancel,
 }: AppointmentCardProps) {
-  const appointmentDate = new Date(appointment.date).toLocaleDateString('en-US', {
-    weekday: 'short',
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
+  const appointmentDate = formatDate(appointment.date, { withDayOfWeek: true });
 
   const doctorName = appointment.doctor?.userId
     ? `Dr. ${appointment.doctor.userId.firstName} ${appointment.doctor.userId.lastName}`
@@ -100,6 +104,32 @@ export function AppointmentCard({
             {appointment.reason && (
               <p className="text-sm text-muted-foreground">Reason: {appointment.reason}</p>
             )}
+
+            {appointment.status === 'cancelled' && (
+              <div className="mt-2.5 p-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/60 text-xs">
+                <div className="flex flex-wrap items-center gap-1.5 font-bold text-rose-800 dark:text-rose-300">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+                  <span>Audit Trail: Cancelled</span>
+                  {typeof appointment.cancelledBy === 'object' && appointment.cancelledBy?.firstName ? (
+                    <span className="font-medium text-rose-700 dark:text-rose-400">
+                      by {appointment.cancelledBy.firstName} {appointment.cancelledBy.lastName || ''}{' '}
+                      <span className="uppercase text-[10px] px-1.5 py-0.5 rounded bg-rose-100 dark:bg-rose-900/60 font-semibold font-mono">
+                        {appointment.cancelledBy.role}
+                      </span>
+                    </span>
+                  ) : appointment.cancelledBy ? (
+                    <span className="font-medium text-rose-700 dark:text-rose-400">
+                      by System/User
+                    </span>
+                  ) : null}
+                </div>
+                {appointment.cancelReason && (
+                  <p className="mt-1 text-[11px] text-rose-600 dark:text-rose-400">
+                    Reason: <span className="font-medium italic">{appointment.cancelReason}</span>
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="flex flex-wrap gap-2 shrink-0">
@@ -125,13 +155,11 @@ export function AppointmentCard({
                   Complete
                 </Button>
               )}
-              {(viewAs === 'patient' || viewAs === 'admin') &&
-                appointment.status === 'scheduled' &&
-                onCancel && (
-                  <Button size="sm" variant="destructive" onClick={() => onCancel(appointment._id)}>
-                    Cancel
-                  </Button>
-                )}
+              {appointment.status !== 'completed' && appointment.status !== 'cancelled' && onCancel && (
+                <Button size="sm" variant="destructive" onClick={() => onCancel(appointment._id)}>
+                  Cancel
+                </Button>
+              )}
             </div>
         </div>
       </CardContent>

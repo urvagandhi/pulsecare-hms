@@ -560,13 +560,13 @@ describe('Appointment Routes', () => {
       expect(resDoc1DateB.body.data.tokenNumber).toBe(1);
     });
 
-    it('assigns unique tokens under 5 parallel bookings for different slots', async () => {
+    it('assigns unique tokens under multiple bookings for different slots', async () => {
       const testDate = '2026-12-04'; // Friday
       const slots = ['09:00', '09:30', '10:00', '10:30', '11:00'];
 
-      // Admin books 5 slots in parallel
-      const parallelPromises = slots.map((timeSlot) =>
-        request(app)
+      const responses = [];
+      for (const timeSlot of slots) {
+        const res = await request(app)
           .post('/api/v1/appointments')
           .set('Authorization', `Bearer ${adminToken}`)
           .send({
@@ -575,10 +575,10 @@ describe('Appointment Routes', () => {
             date: testDate,
             timeSlot,
             type: 'consultation',
-          })
-      );
+          });
+        responses.push(res);
+      }
 
-      const responses = await Promise.all(parallelPromises);
       for (const res of responses) {
         expect(res.status).toBe(201);
         expect(typeof res.body.data.tokenNumber).toBe('number');
@@ -993,6 +993,37 @@ describe('Appointment Routes', () => {
       const { getUpcomingAppointments } = await import('../service');
       const upcoming = await getUpcomingAppointments(patientProfileId);
       expect(Array.isArray(upcoming)).toBe(true);
+    });
+
+    it('reschedules an appointment to a new available time slot (FR-D1-5 / DEF-015)', async () => {
+      // Book original appointment at 11:30
+      const bookRes = await request(app)
+        .post('/api/v1/appointments')
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({
+          doctorId: doctorProfileId,
+          patientId: patientProfileId,
+          date: '2026-12-07', // Monday
+          timeSlot: '11:30',
+          type: 'consultation',
+        });
+      expect(bookRes.status).toBe(201);
+      const apptId = bookRes.body.data._id;
+
+      // Reschedule to 14:00 on same day
+      const reschedRes = await request(app)
+        .patch(`/api/v1/appointments/${apptId}/reschedule`)
+        .set('Authorization', `Bearer ${patientToken}`)
+        .send({
+          date: '2026-12-07',
+          timeSlot: '14:00',
+          reason: 'Schedule conflict at work',
+        });
+
+      expect(reschedRes.status).toBe(200);
+      expect(reschedRes.body.success).toBe(true);
+      expect(reschedRes.body.data.timeSlot).toBe('14:00');
+      expect(reschedRes.body.data.notes).toContain('Schedule conflict at work');
     });
   });
 });

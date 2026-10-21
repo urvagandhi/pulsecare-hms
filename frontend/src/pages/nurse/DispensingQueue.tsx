@@ -7,6 +7,7 @@ import { StatusBadge } from '@/components/Shared/StatusBadge';
 import { DataTable, ColumnDef } from '@/components/Shared/DataTable';
 import type { Prescription } from '@/types/pharmacy';
 import toast from 'react-hot-toast';
+import { formatDate } from '@/lib/format';
 
 interface PrescriptionsResponse {
   success: boolean;
@@ -79,7 +80,7 @@ export function NurseDispensingQueue() {
     {
       header: 'Date',
       accessorKey: 'createdAt',
-      cell: (row) => new Date(row.createdAt).toLocaleDateString(),
+      cell: (row) => formatDate(row.createdAt),
     },
     {
       header: 'Medications',
@@ -158,7 +159,7 @@ export function NurseDispensingQueue() {
                   <div>
                     <p className="text-lg font-semibold">{detailPrescription.prescriptionId}</p>
                     <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
-                      <span>Date: {new Date(detailPrescription.createdAt).toLocaleDateString()}</span>
+                      <span>Date: {formatDate(detailPrescription.createdAt)}</span>
                       <span>
                         Patient:{' '}
                         {`${detailPrescription.patientId?.userId?.firstName ?? ''} ${detailPrescription.patientId?.userId?.lastName ?? ''}`.trim() || '—'}

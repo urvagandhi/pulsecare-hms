@@ -8,6 +8,7 @@ import { env } from './config/env';
 import { logger } from './middleware/requestLogger';
 import { fetchSecrets } from './config/secrets';
 import { startAppointmentJobs } from './jobs/appointments';
+import { startBillingJobs } from './jobs/billing';
 // Unmounted in Task 2.1:
 // import { startInventoryJobs } from './jobs/inventory';
 
@@ -29,6 +30,7 @@ async function bootstrap() {
   server.listen(env.PORT, () => {
     logger.info(`HMS API running on port ${env.PORT} [${env.NODE_ENV}]`);
     startAppointmentJobs();
+    startBillingJobs();
   });
 
   const shutdown = async (signal: string) => {

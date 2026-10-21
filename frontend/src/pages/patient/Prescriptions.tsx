@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/Shared/StatusBadge';
 import { DataTable, ColumnDef } from '@/components/Shared/DataTable';
 import type { Prescription } from '@/types/pharmacy';
+import { formatDate } from '@/lib/format';
 
 interface PrescriptionsResponse {
   success: boolean;
@@ -49,7 +50,7 @@ export function PatientPrescriptions() {
     {
       header: 'Date',
       accessorKey: 'createdAt',
-      cell: (row) => new Date(row.createdAt).toLocaleDateString(),
+      cell: (row) => formatDate(row.createdAt),
     },
     {
       header: 'Medications',
@@ -119,7 +120,7 @@ export function PatientPrescriptions() {
                   <div>
                     <p className="text-lg font-semibold">{detailPrescription.prescriptionId}</p>
                     <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
-                      <span>Date: {new Date(detailPrescription.createdAt).toLocaleDateString()}</span>
+                      <span>Date: {formatDate(detailPrescription.createdAt)}</span>
                       <span>
                         Doctor:{' '}
                         {`${detailPrescription.doctorId?.userId?.firstName ?? ''} ${detailPrescription.doctorId?.userId?.lastName ?? ''}`.trim() || '—'}
@@ -168,7 +169,7 @@ export function PatientPrescriptions() {
                   <div className="text-xs text-muted-foreground">
                     Dispensed by: {detailPrescription.dispensedBy.firstName} {detailPrescription.dispensedBy.lastName}
                     {detailPrescription.dispensedAt && (
-                      <span className="ml-2">on {new Date(detailPrescription.dispensedAt).toLocaleDateString()}</span>
+                      <span className="ml-2">on {formatDate(detailPrescription.dispensedAt)}</span>
                     )}
                   </div>
                 )}

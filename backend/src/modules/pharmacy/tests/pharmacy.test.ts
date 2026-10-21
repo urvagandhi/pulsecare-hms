@@ -29,6 +29,7 @@ import { User } from '../../../models/User';
 import { Patient } from '../../../models/Patient';
 import { Doctor } from '../../../models/Doctor';
 import { Drug } from '../../../models/Drug';
+import { StockMovement } from '../../../models/StockMovement';
 
 // Import the mocked socket module so we can check calls
 import { emitToRole } from '../../../socket';
@@ -449,6 +450,13 @@ describe('Pharmacy Routes', () => {
     // Check stock was deducted
     const drugAfter = await Drug.findById(drugId);
     expect(drugAfter!.stockQuantity).toBe(86); // 100 - 14
+
+    // Check StockMovement audit trail was recorded (Conflict 6 / FR-F1-5)
+    const movement = await StockMovement.findOne({ itemId: drugId, itemModel: 'Drug' });
+    expect(movement).toBeTruthy();
+    expect(movement!.type).toBe('out');
+    expect(movement!.quantity).toBe(14);
+    expect(movement!.reason).toContain(res.body.data.prescriptionId);
   });
 
   it('18. PATCH /api/v1/pharmacy/prescriptions/:id/dispense — low stock emits socket event when stock <= reorderLevel', async () => {
@@ -694,5 +702,68 @@ describe('Pharmacy Routes', () => {
       .get(`/api/v1/pharmacy/drugs/${new mongoose.Types.ObjectId()}`)
       .set('Authorization', `Bearer ${doctorToken}`);
     expect(res.status).toBe(404);
+  });
+
+  it('28. Multi-item prescription dispensing rolls back / prevents partial decrement on stockout', async () => {
+    // Drug A has 10 in stock
+    const uid = `${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+    const drugARes = await request(app)
+      .post('/api/v1/pharmacy/drugs')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        name: `DrugA-StockSafety-${uid}`,
+        code: `DSA-${uid}`,
+        category: 'antibiotic',
+        unit: 'capsule',
+        stockQuantity: 10,
+        reorderLevel: 2,
+      });
+    const drugAId = drugARes.body.data._id;
+
+    // Drug B has 0 in stock
+    const drugBRes = await request(app)
+      .post('/api/v1/pharmacy/drugs')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        name: `DrugB-OutOfStock-${uid}`,
+        code: `DSB-${uid}`,
+        category: 'analgesic',
+        unit: 'tablet',
+        stockQuantity: 0,
+        reorderLevel: 5,
+      });
+    const drugBId = drugBRes.body.data._id;
+
+    // Create prescription requesting Drug A (5) and Drug B (2)
+    const rxRes = await request(app)
+      .post('/api/v1/pharmacy/prescriptions')
+      .set('Authorization', `Bearer ${doctorToken}`)
+      .send({
+        patientId: patientProfileId,
+        doctorId: doctorProfileId,
+        lineItems: [
+          { drugId: drugAId, drugName: 'DrugA-StockSafety', dosage: '500mg', frequency: 'daily', duration: '5 days', quantity: 5 },
+          { drugId: drugBId, drugName: 'DrugB-OutOfStock', dosage: '10mg', frequency: 'daily', duration: '2 days', quantity: 2 },
+        ],
+      });
+    expect(rxRes.status).toBe(201);
+    const rxId = rxRes.body.data._id;
+
+    // Activate
+    await request(app)
+      .patch(`/api/v1/pharmacy/prescriptions/${rxId}/activate`)
+      .set('Authorization', `Bearer ${doctorToken}`)
+      .send({});
+
+    // Attempt to dispense -> must fail with 400
+    const dispenseRes = await request(app)
+      .patch(`/api/v1/pharmacy/prescriptions/${rxId}/dispense`)
+      .set('Authorization', `Bearer ${nurseToken}`)
+      .send({});
+    expect(dispenseRes.status).toBe(400);
+
+    // CRITICAL: Drug A must NOT have been decremented (must still be 10)
+    const drugAAfter = await Drug.findById(drugAId);
+    expect(drugAAfter!.stockQuantity).toBe(10);
   });
 });

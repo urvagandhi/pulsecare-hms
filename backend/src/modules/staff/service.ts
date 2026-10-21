@@ -4,10 +4,58 @@ import { Doctor } from '../../models/Doctor';
 import { Nurse } from '../../models/Nurse';
 import { Receptionist } from '../../models/Receptionist';
 import { Department } from '../../models/Department';
+import { Appointment } from '../../models/Appointment';
+import { emitToUser } from '../../socket';
 import { AppError, ConflictError, NotFoundError, ValidationError } from '../../middleware/errorHandler';
 import { z } from 'zod';
 import { CreateStaffSchema, UpdateStaffSchema, CreateDepartmentSchema, UpdateDepartmentSchema } from './schema';
 import { getUtcDayOfWeek, parseUtcMidnight } from '../../utils/dateUtils';
+
+async function cancelConflictingAppointmentsForLeaves(
+  doctorId: Types.ObjectId,
+  doctorUserId: Types.ObjectId,
+  leaves: Array<{ startDate: Date; endDate: Date; reason?: string }>
+) {
+  if (!leaves || leaves.length === 0) return;
+
+  for (const leave of leaves) {
+    const start = new Date(leave.startDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(leave.endDate);
+    end.setHours(23, 59, 59, 999);
+
+    const conflicting = await Appointment.find({
+      doctor: doctorId,
+      date: { $gte: start, $lte: end },
+      status: { $in: ['scheduled', 'confirmed'] },
+    }).populate('patient');
+
+    const reasonText = leave.reason
+      ? `Doctor on emergency leave (${leave.reason}) — Rescheduling required by receptionist`
+      : 'Doctor on emergency leave — Rescheduling required by receptionist';
+
+    for (const appt of conflicting) {
+      appt.status = 'cancelled';
+      appt.cancelledBy = doctorUserId;
+      appt.cancelReason = reasonText;
+      await appt.save();
+
+      try {
+        const patientUserId = (appt.patient as any)?.userId;
+        if (patientUserId) {
+          emitToUser(patientUserId.toString(), 'appointment:statusChanged', {
+            appointmentId: appt._id.toString(),
+            appointmentRef: appt.appointmentId,
+            status: 'cancelled',
+            reason: reasonText,
+          });
+        }
+      } catch {
+        // Socket emission failure shouldn't fail leave creation
+      }
+    }
+  }
+}
 
 type CreateStaffInput = z.infer<typeof CreateStaffSchema>;
 type UpdateStaffInput = z.infer<typeof UpdateStaffSchema>;
@@ -161,13 +209,23 @@ export async function updateStaffMember(userId: string, input: UpdateStaffInput)
     if (input.qualification !== undefined) profileFields.qualification = input.qualification;
     if (input.consultationFee !== undefined) profileFields.consultationFee = input.consultationFee;
     if (input.leaves !== undefined) {
-      profileFields.leaves = input.leaves.map((l) => ({
+      const parsedLeaves = input.leaves.map((l) => ({
         startDate: new Date(l.startDate),
         endDate: new Date(l.endDate),
         reason: l.reason,
       }));
+      profileFields.leaves = parsedLeaves;
+      const updatedDoc = await Doctor.findOneAndUpdate({ userId }, profileFields, { new: true });
+      if (updatedDoc) {
+        await cancelConflictingAppointmentsForLeaves(
+          updatedDoc._id,
+          updatedDoc.userId as Types.ObjectId,
+          parsedLeaves
+        );
+      }
+    } else {
+      await Doctor.findOneAndUpdate({ userId }, profileFields);
     }
-    await Doctor.findOneAndUpdate({ userId }, profileFields);
   } else if (user.role === 'nurse') {
     if (input.ward !== undefined) profileFields.ward = input.ward;
     if (input.shift !== undefined) profileFields.shift = input.shift;
@@ -235,6 +293,37 @@ export async function getDoctorProfile(id: string) {
       .lean();
   }
   if (!doctor) throw new NotFoundError('Doctor');
+  return doctor;
+}
+
+export async function addDoctorLeave(id: string, leave: { startDate: string | Date; endDate: string | Date; reason?: string }) {
+  if (!Types.ObjectId.isValid(id)) throw new NotFoundError('Doctor');
+  const doctor = await Doctor.findOne({
+    $or: [{ _id: new Types.ObjectId(id) }, { userId: new Types.ObjectId(id) }],
+  });
+  if (!doctor) throw new NotFoundError('Doctor');
+
+  const start = new Date(leave.startDate);
+  const end = new Date(leave.endDate);
+  if (end < start) {
+    throw new ValidationError('endDate cannot be earlier than startDate');
+  }
+
+  doctor.leaves = doctor.leaves || [];
+  doctor.leaves.push({
+    startDate: start,
+    endDate: end,
+    reason: leave.reason,
+  });
+  await doctor.save();
+
+  // Automatically cancel active appointments falling within the doctor's leave window
+  await cancelConflictingAppointmentsForLeaves(
+    doctor._id,
+    doctor.userId as Types.ObjectId,
+    [{ startDate: start, endDate: end, reason: leave.reason }]
+  );
+
   return doctor;
 }
 

@@ -16,6 +16,32 @@ function parseZodError(err: ZodError): ValidationError {
 
 export async function listPatients(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
+    // Enforce horizontal PHI privacy: patient role can only retrieve their own record
+    if (req.user?.role === 'patient' || req.ownOnly) {
+      if (!req.user) return next(new AuthError());
+      try {
+        const ownPatient = await PatientService.getPatientByUserId(req.user._id);
+        res.json(
+          successResponse([ownPatient], {
+            page: 1,
+            limit: 1,
+            total: 1,
+            totalPages: 1,
+          })
+        );
+      } catch {
+        res.json(
+          successResponse([], {
+            page: 1,
+            limit: 1,
+            total: 0,
+            totalPages: 0,
+          })
+        );
+      }
+      return;
+    }
+
     const { page, limit, search } = req.query as Record<string, string>;
     const result = await PatientService.listPatients({
       page: page ? parseInt(page, 10) : undefined,

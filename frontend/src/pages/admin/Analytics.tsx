@@ -12,6 +12,7 @@ import {
   CheckCircle2, Clock, CreditCard, Users
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { formatPeriodLabel } from '@/lib/format';
 
 // ---- Types ----
 interface AppointmentAnalytics {
@@ -47,6 +48,96 @@ interface InvoiceItem {
 
 // ---- Gen-Z Cool Green Color Palette ----
 const CHART_COLORS = ['#059669', '#10b981', '#0d9488', '#0284c7', '#6366f1', '#f59e0b', '#ef4444'];
+
+interface TooltipPayloadItem {
+  name?: string;
+  value?: number;
+  color?: string;
+  payload?: {
+    _id?: string;
+    count?: number;
+    revenue?: number;
+    fill?: string;
+  };
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadItem[];
+  label?: string;
+}
+
+function StatusPieTooltip({ active, payload }: CustomTooltipProps) {
+  if (active && payload && payload.length) {
+    const data = payload[0];
+    const statusName = data.name || data.payload?._id || '';
+    const count = data.value ?? data.payload?.count ?? 0;
+    const color = data.payload?.fill || data.color || '#10b981';
+
+    return (
+      <div className="bg-slate-900/95 text-white backdrop-blur-md px-3.5 py-2.5 rounded-xl border border-slate-700/80 shadow-2xl text-xs flex items-center gap-2.5 pointer-events-none">
+        <span className="w-2.5 h-2.5 rounded-full shrink-0 shadow-xs" style={{ backgroundColor: color }} />
+        <div className="flex items-center gap-2">
+          <span className="capitalize font-semibold text-slate-200">{statusName}:</span>
+          <span className="font-extrabold text-white text-sm">{count}</span>
+          <span className="text-[10px] text-slate-400 font-medium">({count === 1 ? 'appt' : 'appts'})</span>
+        </div>
+      </div>
+    );
+  }
+  return null;
+}
+
+function VolumeBarTooltip({ active, payload, label }: CustomTooltipProps) {
+  if (active && payload && payload.length) {
+    const count = payload[0].value ?? 0;
+    return (
+      <div className="bg-slate-900/95 text-white backdrop-blur-md px-3.5 py-2.5 rounded-xl border border-slate-700/80 shadow-2xl text-xs pointer-events-none">
+        <p className="font-semibold text-slate-400 text-[11px] mb-1.5">{formatPeriodLabel(label, { fullMonth: true })}</p>
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+          <span className="text-slate-200 font-medium">Appointments:</span>
+          <span className="font-extrabold text-white text-sm">{count}</span>
+        </div>
+      </div>
+    );
+  }
+  return null;
+}
+
+function RevenueLineTooltip({ active, payload, label }: CustomTooltipProps) {
+  if (active && payload && payload.length) {
+    const revenue = payload[0].value ?? 0;
+    return (
+      <div className="bg-slate-900/95 text-white backdrop-blur-md px-3.5 py-2.5 rounded-xl border border-slate-700/80 shadow-2xl text-xs pointer-events-none">
+        <p className="font-semibold text-slate-400 text-[11px] mb-1.5">{formatPeriodLabel(label, { fullMonth: true })}</p>
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+          <span className="text-slate-200 font-medium">Revenue:</span>
+          <span className="font-extrabold text-white text-sm">₹{Number(revenue).toLocaleString()}</span>
+        </div>
+      </div>
+    );
+  }
+  return null;
+}
+
+function StaffStatusBarTooltip({ active, payload, label }: CustomTooltipProps) {
+  if (active && payload && payload.length) {
+    const count = payload[0].value ?? 0;
+    return (
+      <div className="bg-slate-900/95 text-white backdrop-blur-md px-3.5 py-2.5 rounded-xl border border-slate-700/80 shadow-2xl text-xs pointer-events-none">
+        <p className="font-semibold text-slate-400 text-[11px] mb-1.5 capitalize">{label}</p>
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+          <span className="text-slate-200 font-medium">Consultations:</span>
+          <span className="font-extrabold text-white text-sm">{count}</span>
+        </div>
+      </div>
+    );
+  }
+  return null;
+}
 
 function SectionSkeleton() {
   return (
@@ -295,12 +386,9 @@ export function AdminAnalytics() {
                       <ResponsiveContainer width="100%" height={260}>
                         <BarChart data={[...appt.volumeByPeriod].reverse()} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.6} />
-                          <XAxis dataKey="_id" tick={{ fontSize: 11, fill: '#64748b' }} tickLine={false} />
+                          <XAxis dataKey="_id" tick={{ fontSize: 11, fill: '#64748b' }} tickLine={false} tickFormatter={(val) => formatPeriodLabel(val)} />
                           <YAxis tick={{ fontSize: 11, fill: '#64748b' }} tickLine={false} axisLine={false} />
-                          <Tooltip
-                            contentStyle={{ backgroundColor: '#0f172a', borderRadius: '12px', border: 'none', color: '#fff', fontSize: '12px' }}
-                            itemStyle={{ color: '#34d399' }}
-                          />
+                          <Tooltip content={<VolumeBarTooltip />} />
                           <Bar dataKey="count" fill="#059669" radius={[6, 6, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
@@ -337,9 +425,7 @@ export function AdminAnalytics() {
                               <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                             ))}
                           </Pie>
-                          <Tooltip
-                            contentStyle={{ backgroundColor: '#0f172a', borderRadius: '12px', border: 'none', color: '#fff', fontSize: '12px' }}
-                          />
+                          <Tooltip content={<StatusPieTooltip />} />
                         </PieChart>
                       </ResponsiveContainer>
                     )}
@@ -429,17 +515,14 @@ export function AdminAnalytics() {
                       <ResponsiveContainer width="100%" height={260}>
                         <LineChart data={[...revenue.byMonth].reverse()} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.6} />
-                          <XAxis dataKey="_id" tick={{ fontSize: 11, fill: '#64748b' }} tickLine={false} />
+                          <XAxis dataKey="_id" tick={{ fontSize: 11, fill: '#64748b' }} tickLine={false} tickFormatter={(val) => formatPeriodLabel(val)} />
                           <YAxis
                             tick={{ fontSize: 11, fill: '#64748b' }}
                             tickLine={false}
                             axisLine={false}
                             tickFormatter={(v: number) => `₹${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
                           />
-                          <Tooltip
-                            contentStyle={{ backgroundColor: '#0f172a', borderRadius: '12px', border: 'none', color: '#fff', fontSize: '12px' }}
-                            formatter={(v: any) => [`₹${Number(v ?? 0).toLocaleString()}`, 'Revenue']}
-                          />
+                          <Tooltip content={<RevenueLineTooltip />} />
                           <Line type="monotone" dataKey="revenue" stroke="#059669" strokeWidth={3} dot={{ fill: '#059669', r: 4 }} activeDot={{ r: 6 }} />
                         </LineChart>
                       </ResponsiveContainer>
@@ -570,7 +653,7 @@ export function AdminAnalytics() {
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.6} />
                       <XAxis dataKey="_id" tick={{ fontSize: 11, fill: '#64748b' }} />
                       <YAxis tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} />
-                      <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderRadius: '12px', color: '#fff', fontSize: '12px' }} />
+                      <Tooltip content={<StaffStatusBarTooltip />} />
                       <Bar dataKey="count" fill="#10b981" radius={[6, 6, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>

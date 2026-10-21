@@ -11,6 +11,7 @@ import { StatusBadge } from '@/components/Shared/StatusBadge';
 import { DashboardSkeleton } from '@/components/Shared/DashboardSkeleton';
 import { Users, Calendar, DollarSign, Clock, Bell, UserPlus, ClipboardList, BarChart3, CreditCard } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatDate } from '@/lib/format';
 
 // Minimal types for dashboard queries
 interface Patient {
@@ -397,7 +398,7 @@ export function AdminDashboard() {
                 ? `${inv.patient.userId.firstName ?? ''} ${inv.patient.userId.lastName ?? ''}`.trim()
                 : 'Patient';
               const createdLabel = inv.createdAt
-                ? new Date(inv.createdAt).toLocaleDateString()
+                ? formatDate(inv.createdAt)
                 : '—';
               return (
                 <div key={inv._id} className="flex items-center gap-3 py-2.5">

@@ -17,6 +17,8 @@ router.get('/doctors', authenticate, authorize('patients', 'read'), StaffControl
 // NOTE: /doctors/available must be defined BEFORE /doctors/:id to avoid param capture
 router.get('/doctors/available', authenticate, authorize('patients', 'read'), StaffController.getAvailableDoctors);
 router.get('/doctors/:id', authenticate, authorize('patients', 'read'), StaffController.getDoctorProfile);
+router.post('/doctors/:id/leaves', authenticate, authorize('users', 'write'), StaffController.addDoctorLeave);
+router.post('/staff/doctors/:id/leaves', authenticate, authorize('users', 'write'), StaffController.addDoctorLeave);
 
 // ─── Department routes ──────────────────────────────────────────────────────
 router.get('/departments', authenticate, authorize('patients', 'read'), StaffController.listDepartments);

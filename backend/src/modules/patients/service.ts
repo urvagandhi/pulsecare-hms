@@ -1,7 +1,7 @@
-import { Types } from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import { User } from '../../models/User';
 import { Patient } from '../../models/Patient';
-import { ConflictError, ForbiddenError, NotFoundError } from '../../middleware/errorHandler';
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '../../middleware/errorHandler';
 import { z } from 'zod';
 import { CreatePatientSchema, UpdatePatientSchema } from './schema';
 
@@ -32,38 +32,100 @@ export async function createPatient(input: CreatePatientInput) {
   const existing = await User.findOne({ email: input.email });
   if (existing) throw new ConflictError('Email already registered');
 
-  // NOTE: Not using Mongoose sessions/transactions here for single-instance compatibility.
-  // In a production multi-replica environment, wrap these in a session transaction.
-  const user = await User.create({
-    firstName: input.firstName,
-    lastName: input.lastName,
-    email: input.email,
-    password: input.password,
-    role: 'patient',
-    phone: input.phone,
-    dob: input.dob ? new Date(input.dob) : undefined,
-    gender: input.gender,
-  });
+  // Multi-document ACID transaction: creates User + Patient atomically
+  let user: any;
+  let patient: any;
 
-  let patient;
   try {
-    patient = await Patient.create({
-      userId: user._id,
-      bloodGroup: input.bloodGroup,
-      allergies: input.allergies ?? [],
-      emergencyContact: input.emergencyContact,
-      insuranceInfo: input.insuranceInfo
-        ? {
-            ...input.insuranceInfo,
-            expiryDate: input.insuranceInfo.expiryDate
-              ? new Date(input.insuranceInfo.expiryDate)
+    const session = await mongoose.startSession();
+    try {
+      session.startTransaction();
+
+      const [createdUser] = await User.create(
+        [
+          {
+            firstName: input.firstName,
+            lastName: input.lastName,
+            email: input.email,
+            password: input.password,
+            role: 'patient',
+            phone: input.phone,
+            dob: input.dob ? new Date(input.dob) : undefined,
+            gender: input.gender,
+          },
+        ],
+        { session }
+      );
+
+      const [createdPatient] = await Patient.create(
+        [
+          {
+            userId: createdUser._id,
+            bloodGroup: input.bloodGroup,
+            allergies: input.allergies ?? [],
+            emergencyContact: input.emergencyContact,
+            insuranceInfo: input.insuranceInfo
+              ? {
+                  ...input.insuranceInfo,
+                  expiryDate: input.insuranceInfo.expiryDate
+                    ? new Date(input.insuranceInfo.expiryDate)
+                    : undefined,
+                }
               : undefined,
-          }
-        : undefined,
-    });
+          },
+        ],
+        { session }
+      );
+
+      await session.commitTransaction();
+      user = createdUser;
+      patient = createdPatient;
+    } catch (sessionErr) {
+      await session.abortTransaction();
+      throw sessionErr;
+    } finally {
+      session.endSession();
+    }
   } catch (err) {
-    await User.findByIdAndDelete(user._id);
-    throw err;
+    if (err instanceof ConflictError || err instanceof ValidationError || err instanceof NotFoundError) {
+      throw err;
+    }
+    const errMsg = (err as Error).message ?? '';
+    // Graceful fallback for standalone MongoDB instances lacking replica sets
+    if (errMsg.includes('Transaction numbers are only allowed on a replica') || errMsg.includes('not supported')) {
+      user = await User.create({
+        firstName: input.firstName,
+        lastName: input.lastName,
+        email: input.email,
+        password: input.password,
+        role: 'patient',
+        phone: input.phone,
+        dob: input.dob ? new Date(input.dob) : undefined,
+        gender: input.gender,
+      });
+
+      try {
+        patient = await Patient.create({
+          userId: user._id,
+          bloodGroup: input.bloodGroup,
+          allergies: input.allergies ?? [],
+          emergencyContact: input.emergencyContact,
+          insuranceInfo: input.insuranceInfo
+            ? {
+                ...input.insuranceInfo,
+                expiryDate: input.insuranceInfo.expiryDate
+                  ? new Date(input.insuranceInfo.expiryDate)
+                  : undefined,
+              }
+            : undefined,
+        });
+      } catch (createErr) {
+        await User.findByIdAndDelete(user._id);
+        throw createErr;
+      }
+    } else {
+      throw err;
+    }
   }
 
   return { user, patient };

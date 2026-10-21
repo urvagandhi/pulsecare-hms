@@ -11,6 +11,7 @@ import { StatusBadge } from '@/components/Shared/StatusBadge';
 import { DataTable, ColumnDef } from '@/components/Shared/DataTable';
 import type { Drug, Prescription, PrescriptionStatus } from '@/types/pharmacy';
 import toast from 'react-hot-toast';
+import { formatDate } from '@/lib/format';
 
 interface DrugsResponse {
   success: boolean;
@@ -215,7 +216,7 @@ export function AdminPharmacyManagement() {
     {
       header: 'Date',
       accessorKey: 'createdAt',
-      cell: (row) => new Date(row.createdAt).toLocaleDateString(),
+      cell: (row) => formatDate(row.createdAt),
     },
     {
       header: 'Status',
@@ -410,7 +411,7 @@ export function AdminPharmacyManagement() {
                   <div>
                     <p className="text-lg font-semibold">{detailPrescription.prescriptionId}</p>
                     <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
-                      <span>Date: {new Date(detailPrescription.createdAt).toLocaleDateString()}</span>
+                      <span>Date: {formatDate(detailPrescription.createdAt)}</span>
                       <span>
                         Patient:{' '}
                         {`${detailPrescription.patientId?.userId?.firstName ?? ''} ${detailPrescription.patientId?.userId?.lastName ?? ''}`.trim() || '—'}
@@ -463,7 +464,7 @@ export function AdminPharmacyManagement() {
                   <div className="text-xs text-muted-foreground">
                     Dispensed by: {detailPrescription.dispensedBy.firstName} {detailPrescription.dispensedBy.lastName}
                     {detailPrescription.dispensedAt && (
-                      <span className="ml-2">on {new Date(detailPrescription.dispensedAt).toLocaleDateString()}</span>
+                      <span className="ml-2">on {formatDate(detailPrescription.dispensedAt)}</span>
                     )}
                   </div>
                 )}
