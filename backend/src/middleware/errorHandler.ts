@@ -62,8 +62,8 @@ export function errorHandler(err: Error, req: Request, res: Response, _next: Nex
     return;
   }
 
-  // Mongoose duplicate key
-  if ('code' in err && (err as NodeJS.ErrnoException).code === '11000') {
+  // Mongoose duplicate key (handles numeric 11000 and string '11000')
+  if ('code' in err && (Number((err as NodeJS.ErrnoException).code) === 11000 || (err as any).code === 11000 || (err as any).code === '11000')) {
     res.status(409).json(errorResponse('DUPLICATE_KEY', 'Resource already exists'));
     return;
   }

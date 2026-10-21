@@ -3,22 +3,21 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { useAppSelector } from '@/store/hooks';
 import { KpiCard } from '@/components/Shared/KpiCard';
-import { AlertItem } from '@/components/Shared/AlertItem';
 import { DashboardSkeleton } from '@/components/Shared/DashboardSkeleton';
 import { Button } from '@/components/ui/button';
 import { downloadPdf } from '@/lib/downloadPdf';
-import { Calendar, Pill, FlaskConical, DollarSign, FileText } from 'lucide-react';
+import { Calendar, Pill, DollarSign, FileText } from 'lucide-react';
+import { formatDate, parseDateSafe } from '@/lib/format';
+import toast from 'react-hot-toast';
 
 interface Appointment {
   _id: string; date?: string; timeSlot?: string; status?: string; reason?: string; tokenNumber?: number;
   doctor?: { specialization?: string; userId?: { firstName?: string; lastName?: string } };
 }
-interface Invoice { _id: string; invoiceId?: string; totalAmount?: number; status?: string; createdAt?: string; }
+interface Invoice { _id: string; invoiceId?: string; total?: number; balance?: number; totalAmount?: number; status?: string; createdAt?: string; }
 interface Prescription { _id: string; status?: string; medicationName?: string; dosage?: string; daysSupply?: number; }
-interface LabResult { _id: string; testName?: string; status?: string; createdAt?: string; }
 
 type TimelineEvent =
-  | { kind: 'lab';    _id: string; title: string; sub: string; date: string; icon: React.ReactNode; iconBg: string }
   | { kind: 'appt';   _id: string; title: string; sub: string; date: string; icon: React.ReactNode; iconBg: string }
   | { kind: 'bill';   _id: string; title: string; sub: string; date: string; icon: React.ReactNode; iconBg: string }
   | { kind: 'script'; _id: string; title: string; sub: string; date: string; icon: React.ReactNode; iconBg: string };
@@ -30,15 +29,11 @@ function greetingByHour(): string {
   return 'Good evening';
 }
 
-function formatDate(d?: string): string {
-  if (!d) return '—';
-  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
-
 function formatApptDate(dateStr?: string): { day: string; month: string; bg: string; text: string } {
   if (!dateStr) return { day: '—', month: '—', bg: 'bg-slate-100', text: 'text-slate-500' };
-  const d = new Date(dateStr);
-  const day   = d.getDate().toString();
+  const d = parseDateSafe(dateStr);
+  if (!d) return { day: '—', month: '—', bg: 'bg-slate-100', text: 'text-slate-500' };
+  const day = String(d.getDate()).padStart(2, '0');
   const month = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
   const daysAway = Math.ceil((d.getTime() - Date.now()) / 86400000);
   if (daysAway <= 3)  return { day, month, bg: 'bg-blue-50',    text: 'text-blue-700' };
@@ -50,25 +45,20 @@ export function PatientDashboard() {
   const user = useAppSelector(s => s.auth.user);
 
   const apptQ = useQuery<{ success: boolean; data: Appointment[] }>({
-    queryKey: ['patient-dashboard', 'appointments'],
+    queryKey: ['patient-dashboard', 'appointments', user?._id],
     queryFn: () => api.get('/appointments?status=completed,confirmed,scheduled&limit=5').then(r => r.data),
+    enabled: !!user?._id,
   });
 
   const billsQ = useQuery<{ success: boolean; data: Invoice[] }>({
-    queryKey: ['patient-dashboard', 'billing'],
+    queryKey: ['patient-dashboard', 'billing', user?._id],
     queryFn: () => api.get('/billing?status=unpaid&limit=20').then(r => r.data),
+    enabled: !!user?._id,
   });
 
   const rxQ = useQuery<{ success: boolean; data: Prescription[] }>({
-    queryKey: ['patient-dashboard', 'prescriptions'],
+    queryKey: ['patient-dashboard', 'prescriptions', user?._id],
     queryFn: () => api.get('/pharmacy/prescriptions?status=active').then(r => r.data),
-    enabled: false,
-    initialData: { success: true, data: [] },
-  });
-
-  const labQ = useQuery<{ success: boolean; data: LabResult[] }>({
-    queryKey: ['patient-dashboard', 'lab'],
-    queryFn: () => api.get('/lab/results?limit=5').then(r => r.data),
     enabled: false,
     initialData: { success: true, data: [] },
   });
@@ -76,12 +66,9 @@ export function PatientDashboard() {
   const upcomingAppts   = apptQ.data?.data ?? [];
   const allBills        = billsQ.data?.data ?? [];
   const activePrescriptions = rxQ.data?.data ?? [];
-  const labResults      = labQ.data?.data ?? [];
 
-  const unpaidBills     = allBills.filter((b: Invoice) => b.status === 'unpaid');
-  const outstandingAmt  = unpaidBills.reduce((sum, b) => sum + (b.totalAmount ?? 0), 0);
-
-  const newLabCount = labQ.data?.data?.filter((l: LabResult) => l.status === 'resulted' || l.status === 'pending').length ?? 0;
+  const unpaidBills     = allBills.filter((b: Invoice) => b.status !== 'paid' && b.status !== 'void');
+  const outstandingAmt  = unpaidBills.reduce((sum, b) => sum + (b.balance ?? b.total ?? b.totalAmount ?? 0), 0);
 
   const upcomingCount = upcomingAppts.filter(
     (a: Appointment) => a.status !== 'completed' && a.status !== 'cancelled'
@@ -89,17 +76,10 @@ export function PatientDashboard() {
 
   const nextAppt = upcomingAppts[0];
   const nextApptLabel = nextAppt?.date
-    ? `Next appointment: ${new Date(nextAppt.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}`
+    ? `Next appointment: ${formatDate(nextAppt.date, { withDayOfWeek: true, fullMonth: true })}`
     : 'No upcoming appointments';
 
   const timeline: TimelineEvent[] = [
-    ...labResults.slice(0, 2).map(r => ({
-      kind: 'lab' as const, _id: r._id,
-      title: `Lab Result: ${r.testName ?? 'Test'}`,
-      sub: r.status === 'resulted' ? 'Results ready for review' : `Status: ${r.status ?? '—'}`,
-      date: formatDate(r.createdAt),
-      icon: <FlaskConical className="w-4 h-4 text-emerald-600" />, iconBg: 'bg-emerald-50',
-    })),
     ...upcomingAppts.map(a => ({
       kind: 'appt' as const, _id: a._id,
       title: a.status === 'completed' ? 'Appointment Completed' : 'Upcoming Appointment',
@@ -162,17 +142,23 @@ export function PatientDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <KpiCard
           title="Upcoming Appointments" value={apptQ.isLoading ? '…' : upcomingCount}
-          trend={nextAppt?.date ? `Next: ${new Date(nextAppt.date).toLocaleDateString('en-US', { weekday: 'short' })}` : 'None'}
+          trend={nextAppt?.date ? `Next: ${formatDate(nextAppt.date, { withDayOfWeek: true })}` : 'None'}
           trendDir="neutral" color="blue" icon={<Calendar className="w-5 h-5 text-emerald-600" />} isLoading={apptQ.isLoading}
         />
+        <div
+          onClick={() => toast('Prescription management is scheduled for the next release (v2.0). Currently active: 4 Core Outpatient Modules.', { icon: 'ℹ️', duration: 4000 })}
+          className="cursor-not-allowed opacity-60 hover:opacity-75 transition-opacity"
+          title="Scheduled for next release (v2.0)"
+        >
+          <KpiCard
+            title="Active Prescriptions" value={rxQ.isLoading ? '…' : 0}
+            trend="v2.0 Locked" trendDir="neutral" color="green" icon={<Pill className="w-5 h-5 text-slate-400" />} isLoading={rxQ.isLoading}
+          />
+        </div>
         <KpiCard
-          title="Active Prescriptions" value={rxQ.isLoading ? '…' : activePrescriptions.length}
-          trend="Active" trendDir="up" color="green" icon={<Pill className="w-5 h-5 text-emerald-600" />} isLoading={rxQ.isLoading}
-        />
-        <KpiCard
-          title="Lab Results"          value={labQ.isLoading ? '…' : labResults.length}
-          trend={newLabCount > 0 ? `${newLabCount} new` : 'Up to date'} trendDir="neutral"
-          color="purple" icon={<FlaskConical className="w-5 h-5 text-teal-600" />} isLoading={labQ.isLoading}
+          title="Past Visits"          value={apptQ.isLoading ? '…' : upcomingAppts.filter((a: Appointment) => a.status === 'completed').length}
+          trend="Completed" trendDir="neutral"
+          color="purple" icon={<Calendar className="w-5 h-5 text-teal-600" />} isLoading={apptQ.isLoading}
         />
         <KpiCard
           title="Outstanding Balance"  value={billsQ.isLoading ? '…' : outstandingAmt > 0 ? `₹${outstandingAmt.toLocaleString()}` : '₹0'}
@@ -255,51 +241,89 @@ export function PatientDashboard() {
             <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-3">Quick Actions</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-2.5">
               {[
-                { icon: <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />, label: 'Book Appt',   sub: 'Schedule visit',   to: '/patient/book-appointment' },
-                { icon: <Pill className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />, label: 'Refill Rx',     sub: 'Request refill',  to: '/patient/prescriptions' },
-                { icon: <DollarSign className="w-4 h-4 text-amber-600 dark:text-amber-400" />, label: 'Pay Bill',     sub: outstandingAmt > 0 ? `₹${outstandingAmt.toLocaleString()} due` : 'No balance due', to: '/patient/billing' },
-                { icon: <FileText className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />, label: 'My Records',   sub: 'Documents & Lab',  to: '/patient/documents' },
-              ].map(({ icon, label, sub, to }) => (
+                { icon: <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />, label: 'Book Appt', sub: 'Schedule visit', to: '/patient/book-appointment', isBlackedOut: false },
+                {
+                  icon: <Pill className="w-4 h-4 text-slate-400 dark:text-slate-500" />,
+                  label: 'Refill Rx',
+                  sub: 'Request refill',
+                  to: '/patient/prescriptions',
+                  badge: 'v2.0 Locked',
+                  isBlackedOut: true,
+                  onClick: (e: React.MouseEvent) => {
+                    e.preventDefault();
+                    toast('Medication Refills & Prescriptions are coming in the next release (v2.0). Currently active: 4 Core Outpatient Modules.', {
+                      icon: 'ℹ️',
+                      duration: 4000,
+                    });
+                  }
+                },
+                { icon: <DollarSign className="w-4 h-4 text-amber-600 dark:text-amber-400" />, label: 'Pay Bill', sub: outstandingAmt > 0 ? `₹${outstandingAmt.toLocaleString()} due` : 'No balance due', to: '/patient/billing', isBlackedOut: false },
+                { icon: <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />, label: 'My Visits', sub: 'Appointment history', to: '/patient/appointments', isBlackedOut: false },
+              ].map(({ icon, label, sub, to, badge, isBlackedOut, onClick }) => (
                 <Link
-                  key={label} to={to}
-                  className="flex items-center gap-3 p-3 rounded-xl border border-slate-200/70 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 transition-all group"
+                  key={label}
+                  to={to}
+                  onClick={onClick}
+                  className={`flex items-center gap-3 p-3 rounded-xl border transition-all relative ${
+                    isBlackedOut
+                      ? 'bg-slate-100/90 dark:bg-slate-800/80 border-slate-300 dark:border-slate-700 opacity-60 cursor-not-allowed hover:opacity-80'
+                      : 'border-slate-200/70 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 group'
+                  }`}
+                  title={isBlackedOut ? 'Coming in next release (v2.0)' : undefined}
                 >
-                  <div className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700 flex items-center justify-center shrink-0 group-hover:bg-white dark:group-hover:bg-slate-700">
+                  <div className={`w-8 h-8 rounded-lg border flex items-center justify-center shrink-0 ${
+                    isBlackedOut
+                      ? 'bg-slate-200/70 dark:bg-slate-700/80 border-slate-300/80 dark:border-slate-600 text-slate-400'
+                      : 'bg-slate-50 dark:bg-slate-800 border-slate-200/60 dark:border-slate-700 group-hover:bg-white dark:group-hover:bg-slate-700'
+                  }`}>
                     {icon}
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 truncate">{label}</p>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{sub}</p>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <p className={`text-xs font-bold truncate ${
+                        isBlackedOut
+                          ? 'text-slate-500 dark:text-slate-400 line-through'
+                          : 'text-slate-800 dark:text-slate-200 group-hover:text-emerald-700 dark:group-hover:text-emerald-400'
+                      }`}>
+                        {label}
+                      </p>
+                      {badge && (
+                        <span className="text-[8px] font-mono px-1 py-0.2 rounded bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold uppercase tracking-wider">
+                          {badge}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">{sub}</p>
                   </div>
                 </Link>
               ))}
             </div>
           </div>
 
-          {/* Active prescriptions */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden">
+          {/* Active prescriptions - Blacked out / Greyed out */}
+          <div
+            onClick={() => toast('Prescription & Medication management is coming in the next release (v2.0). Currently active: 4 Core Outpatient Modules.', { icon: 'ℹ️', duration: 4000 })}
+            className="bg-slate-50/80 dark:bg-slate-900/60 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden opacity-60 hover:opacity-75 transition-opacity cursor-not-allowed select-none"
+            title="Scheduled for next release (v2.0)"
+          >
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-slate-800">
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white">Active Prescriptions</h2>
-              <Link to="/patient/prescriptions" className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:underline">
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-bold text-slate-400 dark:text-slate-500 line-through">Active Prescriptions</h2>
+                <span className="text-[8px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-500 uppercase tracking-wider">v2.0 Locked</span>
+              </div>
+              <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 line-through">
                 View all →
-              </Link>
+              </span>
             </div>
-            <div className="px-5 py-3">
-              {rxQ.isLoading && <div className="h-16 animate-pulse bg-slate-50 dark:bg-slate-800/60 rounded-xl my-2" />}
-              {!rxQ.isLoading && activePrescriptions.length === 0 && (
-                <p className="text-xs text-slate-400 py-4 text-center">No active prescriptions</p>
-              )}
-              {activePrescriptions.slice(0, 3).map(rx => (
-                <AlertItem key={rx._id} dotColor="#10b981">
-                  <strong>{rx.medicationName ?? 'Medication'}</strong>
-                  {rx.dosage && ` — ${rx.dosage}`}
-                  {rx.daysSupply && <span className="text-slate-400"> · {rx.daysSupply} days</span>}
-                </AlertItem>
-              ))}
+            <div className="px-5 py-4 text-center">
+              <p className="text-xs text-slate-400 dark:text-slate-500">
+                Prescription & Medication records will be available in the next release (v2.0).
+              </p>
             </div>
           </div>
         </div>
       </div>
+
 
       {/* Health Activity Timeline */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">

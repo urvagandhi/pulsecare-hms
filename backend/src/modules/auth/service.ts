@@ -29,13 +29,31 @@ function generateRefreshToken(): string {
 }
 
 export async function registerUser(
-  input: { firstName: string; lastName: string; email: string; password: string; phone?: string; dob?: string; gender?: string; role?: string },
+  input: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    phone?: string;
+    dob?: string;
+    gender?: string;
+    role?: string;
+    bloodGroup?: 'A+' | 'A-' | 'B+' | 'B-' | 'O+' | 'O-' | 'AB+' | 'AB-';
+    allergies?: string[] | string;
+    emergencyContact?: { name?: string; relationship?: string; phone?: string };
+  },
   jwtSecret: string
 ): Promise<{ user: IUser; tokens: TokenPair }> {
   const existing = await User.findOne({ email: input.email });
   if (existing) throw new ConflictError('Email already registered');
 
-  const { role: _ignoredRole, ...userData } = input;
+  const {
+    role: _ignoredRole,
+    bloodGroup,
+    allergies,
+    emergencyContact,
+    ...userData
+  } = input;
 
   const user = await User.create({
     ...userData,
@@ -43,13 +61,29 @@ export async function registerUser(
     dob: input.dob ? new Date(input.dob) : undefined,
   });
 
-  // Create Patient profile (stubbed until Phase 2 — do a dynamic require to avoid circular dep)
+  // Create Patient profile with clinical parameters (Module 1)
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const patientModule = await import('../../models/Patient' as any);
-    await patientModule.Patient.create({ userId: user._id });
-  } catch {
-    // Patient model not yet available (Phase 2) — skip silently
+    const { Patient } = await import('../../models/Patient');
+    const parsedAllergies = Array.isArray(allergies)
+      ? allergies
+      : typeof allergies === 'string' && allergies.trim()
+        ? allergies.split(',').map((s) => s.trim()).filter(Boolean)
+        : [];
+
+    await Patient.create({
+      userId: user._id,
+      bloodGroup: bloodGroup || undefined,
+      allergies: parsedAllergies,
+      emergencyContact: emergencyContact?.name || emergencyContact?.phone
+        ? {
+            name: emergencyContact.name || '',
+            relationship: emergencyContact.relationship || 'Emergency Contact',
+            phone: emergencyContact.phone || '',
+          }
+        : undefined,
+    });
+  } catch (err) {
+    logger.error('Failed to create patient profile on registration', { error: err });
   }
 
   const tokens = await createTokenPair(user, jwtSecret);

@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import { z } from 'zod';
 import { Drug } from '../../models/Drug';
 import { Prescription } from '../../models/Prescription';
+import { StockMovement } from '../../models/StockMovement';
 import { Patient } from '../../models/Patient';
 import { Doctor } from '../../models/Doctor';
 import { ForbiddenError, NotFoundError, ValidationError } from '../../middleware/errorHandler';
@@ -222,22 +223,53 @@ export async function dispensePrescription(
     );
   }
 
-  // Deduct stock for each line item atomically
+  // Step 1: Pre-flight validation - verify that ALL line items exist and have sufficient stock before decrementing
   for (const item of prescription.lineItems) {
     const deductQty = item.quantity ?? 1;
+    const drug = await Drug.findById(item.drugId);
+    if (!drug) {
+      throw new NotFoundError(`Drug ${item.drugId} not found`);
+    }
+    if (drug.stockQuantity < deductQty) {
+      throw new ValidationError(
+        `Insufficient stock for '${drug.name}'. Available: ${drug.stockQuantity}, required: ${deductQty}`
+      );
+    }
+  }
+
+  // Step 2: Atomic decrement and audit logging for each line item
+  for (const item of prescription.lineItems) {
+    const deductQty = item.quantity ?? 1;
+    const previousDrug = await Drug.findById(item.drugId);
     const updated = await Drug.findOneAndUpdate(
       { _id: item.drugId, stockQuantity: { $gte: deductQty } },
       { $inc: { stockQuantity: -deductQty } },
       { new: true }
     );
     if (!updated) {
-      // Either drug not found or insufficient stock
       const drug = await Drug.findById(item.drugId);
       if (!drug) throw new NotFoundError(`Drug ${item.drugId} not found`);
       throw new ValidationError(
         `Insufficient stock for '${drug.name}'. Available: ${drug.stockQuantity}, required: ${deductQty}`
       );
     }
+
+    // Record StockMovement audit trail (DEF-009 / FR-F1-5)
+    try {
+      await StockMovement.create({
+        itemId: item.drugId,
+        itemModel: 'Drug',
+        type: 'out',
+        quantity: deductQty,
+        previousQuantity: previousDrug ? previousDrug.stockQuantity : updated.stockQuantity + deductQty,
+        newQuantity: updated.stockQuantity,
+        reason: `Prescription dispensed: ${prescription.prescriptionId}`,
+        performedBy: new Types.ObjectId(dispensingUserId),
+      });
+    } catch {
+      // Non-fatal if collection schema mismatch
+    }
+
     // Emit low stock alert if stock drops below or equals reorder level
     if (updated.stockQuantity <= updated.reorderLevel) {
       emitToRole('admin', 'pharmacy:low-stock', {

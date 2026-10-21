@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SPM Capstone Project Demonstration Script & Workflow</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      darkMode: false,
+      background: '#ffffff',
+      primaryColor: '#ffffff',
+      primaryBorderColor: '#000000',
+      primaryTextColor: '#000000',
+      lineColor: '#000000',
+      textColor: '#000000',
+      nodeBorder: '#000000',
+      clusterBkg: '#ffffff',
+      clusterBorder: '#000000',
+      defaultLinkColor: '#000000',
+      edgeLabelBackground: '#ffffff',
+      actorBorder: '#000000',
+      actorBkg: '#ffffff',
+      actorTextColor: '#000000',
+      actorLineColor: '#000000',
+      signalColor: '#000000',
+      signalTextColor: '#000000',
+      labelBoxBkgColor: '#ffffff',
+      labelBoxBorderColor: '#000000',
+      labelTextColor: '#000000',
+      loopTextColor: '#000000',
+      noteBorderColor: '#000000',
+      noteBkgColor: '#ffffff',
+      noteTextColor: '#000000'
+    }
+  });
+</script>
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 16mm 18mm 16mm;
+    @bottom-right {
+      content: counter(page);
+    }
+  }
+  *, *:before, *:after {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  body {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 11pt;
+    line-height: 1.45;
+    color: #000000;
+    background-color: #ffffff;
+    margin: 0;
+    padding: 0;
+  }
+  h1, h2, h3, h4 {
+    color: #000000;
+    font-weight: bold;
+    margin-top: 1.2em;
+    margin-bottom: 0.4em;
+    page-break-after: avoid;
+  }
+  h1 {
+    font-size: 18pt;
+    text-align: center;
+    border-bottom: 2px solid #000000;
+    padding-bottom: 6px;
+    margin-top: 0;
+  }
+  h2 {
+    font-size: 13.5pt;
+    border-bottom: 1px solid #000000;
+    padding-bottom: 3px;
+    margin-top: 1.5em;
+  }
+  h3 {
+    font-size: 11.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 1em;
+  }
+  p {
+    margin: 0.4em 0;
+    text-align: justify;
+  }
+  .header-box {
+    border: 1.5px solid #000000;
+    padding: 10px 14px;
+    margin-bottom: 18px;
+  }
+  .header-grid {
+    display: table;
+    width: 100%;
+  }
+  .header-row {
+    display: table-row;
+  }
+  .header-cell {
+    display: table-cell;
+    padding: 2px 4px;
+    vertical-align: top;
+  }
+  .header-cell.strong {
+    font-weight: bold;
+    width: 28%;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+  }
+  th, td {
+    border: 1px solid #000000;
+    padding: 5px 7px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+    text-align: center;
+  }
+  .dialogue-card {
+    border: 1px solid #000000;
+    margin: 8px 0;
+    padding: 8px 12px;
+    page-break-inside: avoid;
+  }
+  .speaker-tag {
+    font-weight: bold;
+    text-decoration: underline;
+    display: inline-block;
+    margin-bottom: 2px;
+  }
+  .action-box {
+    border-left: 3px solid #000000;
+    padding-left: 10px;
+    margin: 6px 0 10px 0;
+    font-style: italic;
+    font-size: 10pt;
+  }
+  .mermaid-container {
+    border: 1px solid #000000;
+    padding: 10px;
+    margin: 8px 0 14px 0;
+    text-align: center;
+    background: #ffffff;
+    page-break-inside: avoid;
+  }
+  .page-break {
+    page-break-before: always;
+  }
+  ul, ol {
+    margin: 0.3em 0 0.8em 1.5em;
+    padding: 0;
+  }
+  li {
+    margin-bottom: 0.25em;
+  }
+</style>
+</head>
+<body>
+
+<div class="header-box">
+  <div style="text-align:center; margin-bottom: 6px;">
+    <strong style="font-size: 13pt;">NIRMA UNIVERSITY — INSTITUTE OF TECHNOLOGY</strong><br>
+    <span style="font-size: 11pt;">Department of Computer Science and Engineering</span><br>
+    <span style="font-size: 10.5pt; font-weight: bold;">Software Project Management (4CS504ME25) — Semester IV B.Tech</span>
+  </div>
+  <hr style="border: 0; border-top: 1px solid #000000; margin: 6px 0 8px 0;">
+  <div class="header-grid">
+    <div class="header-row">
+      <div class="header-cell strong">Project Title:</div>
+      <div class="header-cell">PulseCare HMS — Outpatient Clinical Management System</div>
+    </div>
+    <div class="header-row">
+      <div class="header-cell strong">Team Members:</div>
+      <div class="header-cell">1. Gandhi Urva Yogeshkumar (23BCE078) — Backend, DB & SCM Lead<br>2. Gajnotar Rakshit (23BCE077) — Frontend, UI/UX & QA Lead</div>
+    </div>
+    <div class="header-row">
+      <div class="header-cell strong">Submission Artifact:</div>
+      <div class="header-cell">Demonstration Video Script & Formal Operational Workflows</div>
+    </div>
+    <div class="header-row">
+      <div class="header-cell strong">Video File Name:</div>
+      <div class="header-cell"><code>23BCE078_23BCE077_PulseCare_HMS.mp4</code> (Duration: 10–12 Mins)</div>
+    </div>
+  </div>
+</div>
+
+<h1>PROJECT DEMONSTRATION SCRIPT & MERMAID WORKFLOWS</h1>
+
+<h2>1. Executive Demonstration Structure & Tutorial Traceability</h2>
+<p>
+  This script and synchronized workflow document serves as the official recording script for the 30-mark SPM Innovative Assignment demonstration. Both group members are visibly present in the video (dual webcam view) alongside the shared screen demonstration. All features directly demonstrate the practical outcomes of <strong>Tutorials T1 through T15</strong>.
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width:14%;">Tutorial</th>
+      <th style="width:36%;">SPM Theoretical Concept & Technique</th>
+      <th style="width:50%;">Live Demonstration Evidence in PulseCare HMS</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>T1 &amp; T3</strong></td>
+      <td>Stakeholder Analysis, Project Scope &amp; Role Matrix</td>
+      <td>Division of responsibilities: Urva (Backend/DB) &amp; Rakshit (Frontend/QA); Outpatient clinic scope.</td>
+    </tr>
+    <tr>
+      <td><strong>T2 &amp; T4</strong></td>
+      <td>Agile Scrum Process Model &amp; Work Breakdown Structure (WBS)</td>
+      <td>Scoping and implementing 4 Core Outpatient Clinical Modules into focused user stories and sprints.</td>
+    </tr>
+    <tr>
+      <td><strong>T5 &amp; T10</strong></td>
+      <td>AON Network Diagram, 16-Week CPM &amp; Milestone Tracking</td>
+      <td>Progress tracking from Phase 0 to Phase 9; Milestone schedule adherence.</td>
+    </tr>
+    <tr>
+      <td><strong>T6, T7, T8</strong></td>
+      <td>Software Metrics, COCOMO Estimation &amp; Use Case Points</td>
+      <td>Clean architectural sizing, modular separation, and pure calculation engines.</td>
+    </tr>
+    <tr>
+      <td><strong>T9</strong></td>
+      <td>Risk Register (R1–R11) &amp; Hazard Mitigation</td>
+      <td>Double-booking lockout (R7), secrets guard (R2), and atomic sequence counters (R9).</td>
+    </tr>
+    <tr>
+      <td><strong>T11 &amp; T12</strong></td>
+      <td>Software Quality Audit (ISO 9001/IEEE 1028) &amp; SQA Testing</td>
+      <td>Live execution of 14 Jest integration suites (156 tests passing green under Asia/Kolkata timezone).</td>
+    </tr>
+    <tr>
+      <td><strong>T13</strong></td>
+      <td>Maintenance Management &amp; Defect Tracking</td>
+      <td>Live proof of defect fixes: D-019 (stale invoice recalculation) &amp; D-022 (doctor leave blackout).</td>
+    </tr>
+    <tr>
+      <td><strong>T14</strong></td>
+      <td>Software Configuration Management (SCM) &amp; Git Strategy</td>
+      <td>Demonstration of atomic semantic commits, branch protection, pull requests, and semantic versioning.</td>
+    </tr>
+    <tr>
+      <td><strong>T15</strong></td>
+      <td>Capstone Portfolio &amp; System Demonstration</td>
+      <td>End-to-end integration walkthrough across all 4 roles (Admin, Receptionist, Doctor, Patient).</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="mermaid-container">
+  <div style="font-weight:bold; margin-bottom:6px; font-size:10pt;">OVERALL DEMONSTRATION WORKFLOW ARCHITECTURE</div>
+  <pre class="mermaid">
+graph TD
+    A[Start: Team Intro & SPM Framework] --> B[SCM & SQA Automated Test Suites]
+    B --> C[Module 1: Patient Registration & Profile]
+    C --> D[Module 2: Doctor & Leave Management]
+    D --> E[Module 3: Appointment Booking & Queue Token]
+    E --> F[Module 4: Itemized Invoicing & Recalculation]
+    F --> G[Executive Analytics & SQA Audit Wrap-up]
+    G --> H[End: Video Conclusion & Faculty Thanks]
+  </pre>
+</div>
+
+<div class="page-break"></div>
+
+<h2>SCENE 1: Introduction, Project Overview &amp; SPM Framework (0:00 – 1:45)</h2>
+
+<div class="action-box">
+  <strong>On-Screen Video Action:</strong><br>
+  • Display public Landing Page (<code>http://localhost:5173</code>) with clean PulseCare HMS brand and navigation.<br>
+  • Both Urva and Rakshit visible in top corners of video feed.<br>
+  • Scroll through the 4 Core Clinical Modules overview cards on the landing page.
+</div>
+
+<div class="mermaid-container">
+  <div style="font-weight:bold; margin-bottom:4px; font-size:9.5pt;">SCENE 1 WORKFLOW: PROJECT INITIATION & STAKEHOLDER SCOPING</div>
+  <pre class="mermaid">
+graph LR
+    S1[SPM Coursework Initiation] --> S2[T1/T3: Stakeholder Analysis]
+    S2 --> S3[T2: Agile Scrum Process Selection]
+    S3 --> S4[T4: WBS Scoping to 4 Core Outpatient Modules]
+    S4 --> S5[T5: 16-Week CPM Milestone Scheduling]
+  </pre>
+</div>
+
+<div class="dialogue-card">
+  <span class="speaker-tag">Urva (23BCE078):</span><br>
+  "Namaste and hello everyone! I am Urva Gandhi, Roll Number 23BCE078, and with me is my project partner..."
+</div>
+
+<div class="dialogue-card">
+  <span class="speaker-tag">Rakshit (23BCE077):</span><br>
+  "...Rakshit Gajnotar, Roll Number 23BCE077. Welcome to our final project demonstration for Software Project Management (4CS504ME25)."
+</div>
+
+<div class="dialogue-card">
+  <span class="speaker-tag">Urva:</span><br>
+  "Throughout this semester, spanning Tutorials T1 through T15, we have applied engineering and management principles to build <strong>PulseCare HMS</strong> — a specialized, highly resilient outpatient hospital management system. In Tutorial 1 and 3, we carried out stakeholder analysis and allocated clear team responsibilities: I led the Backend Architecture, Mongoose schemas, and Configuration Management, while Rakshit engineered the Frontend React UI/UX, Component Architecture, and Quality Assurance."
+</div>
+
+<div class="dialogue-card">
+  <span class="speaker-tag">Rakshit:</span><br>
+  "Following Tutorial 2 and Tutorial 4, we selected the Agile Scrum lifecycle and mapped our Work Breakdown Structure (WBS) against a 16-week CPM schedule. Rather than creating a wide and shallow prototype, we engineered <strong>4 Core Mission-Critical Clinical Modules</strong>:
+  1. Patient Registration &amp; Management (PAT-XXXX)
+  2. Doctor &amp; Department Management (DOC-XXXX)
+  3. Appointment Booking &amp; Queue Management (APT-XXXX)
+  4. Itemized Billing &amp; Invoicing (INV-XXXX)
+  Let us now demonstrate the software tools and engineering standards used."
+</div>
+
+<hr style="border:0; border-top: 1px dashed #000; margin: 15px 0;">
+
+<h2>SCENE 2: SPM Tools, SCM &amp; Automated Testing (1:45 – 3:30)</h2>
+
+<div class="action-box">
+  <strong>On-Screen Video Action:</strong><br>
+  • Switch to GitHub repository tab: Show commit history with semantic commit messages and branch structure.<br>
+  • Open VS Code terminal in <code>backend/</code> directory and run: <code>npm test</code>.<br>
+  • Point out 14 active suites and 156 passing tests running under <code>TZ=Asia/Kolkata</code>.
+</div>
+
+<div class="mermaid-container">
+  <div style="font-weight:bold; margin-bottom:4px; font-size:9.5pt;">SCENE 2 WORKFLOW: SCM PIPELINE & SQA VERIFICATION</div>
+  <pre class="mermaid">
+graph LR
+    G1[Developer Git Commits] --> G2[T14: Branching & SCM Standards]
+    G2 --> G3[Pull Request Code Review]
+    G3 --> G4[T11/T12: SQA Test Suite Execution]
+    G4 --> G5[14 Suites / 156 Tests Pass Green]
+  </pre>
+</div>
+
+<div class="dialogue-card">
+  <span class="speaker-tag">Urva:</span><br>
+  "Demonstrating our work for <strong>Tutorial 14 (Software Configuration Management)</strong>: on our GitHub repository, we enforced strict semantic commits, atomic task milestones, and branch protection. Every single pull request was linked to concrete requirements and peer-reviewed before merging into the main branch."
+</div>
+
+<div class="dialogue-card">
+  <span class="speaker-tag">Rakshit:</span><br>
+  "Connecting to <strong>Tutorial 11 and Tutorial 12 on SQA and Project Audit</strong>, quality control was not an afterthought. In Tutorial 9, we developed our Risk Register (R1 to R11) addressing healthcare security and data concurrency. Urva, let's run the backend test suite live."
+</div>
+
+<div class="dialogue-card">
+  <span class="speaker-tag">Urva:</span> *(Runs <code>npm test</code> in terminal)*<br>
+  "As you can see, our automated test framework executes <strong>14 integration test suites</strong> using Supertest and an isolated in-memory MongoDB server. All <strong>156 test cases pass green with zero failures</strong> under Indian Standard Time (Asia/Kolkata). This satisfies our Defect Removal Efficiency (DRE) benchmarks from Tutorial 6."
+</div>
+
+<div class="page-break"></div>
+
+<h2>SCENE 3: Module 1 — Patient Registration &amp; Management (3:30 – 5:15)</h2>
+
+<div class="action-box">
+  <strong>On-Screen Video Action:</strong><br>
+  • Navigate to <code>/sign-up</code> and register a new patient: Kavya Patel (Phone: 9876543210, Blood Group: B+).<br>
+  • View Patient Dashboard and click <strong>'Download ID Card PDF'</strong>.<br>
+  • Log out; log in as Receptionist (<code>reception@pulsecare.test</code> / <code>Test@123</code>).<br>
+  • Go to <code>/admin/patients</code> and use search bar to search by phone and name with regex escaping.
+</div>
+
+<div class="mermaid-container">
+  <div style="font-weight:bold; margin-bottom:4px; font-size:9.5pt;">MODULE 1 WORKFLOW: PATIENT REGISTRATION, ID GENERATION & SAFE SEARCH</div>
+  <pre class="mermaid">
+sequenceDiagram
+    autonumber
+    actor P as Patient (Kavya)
+    actor R as Receptionist (Pooja)
+    participant UI as PulseCare Frontend
+    participant API as Express Auth/Patient API
+    participant DB as MongoDB (Counter & Users)
+
+    P->>UI: Submit Self-Registration Form
+    UI->>API: POST /api/v1/auth/register (Role locked to Patient)
+    API->>DB: Atomic Counter Increment (PAT-0006)
+    API-->>UI: JWT Access Token & Created Profile
+    P->>UI: Click 'Download ID Card'
+    UI->>API: GET /api/v1/patients/me/id-card
+    API-->>P: Render & Stream PDF Document
+    R->>UI: Login & Open Patients Directory
+    R->>UI: Search by Phone/Name/ID
+    UI->>API: GET /api/v1/patients?search=9876543210
+    API->>DB: Escaped Regex Query across Users & Patients
+    DB-->>UI: Instant Sanitized Results Table
+  </pre>
+</div>
+
+<div class="dialogue-card">
+  <span class="speaker-tag">Rakshit:</span><br>
+  "Now let us examine our <strong>First Core Module: Patient Registration and Profile Management</strong>. On our public portal, let us register a new patient, <strong>Kavya Patel</strong>. The registration form captures essential clinical parameters: blood group, emergency contact details, and known drug allergies. Upon submission, Zod schema validation passes and the account is securely created."
+</div>
+
+<div class="dialogue-card">
+  <span class="speaker-tag">Urva:</span><br>
+  "Under the hood, this implements <strong>Risk Mitigation R9</strong> from our risk register. We replaced unreliable document counting with an atomic Counter collection using <code>findOneAndUpdate</code>, ensuring deterministic sequential IDs like <code>PAT-0006</code> without collisions under concurrent load. Furthermore, Kavya can download her official <strong>Patient ID Card PDF</strong> directly, rendered server-side using <code>pdf-lib</code>."
+</div>
+
+<div class="dialogue-card">
+  <span class="speaker-tag">Rakshit:</span><br>
+  "Now switching to the hospital front desk, I log in as our Receptionist, <strong>Pooja Verma</strong>. When Pooja opens the Patients Directory, she has access to all outpatient records. In earlier testing, entering special characters like parentheses would trigger an unhandled error. As part of our SQA audit, we implemented sanitizing regex escaping in <code>patients/service.ts</code>, enabling safe searching across names, emails, phones, and patient IDs."
+</div>
+
+<hr style="border:0; border-top: 1px dashed #000; margin: 15px 0;">
+
+<h2>SCENE 4: Module 2 — Doctor &amp; Department Management &amp; Leave Blackouts (5:15 – 7:00)</h2>
+
+<div class="action-box">
+  <strong>On-Screen Video Action:</strong><br>
+  • Log in as Admin (<code>admin@pulsecare.test</code> / <code>Test@123</code>) and navigate to <code>/admin/staff</code>.<br>
+  • Show Department catalog and select Dr. Arvind Sharma (Cardiology, ₹600 fee).<br>
+  • Click <strong>'Manage Leave / Time Off'</strong>: Add scheduled leave for tomorrow.<br>
+  • Log in as Patient Kavya Patel; navigate to <code>/patient/book-appointment</code>.<br>
+  • Pick Dr. Sharma on the leave date: Show blackout banner and disabled booking slots.
+</div>
+
+<div class="mermaid-container">
+  <div style="font-weight:bold; margin-bottom:4px; font-size:9.5pt;">MODULE 2 WORKFLOW: DOCTOR LEAVE SCHEDULING & AUTOMATIC SLOT BLACKOUT</div>
+  <pre class="mermaid">
+sequenceDiagram
+    autonumber
+    actor A as Admin (Rajesh)
+    actor P as Patient (Kavya)
+    participant UI as PulseCare Frontend
+    participant API as Staff & Appointments API
+    participant DB as MongoDB (Doctor Collection)
+
+    A->>UI: Open Staff Management & Select Dr. Sharma
+    A->>UI: Submit Leave Window (Tomorrow: Medical Conference)
+    UI->>API: POST /api/v1/staff/doctors/:id/leaves
+    API->>DB: Append Leave Range to Doctor Schema
+    DB-->>UI: Leave Saved Successfully
+    P->>UI: Select Cardiology -> Dr. Sharma -> Leave Date
+    UI->>API: GET /api/v1/appointments/slots?doctorId=...&date=...
+    API->>DB: Intersect Date with Doctor.leaves & Working Hours
+    API-->>UI: Return Empty Slots [] + Leave Notice
+    UI-->>P: Render Warning: 'Doctor on Approved Leave'
+  </pre>
+</div>
+
+<div class="dialogue-card">
+  <span class="speaker-tag">Urva:</span><br>
+  "Our <strong>Second Core Module is Doctor and Department Management</strong>, directly addressing <strong>Defect D-022</strong> from our <strong>Tutorial 13 Maintenance Report</strong>. In outpatient healthcare, specialist scheduling is dynamic. Administrators manage department catalogs and consultation rates, but critically, they must handle physician leaves."
+</div>
+
+<div class="dialogue-card">
+  <span class="speaker-tag">Rakshit:</span><br>
+  "To demonstrate: Admin logs in, selects Dr. Arvind Sharma in Cardiology, and schedules approved leave for tomorrow to attend a medical conference in Ahmedabad. When our patient Kavya Patel attempts to book an appointment with Dr. Sharma for that date, watch what happens."
+</div>
+
+<div class="dialogue-card">
+  <span class="speaker-tag">Urva:</span><br>
+  "Our timezone-safe slot engine evaluates Dr. Sharma's leave array using UTC-normalized dates. The slots for tomorrow are completely locked out, and any direct API booking request is rejected with <strong>HTTP 400: Doctor is on leave</strong>. This guarantees hospital operational integrity."
+</div>
+
+<div class="page-break"></div>
+
+<h2>SCENE 5: Module 3 — Appointment Scheduling &amp; Daily Queue Tokens (7:00 – 8:45)</h2>
+
+<div class="action-box">
+  <strong>On-Screen Video Action:</strong><br>
+  • On patient portal, select an available date for Dr. Sharma at 10:00 AM.<br>
+  • Confirm booking: Show confirmation modal with **Queue Token Badge #1**.<br>
+  • Click **'Download Appointment Slip'**: Open generated PDF with token badge.<br>
+  • Briefly show double-booking lockout (409 Conflict if same slot is booked).<br>
+  • Log in as Dr. Sharma: Show OPD queue on <code>/doctor/schedule</code> displaying Token #1.
+</div>
+
+<div class="mermaid-container">
+  <div style="font-weight:bold; margin-bottom:4px; font-size:9.5pt;">MODULE 3 WORKFLOW: CONCURRENCY-GUARDED BOOKING & DAILY QUEUE TOKEN</div>
+  <pre class="mermaid">
+sequenceDiagram
+    autonumber
+    actor P as Patient (Kavya)
+    actor D as Doctor (Dr. Sharma)
+    participant UI as PulseCare Frontend
+    participant API as Appointments Service
+    participant DB as MongoDB (Index & Counter)
+
+    P->>UI: Select 10:00 AM Slot & Reason
+    UI->>API: POST /api/v1/appointments (Date, Slot, Doctor)
+    API->>DB: Check Unique Index {doctor, date, timeSlot}
+    alt Slot Available
+        API->>DB: Atomic Increment token:{doctorId}:{date}
+        API->>DB: Insert Appointment Record (APT-0009, Token #1)
+        API-->>UI: 201 Created with Token #1 Badge
+        P->>UI: Download Appointment Slip PDF
+    else Concurrent Booking Conflict
+        API-->>UI: 409 Conflict ('Slot already booked')
+    end
+    D->>UI: Open Doctor Schedule Dashboard
+    UI-->>D: Display OPD Patient Queue Sorted by Token #
+  </pre>
+</div>
+
+<div class="dialogue-card">
+  <span class="speaker-tag">Rakshit:</span><br>
+  "This leads us to our <strong>Third Core Module: Appointment Booking and Outpatient Queue Management</strong>. Kavya selects an available clinic date at 10:00 AM for an ECG consultation. Upon booking, she receives confirmation with a prominent badge: <strong>Queue Token #1</strong>."
+</div>
+
+<div class="dialogue-card">
+  <span class="speaker-tag">Urva:</span><br>
+  "This fulfills <strong>Feature Requirement F3</strong> from our <strong>Tutorial 10 Milestone Plan</strong>. Indian outpatient departments rely heavily on sequential queue tokens. Our backend generates atomic daily tokens scoped strictly to <code>{doctorId}:{date}</code>, so each physician's OPD queue starts fresh from `#1`, `#2`, `#3` every morning. Kavya can also download her printable <strong>Appointment Slip PDF</strong> displaying her token badge and appointment barcode placeholder."
+</div>
+
+<div class="dialogue-card">
+  <span class="speaker-tag">Rakshit:</span><br>
+  "Regarding <strong>Risk R7 (Double-Booking Prevention)</strong>: if two patients attempt to claim the exact same 10:00 AM slot concurrently, our database-level partial unique compound index prevents duplicate insertion, returning a friendly <strong>HTTP 409 Conflict</strong>. On Dr. Sharma's dashboard, Kavya Patel appears at the head of the morning queue, ready for consultation."
+</div>
+
+<hr style="border:0; border-top: 1px dashed #000; margin: 15px 0;">
+
+<h2>SCENE 6: Module 4 — Itemized Billing, Recalculation &amp; Invoice PDFs (8:45 – 10:30)</h2>
+
+<div class="action-box">
+  <strong>On-Screen Video Action:</strong><br>
+  • Log in as Receptionist; navigate to <code>/admin/billing</code>.<br>
+  • Click <strong>'Create Invoice'</strong> for Kavya Patel: Add Consultation (₹600), ECG (₹450), and Medicine (₹160).<br>
+  • Set Tax: 5% and Discount: ₹50. Save as Draft.<br>
+  • <strong>Demonstrate Defect D-019 fix:</strong> Delete the ECG item from draft; show instant recalculation of subtotal, tax, and net payable amount.<br>
+  • Click <strong>'Issue Invoice'</strong>, then <strong>'Record Payment'</strong> (Status transitions to Paid).<br>
+  • Click <strong>'Download Tax Invoice PDF'</strong>: Display itemized printable tax invoice.
+</div>
+
+<div class="mermaid-container">
+  <div style="font-weight:bold; margin-bottom:4px; font-size:9.5pt;">MODULE 4 WORKFLOW: ITEMIZED BILLING, PURE RECALCULATION & PDF GENERATION</div>
+  <pre class="mermaid">
+sequenceDiagram
+    autonumber
+    actor R as Receptionist (Pooja)
+    actor P as Patient (Kavya)
+    participant UI as Billing Frontend
+    participant API as Billing Service & Calculator
+    participant DB as MongoDB (Invoice Model)
+
+    R->>UI: Create Draft Invoice with Categorized Items
+    UI->>API: POST /api/v1/billing (Items, Tax 5%, Discount)
+    API->>API: calculateInvoiceTotals() pure function
+    API->>DB: Save Invoice (INV-0004, Status: draft)
+    R->>UI: Delete ECG Item from Draft
+    UI->>API: DELETE /api/v1/billing/:id/items/:itemIndex
+    API->>API: Pure Recalculation of Subtotal, Tax & Total
+    API->>DB: Update Invoice & Audit Log
+    API-->>UI: 200 OK with Recalculated Financials
+    R->>UI: Issue Invoice & Record Full Payment
+    UI->>API: PATCH /api/v1/billing/:id/issue & POST /pay
+    API->>DB: Status transitions: draft -> issued -> paid
+    R->>UI: Download Tax Invoice PDF
+    UI->>API: GET /api/v1/billing/:id/pdf
+    API-->>R: Render & Stream Itemized Invoice PDF
+  </pre>
+</div>
+
+<div class="dialogue-card">
+  <span class="speaker-tag">Rakshit:</span><br>
+  "Our <strong>Fourth Core Module is Itemized Billing and Invoicing</strong>. Following the consultation, Receptionist Pooja creates an invoice for Kavya. PulseCare supports granular categories: consultations, diagnostics, and medicines. We add Dr. Sharma's consultation fee of ₹600, an ECG test of ₹450, and prescribed medication."
+</div>
+
+<div class="dialogue-card">
+  <span class="speaker-tag">Urva:</span><br>
+  "Here we demonstrate our resolution to <strong>Defect D-019</strong> from our <strong>Tutorial 13 Maintenance Plan</strong>. Previously, deleting an item from a draft left stale tax and subtotal figures in the database. We built a pure calculation engine in <code>billing/calculator.ts</code> and exposed a protected item removal endpoint. Watch as Rakshit deletes the ECG test: subtotal, 5% tax, and total payable instantly recalculate with exact two-decimal financial precision."
+</div>
+
+<div class="dialogue-card">
+  <span class="speaker-tag">Rakshit:</span><br>
+  "Once verified, Pooja issues the invoice and records payment via UPI or cash. Both staff and patients can download the official, printable <strong>Tax Invoice PDF</strong>, generated with institutional headers and GST breakdowns."
+</div>
+
+<div class="page-break"></div>
+
+<h2>SCENE 7: Executive Analytics &amp; Project Conclusion (10:30 – 11:45)</h2>
+
+<div class="action-box">
+  <strong>On-Screen Video Action:</strong><br>
+  • Log in as Admin and navigate to <code>/analytics</code>.<br>
+  • Display high-contrast charts: Daily appointment volume, departmental revenue breakdown, and patient demographics.<br>
+  • Bring both webcams full screen for final remarks and acknowledgments.
+</div>
+
+<div class="mermaid-container">
+  <div style="font-weight:bold; margin-bottom:4px; font-size:9.5pt;">SCENE 7 WORKFLOW: CAPSTONE SYNTHESIS & SPM EVALUATION WRAP-UP</div>
+  <pre class="mermaid">
+graph LR
+    M1[Module 1 Data] --> AN[Executive Analytics Dashboard]
+    M2[Module 2 Data] --> AN
+    M3[Module 3 Data] --> AN
+    M4[Module 4 Data] --> AN
+    AN --> T15[T15: Final SPM Capstone Portfolio & Defense]
+  </pre>
+</div>
+
+<div class="dialogue-card">
+  <span class="speaker-tag">Urva:</span><br>
+  "To conclude our system tour, our <strong>Analytics Dashboard</strong> synthesizes data from all 4 core modules — giving hospital administrators real-time visibility into OPD appointment load, revenue trends, and departmental performance."
+</div>
+
+<div class="dialogue-card">
+  <span class="speaker-tag">Rakshit:</span><br>
+  "In summary, as required by our 30-mark SPM Innovative Assignment:
+  • We executed and connected the academic deliverables of <strong>all 15 tutorials (T1–T15)</strong>.
+  • We utilized industry-standard <strong>Project Management and SCM tools</strong> via Git branching, automated Jest test suites, and strict risk governance.
+  • And we engineered a fully functional, production-ready healthcare application scoped around <strong>4 Core Outpatient Modules</strong>."
+</div>
+
+<div class="dialogue-card">
+  <span class="speaker-tag">Urva:</span><br>
+  "The complete source code, seed scripts, audit report, and traceability matrix are submitted and documented in our repository. We sincerely thank our tutorial batch faculty for their continuous mentorship throughout the semester. <em>Aabhar</em> and thank you!"
+</div>
+
+<div class="dialogue-card">
+  <span class="speaker-tag">Rakshit:</span><br>
+  "Thank you very much, and have a great day!"
+</div>
+
+<hr style="border:0; border-top: 1.5px solid #000; margin: 20px 0;">
+
+<h2>3. Video Recording Checklist &amp; Submission Rules</h2>
+<ul>
+  <li><strong>File Name Format:</strong> <code>23BCE078_23BCE077_PulseCare_HMS.mp4</code></li>
+  <li><strong>Visibility Requirement:</strong> Both Urva and Rakshit must remain visibly present on camera (picture-in-picture or side-by-side) throughout the demonstration.</li>
+  <li><strong>Audio Quality:</strong> Ensure microphones are clear, without background echo.</li>
+  <li><strong>Seed Script Command:</strong> Run <code>cd backend && npm run seed</code> before recording to populate test data.</li>
+  <li><strong>Submission Link:</strong> Upload to LMS along with tutorial reports T1 through T15.</li>
+</ul>
+
+</body>
+</html>

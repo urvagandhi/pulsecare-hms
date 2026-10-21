@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/Shared/StatusBadge';
 import { DataTable, ColumnDef } from '@/components/Shared/DataTable';
 import type { Document, DocumentStatus, DocumentType } from '@/types/documents';
+import { formatDate, formatDateTime } from '@/lib/format';
 
 interface DocumentsResponse {
   success: boolean;
@@ -73,7 +74,7 @@ export function PatientDocuments() {
     {
       header: 'Issued At',
       accessorKey: 'issuedAt',
-      cell: (row) => (row.issuedAt ? new Date(row.issuedAt).toLocaleDateString() : '—'),
+      cell: (row) => (row.issuedAt ? formatDate(row.issuedAt) : '—'),
     },
     {
       header: 'Status',
@@ -170,7 +171,7 @@ export function PatientDocuments() {
                       <span>
                         Type: {DOCUMENT_TYPE_LABELS[detailDocument.type] ?? detailDocument.type}
                       </span>
-                      <span>Created: {new Date(detailDocument.createdAt).toLocaleDateString()}</span>
+                      <span>Created: {formatDate(detailDocument.createdAt)}</span>
                       <span>
                         Doctor:{' '}
                         {`${detailDocument.issuedBy?.userId?.firstName ?? ''} ${detailDocument.issuedBy?.userId?.lastName ?? ''}`.trim() || '—'}
@@ -182,7 +183,7 @@ export function PatientDocuments() {
 
                 {detailDocument.issuedAt && (
                   <p className="text-xs text-muted-foreground">
-                    Issued at: {new Date(detailDocument.issuedAt).toLocaleString()}
+                    Issued at: {formatDateTime(detailDocument.issuedAt)}
                   </p>
                 )}
 

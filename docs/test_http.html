@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="/mermaid.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", async function() {
+      mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+      await mermaid.run();
+      document.body.setAttribute('data-rendered', 'true');
+    });
+  </script>
+</head>
+<body>
+  <h1>HTTP Test</h1>
+  <div class="mermaid">
+    graph LR
+    A[Start] --> B[Process]
+    B --> C[End]
+  </div>
+</body>
+</html>

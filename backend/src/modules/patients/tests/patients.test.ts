@@ -196,6 +196,39 @@ describe('Patient Routes', () => {
     expect(listedIds).not.toContain(strayProfile!._id.toString());
   });
 
+  it('5B. GET /api/v1/patients — patient role only receives own record (horizontal PHI privacy protection)', async () => {
+    // Create Patient 1
+    const p1User = await createUser({
+      email: 'p1@privacy.test',
+      password: 'PatPass1!',
+      role: 'patient',
+    });
+    const p1Profile = await Patient.create({ userId: p1User._id, bloodGroup: 'B+' });
+    const p1Token = await loginAs('p1@privacy.test', 'PatPass1!');
+
+    // Create Patient 2
+    const p2User = await createUser({
+      email: 'p2@privacy.test',
+      password: 'PatPass1!',
+      role: 'patient',
+    });
+    const p2Profile = await Patient.create({ userId: p2User._id, bloodGroup: 'O+' });
+
+    // Patient 1 requests patient directory listing
+    const res = await request(app)
+      .get('/api/v1/patients')
+      .set('Authorization', `Bearer ${p1Token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(Array.isArray(res.body.data)).toBe(true);
+    expect(res.body.data.length).toBe(1);
+    expect(res.body.data[0]._id).toBe(p1Profile._id.toString());
+    // Critical: Patient 2 record must NOT be returned
+    const p2Found = res.body.data.some((p: { _id: string }) => p._id === p2Profile._id.toString());
+    expect(p2Found).toBe(false);
+  });
+
   it('6. PATCH /api/v1/patients/me — patient updates own profile', async () => {
     const reg = await request(app)
       .post('/api/v1/auth/register')

@@ -134,6 +134,21 @@ export async function removeLineItem(req: Request, res: Response, next: NextFunc
   }
 }
 
+export async function payOnline(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    if (!req.user) return next(new AuthError());
+    const result = await BillingService.processOnlinePayment(
+      req.params.id,
+      req.body,
+      req.user._id,
+      req.user.role
+    );
+    res.json(successResponse(result));
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function getInvoicePdf(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     if (!req.user) return next(new AuthError());

@@ -1,4 +1,4 @@
-import { validateSecretsGuard, DEV_DEFAULT_JWT_SECRET, DEV_DEFAULT_JWT_REFRESH_SECRET, AppSecrets } from './secrets';
+import { validateSecretsGuard, fetchSecrets, DEV_DEFAULT_JWT_SECRET, DEV_DEFAULT_JWT_REFRESH_SECRET, AppSecrets } from './secrets';
 import { env } from './env';
 
 describe('Secrets Guard (Task 1.5)', () => {
@@ -38,5 +38,13 @@ describe('Secrets Guard (Task 1.5)', () => {
 
     // Restore
     (env as { NODE_ENV: string }).NODE_ENV = originalEnv;
+  });
+
+  it('fetchSecrets resolves secrets from environment or sensible defaults', async () => {
+    const secrets = await fetchSecrets();
+    expect(secrets).toBeDefined();
+    expect(secrets.MONGODB_URI).toBeDefined();
+    expect(secrets.JWT_SECRET).toBeDefined();
+    expect(secrets.JWT_REFRESH_SECRET).toBeDefined();
   });
 });

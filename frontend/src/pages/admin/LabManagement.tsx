@@ -21,6 +21,7 @@ import { Select } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { formatDate } from '@/lib/format';
 import type {
   LabOrder,
   LabResult,
@@ -327,7 +328,7 @@ export function AdminLabManagement() {
     {
       header: 'Date',
       accessorKey: 'orderedAt',
-      cell: (row) => new Date(row.orderedAt ?? row.createdAt).toLocaleDateString(),
+      cell: (row) => formatDate(row.orderedAt ?? row.createdAt),
     },
     {
       header: 'Priority',
@@ -771,7 +772,7 @@ export function AdminLabManagement() {
                     {`${detailOrder.doctor?.userId?.firstName ?? ''} ${detailOrder.doctor?.userId?.lastName ?? ''}`.trim() || '—'}
                   </p>
                   <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
-                    <span>Date: {new Date(detailOrder.orderedAt ?? detailOrder.createdAt).toLocaleDateString()}</span>
+                    <span>Date: {formatDate(detailOrder.orderedAt ?? detailOrder.createdAt)}</span>
                     <span className="capitalize">Priority: {detailOrder.priority}</span>
                   </div>
                 </div>

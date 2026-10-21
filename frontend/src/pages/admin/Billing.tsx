@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAppSelector } from '@/store/hooks';
-import { fmt } from '@/lib/format';
+import { fmt, formatDate, formatDateTime } from '@/lib/format';
 import { downloadPdf } from '@/lib/downloadPdf';
 import type { Invoice } from '@/types/billing';
 import { Trash2 } from 'lucide-react';
@@ -156,6 +156,7 @@ export function AdminBilling() {
   const createMutation = useMutation({
     mutationFn: async () => {
       const body = {
+        patientId: patientId.trim(),
         patient: patientId.trim(),
         lineItems,
         taxRate,
@@ -172,9 +173,14 @@ export function AdminBilling() {
       void queryClient.invalidateQueries({ queryKey: ['billing', 'admin'] });
     },
     onError: (err: unknown) => {
-      const msg =
-        (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error
-          ?.message ?? 'Failed to create invoice';
+      const errorObj = (err as { response?: { data?: { error?: { message?: string; details?: Record<string, unknown> } } } })?.response?.data?.error;
+      const details = errorObj?.details;
+      const detailMsg = details
+        ? Object.entries(details)
+            .map(([field, issue]) => `${field}: ${String(issue)}`)
+            .join(' | ')
+        : '';
+      const msg = detailMsg || errorObj?.message || 'Failed to create invoice';
       toast.error(msg);
     },
   });
@@ -276,8 +282,7 @@ export function AdminBilling() {
     {
       header: 'Date',
       accessorKey: 'issuedDate',
-      cell: (row) =>
-        new Date(row.issuedDate ?? row.createdAt).toLocaleDateString(),
+      cell: (row) => formatDate(row.issuedDate ?? row.createdAt),
     },
     {
       header: 'Total',
@@ -465,7 +470,21 @@ export function AdminBilling() {
               <Select
                 id="patientId"
                 value={patientId}
-                onChange={(e) => setPatientId(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setPatientId(val);
+                  // Automatically populate Doctor Consultation fee (₹600) for the visit
+                  if (val && (lineItems.length === 0 || (lineItems.length === 1 && !lineItems[0].description && lineItems[0].unitPrice === 0))) {
+                    setLineItems([
+                      {
+                        description: 'Doctor Consultation',
+                        category: 'consultation',
+                        quantity: 1,
+                        unitPrice: 600,
+                      },
+                    ]);
+                  }
+                }}
                 className="mt-1"
                 disabled={patientsLoading}
                 placeholder={patientsLoading ? 'Loading patients…' : 'Select a patient'}
@@ -480,12 +499,54 @@ export function AdminBilling() {
 
             {/* Line Items */}
             <div>
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-1.5">
                 <Label>Line Items</Label>
                 <Button type="button" variant="outline" size="sm" onClick={addItem}>
                   Add Item
                 </Button>
               </div>
+
+              {/* Quick Preset Buttons for Scene 6 */}
+              <div className="flex flex-wrap items-center gap-1.5 mb-2.5">
+                <span className="text-[11px] text-muted-foreground mr-1">Quick Add:</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLineItems((prev) => {
+                      const clean = prev.filter((it) => it.description || it.unitPrice > 0);
+                      return [...clean, { description: 'Doctor Consultation', category: 'consultation', quantity: 1, unitPrice: 600 }];
+                    });
+                  }}
+                  className="text-[11px] px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 font-medium transition-colors"
+                >
+                  + Consultation (₹600)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLineItems((prev) => {
+                      const clean = prev.filter((it) => it.description || it.unitPrice > 0);
+                      return [...clean, { description: 'ECG Diagnostic Test', category: 'procedure', quantity: 1, unitPrice: 450 }];
+                    });
+                  }}
+                  className="text-[11px] px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/40 font-medium transition-colors"
+                >
+                  + ECG Test (₹450)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLineItems((prev) => {
+                      const clean = prev.filter((it) => it.description || it.unitPrice > 0);
+                      return [...clean, { description: 'Prescribed Medication', category: 'medicine', quantity: 1, unitPrice: 160 }];
+                    });
+                  }}
+                  className="text-[11px] px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/40 font-medium transition-colors"
+                >
+                  + Medicine (₹160)
+                </button>
+              </div>
+
               <div className="space-y-2">
                 {lineItems.map((item, i) => (
                   <div key={i} className="flex gap-2 items-start">
@@ -497,7 +558,21 @@ export function AdminBilling() {
                     />
                     <Select
                       value={item.category || 'other'}
-                      onChange={(e) => updateItem(i, 'category', e.target.value)}
+                      onChange={(e) => {
+                        const newCat = e.target.value;
+                        updateItem(i, 'category', newCat);
+                        // Auto-fill price and description if blank
+                        if (newCat === 'consultation' && (!item.unitPrice || item.unitPrice === 0)) {
+                          updateItem(i, 'unitPrice', 600);
+                          if (!item.description) updateItem(i, 'description', 'Doctor Consultation');
+                        } else if (newCat === 'procedure' && (!item.unitPrice || item.unitPrice === 0)) {
+                          updateItem(i, 'unitPrice', 450);
+                          if (!item.description) updateItem(i, 'description', 'ECG Diagnostic Test');
+                        } else if (newCat === 'medicine' && (!item.unitPrice || item.unitPrice === 0)) {
+                          updateItem(i, 'unitPrice', 160);
+                          if (!item.description) updateItem(i, 'description', 'Prescribed Medication');
+                        }
+                      }}
                       className="w-36"
                     >
                       <option value="consultation">Consultation</option>
@@ -736,13 +811,13 @@ export function AdminBilling() {
                   </p>
                   <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
                     {detailInv.issuedDate && (
-                      <span>Issued: {new Date(detailInv.issuedDate).toLocaleDateString()}</span>
+                      <span>Issued: {formatDate(detailInv.issuedDate)}</span>
                     )}
                     {detailInv.dueDate && (
-                      <span>Due: {new Date(detailInv.dueDate).toLocaleDateString()}</span>
+                      <span>Due: {formatDate(detailInv.dueDate)}</span>
                     )}
                     {!detailInv.issuedDate && (
-                      <span>Created: {new Date(detailInv.createdAt).toLocaleDateString()}</span>
+                      <span>Created: {formatDate(detailInv.createdAt)}</span>
                     )}
                   </div>
                 </div>
@@ -874,7 +949,7 @@ export function AdminBilling() {
                         {detailInv.payments.map((pmt, idx) => (
                           <tr key={pmt._id ?? idx}>
                             <td className="py-2 pr-4">
-                              {new Date(pmt.paidAt).toLocaleDateString()}
+                              {formatDateTime(pmt.paidAt)}
                             </td>
                             <td className="py-2 pr-4 capitalize">{pmt.method}</td>
                             <td className="py-2 pr-4 text-muted-foreground">

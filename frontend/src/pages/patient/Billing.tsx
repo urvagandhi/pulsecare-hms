@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import api from '@/lib/api';
-import { fmt } from '@/lib/format';
+import { fmt, formatDate } from '@/lib/format';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatusBadge } from '@/components/Shared/StatusBadge';
 import type { Invoice } from '@/types/billing';
@@ -131,7 +131,7 @@ export function PatientBilling() {
                     <tbody className="divide-y">
                       {filtered.map((inv) => {
                         const dateStr = inv.issuedDate ?? inv.createdAt;
-                        const date = new Date(dateStr).toLocaleDateString();
+                        const date = formatDate(dateStr);
                         return (
                           <tr key={inv._id} className="hover:bg-muted/50 transition-colors">
                             <td className="py-3 pr-4 font-medium text-gray-900 dark:text-white">

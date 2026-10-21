@@ -5,6 +5,7 @@ import api from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatusBadge } from '@/components/Shared/StatusBadge';
 import type { LabOrder, LabResult } from '@/types/lab';
+import { formatDate, formatDateTime } from '@/lib/format';
 
 interface LabOrderResponse {
   success: boolean;
@@ -81,7 +82,7 @@ export function PatientLabResultDetail() {
   const order = orderData.data;
   const result = resultData?.data ?? null;
 
-  const orderedDate = new Date(order.orderedAt ?? order.createdAt).toLocaleDateString();
+  const orderedDate = formatDate(order.orderedAt ?? order.createdAt);
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -224,19 +225,19 @@ export function PatientLabResultDetail() {
                 {result.collectedAt && (
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">Collected At</dt>
-                    <dd>{new Date(result.collectedAt).toLocaleString()}</dd>
+                    <dd>{formatDateTime(result.collectedAt)}</dd>
                   </div>
                 )}
                 {result.resultedAt && (
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">Resulted At</dt>
-                    <dd>{new Date(result.resultedAt).toLocaleString()}</dd>
+                    <dd>{formatDateTime(result.resultedAt)}</dd>
                   </div>
                 )}
                 {result.status === 'final' && result.verifiedAt && (
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">Verified At</dt>
-                    <dd>{new Date(result.verifiedAt).toLocaleString()}</dd>
+                    <dd>{formatDateTime(result.verifiedAt)}</dd>
                   </div>
                 )}
               </dl>

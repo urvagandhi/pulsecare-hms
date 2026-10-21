@@ -34,7 +34,24 @@ export function SignIn() {
 
   const onSubmit = (data: SignInForm) => {
     loginMutation.mutate(data, {
-      onSuccess: () => navigate(from, { replace: true }),
+      onSuccess: ({ data: resData }) => {
+        const userRole = resData.data.user.role;
+        let target = '/dashboard';
+
+        if (from && from !== '/unauthorized' && from !== '/sign-in' && from !== '/') {
+          const isRoleMatch =
+            (from.startsWith('/admin') && (userRole === 'admin' || userRole === 'receptionist')) ||
+            (from.startsWith('/doctor') && userRole === 'doctor') ||
+            (from.startsWith('/patient') && userRole === 'patient') ||
+            (from.startsWith('/nurse') && userRole === 'nurse');
+
+          if (isRoleMatch) {
+            target = from;
+          }
+        }
+
+        navigate(target, { replace: true });
+      },
     });
   };
 

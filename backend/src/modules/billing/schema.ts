@@ -8,29 +8,41 @@ export const LineItemCategorySchema = z.enum([
   'other',
 ]);
 
-export const CreateInvoiceSchema = z.object({
-  patientId: z.string().min(1),
-  appointmentId: z.string().optional(),
-  lineItems: z.array(
-    z.object({
-      description: z.string().min(1),
-      quantity: z.number().gt(0),
-      unitPrice: z.number().gte(0),
-      category: LineItemCategorySchema.default('other').optional(),
-    })
-  ).min(1),
-  taxRate: z.number().min(0).max(100).default(0),
-  discount: z.number().gte(0).default(0),
-  insurance: z
-    .object({
-      provider: z.string().min(1),
-      policyNumber: z.string().min(1),
-      coverageAmount: z.number().gte(0),
-    })
-    .optional(),
-  dueDate: z.string().datetime({ offset: true }).optional(),
-  notes: z.string().optional(),
-});
+export const CreateInvoiceSchema = z
+  .object({
+    patientId: z.string().min(1).optional(),
+    patient: z.string().min(1).optional(),
+    appointmentId: z.string().optional(),
+    lineItems: z
+      .array(
+        z.object({
+          description: z.string().min(1),
+          quantity: z.number().gt(0),
+          unitPrice: z.number().gte(0),
+          category: LineItemCategorySchema.default('other').optional(),
+        })
+      )
+      .default([]),
+    taxRate: z.number().min(0).max(100).default(0),
+    discount: z.number().gte(0).default(0),
+    insurance: z
+      .object({
+        provider: z.string().min(1),
+        policyNumber: z.string().min(1),
+        coverageAmount: z.number().gte(0),
+      })
+      .optional(),
+    dueDate: z.string().datetime({ offset: true }).optional(),
+    notes: z.string().optional(),
+  })
+  .refine((data) => Boolean(data.patientId || data.patient), {
+    message: 'Patient is required',
+    path: ['patientId'],
+  })
+  .transform((data) => ({
+    ...data,
+    patientId: (data.patientId || data.patient)!,
+  }));
 
 export const RecordPaymentSchema = z.object({
   amount: z.number().gt(0),
@@ -46,7 +58,7 @@ export const VoidInvoiceSchema = z.object({
 export const ListInvoicesQuerySchema = z.object({
   patientId: z.string().optional(),
   status: z.string().refine(
-    (val) => !val || val.split(',').every(s => ['draft','issued','paid','partial','overdue','void'].includes(s.trim())),
+    (val) => !val || val.split(',').every(s => ['draft','issued','paid','partial','overdue','void','unpaid'].includes(s.trim())),
     { message: 'Invalid status value(s)' }
   ).optional(),
   page: z.coerce.number().default(1),

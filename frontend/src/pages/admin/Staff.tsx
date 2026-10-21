@@ -16,6 +16,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import toast from 'react-hot-toast';
+import { formatDate } from '@/lib/format';
+
 
 interface StaffUser {
   _id: string;
@@ -492,7 +494,7 @@ export function AdminStaff() {
                     >
                       <div>
                         <p className="font-semibold text-slate-900 dark:text-slate-100">
-                          {l.startDate} to {l.endDate}
+                          {formatDate(l.startDate)} – {formatDate(l.endDate)}
                         </p>
                         <p className="text-muted-foreground">{l.reason || 'Leave'}</p>
                       </div>

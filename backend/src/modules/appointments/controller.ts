@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
 import { ValidationError, AuthError, ForbiddenError } from '../../middleware/errorHandler';
 import { successResponse } from '../../types/api';
-import { CreateAppointmentSchema, UpdateStatusSchema, GetSlotsSchema } from './schema';
+import { CreateAppointmentSchema, UpdateStatusSchema, GetSlotsSchema, RescheduleAppointmentSchema } from './schema';
 import * as AppointmentService from './service';
 import { generateAppointmentSlipPdf } from '../../services/pdfService';
 
@@ -32,18 +32,32 @@ export async function listAppointments(req: Request, res: Response, next: NextFu
   try {
     if (!req.user) return next(new AuthError());
 
-    const { date, doctorId, status, departmentId, page, limit } = req.query as Record<string, string>;
-    let { patientId } = req.query as Record<string, string>;
+    const { date, status, departmentId, page, limit } = req.query as Record<string, string>;
+    let { doctorId, patientId } = req.query as Record<string, string>;
 
-    // If ownOnly is set (e.g. patient role), enforce that patient can only see their own appointments
-    if (req.ownOnly && req.user.role === 'patient') {
+    // Enforce role-based isolation: patients can ONLY see their own appointments, doctors can ONLY see their own appointments
+    if (req.user.role === 'patient') {
       const { Patient } = await import('../../models/Patient');
       const patientProfile = await Patient.findOne({ userId: req.user._id }).lean();
       if (!patientProfile) {
-        res.json({ success: true, data: [], page: 1, limit: 20, total: 0, totalPages: 0 });
+        res.json(successResponse([], { page: 1, limit: 20, total: 0, totalPages: 0 }));
         return;
       }
       patientId = (patientProfile._id as import('mongoose').Types.ObjectId).toString();
+    } else if (req.user.role === 'doctor') {
+      const { Doctor } = await import('../../models/Doctor');
+      const { Types } = await import('mongoose');
+      const doctorProfile = await Doctor.findOne({
+        $or: [
+          { userId: req.user._id },
+          ...(Types.ObjectId.isValid(req.user._id) ? [{ userId: new Types.ObjectId(req.user._id) }, { _id: new Types.ObjectId(req.user._id) }] : [])
+        ]
+      }).lean();
+      if (!doctorProfile) {
+        res.json(successResponse([], { page: 1, limit: 20, total: 0, totalPages: 0 }));
+        return;
+      }
+      doctorId = (doctorProfile._id as import('mongoose').Types.ObjectId).toString();
     }
 
     const result = await AppointmentService.listAppointments({
@@ -76,8 +90,13 @@ export async function getAvailableSlots(req: Request, res: Response, next: NextF
     const parsed = GetSlotsSchema.safeParse(req.query);
     if (!parsed.success) return next(parseZodError(parsed.error));
 
-    const slots = await AppointmentService.getAvailableSlots(parsed.data.doctorId, parsed.data.date);
-    res.json(successResponse(slots));
+    const result = await AppointmentService.getAvailableSlots(parsed.data.doctorId, parsed.data.date);
+    res.json(
+      successResponse(result.availableSlots, {
+        bookedSlots: result.bookedSlots,
+        allSlots: result.allSlots,
+      })
+    );
   } catch (err) {
     next(err);
   }
@@ -155,6 +174,24 @@ export async function cancelAppointment(req: Request, res: Response, next: NextF
       req.user._id,
       req.user.role,
       cancelReason
+    );
+    res.json(successResponse(appointment));
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function rescheduleAppointment(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    if (!req.user) return next(new AuthError());
+    const parsed = RescheduleAppointmentSchema.safeParse(req.body);
+    if (!parsed.success) return next(parseZodError(parsed.error));
+
+    const appointment = await AppointmentService.rescheduleAppointment(
+      req.params.id,
+      parsed.data,
+      req.user._id,
+      req.user.role
     );
     res.json(successResponse(appointment));
   } catch (err) {

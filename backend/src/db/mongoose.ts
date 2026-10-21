@@ -10,7 +10,7 @@ export async function connectDB(uri?: string): Promise<void> {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       await mongoose.connect(mongoUri, {
-        serverSelectionTimeoutMS: 5000,
+        serverSelectionTimeoutMS: 10000,
         maxPoolSize: 20,
         minPoolSize: 5,
         socketTimeoutMS: 45000,
@@ -19,7 +19,7 @@ export async function connectDB(uri?: string): Promise<void> {
       return;
     } catch (err) {
       if (attempt === MAX_RETRIES) throw err;
-      logger.warn(`MongoDB connection attempt ${attempt} failed — retrying in ${RETRY_DELAY_MS}ms`);
+      logger.warn(`MongoDB connection attempt ${attempt} failed: ${(err as Error).message} — retrying in ${RETRY_DELAY_MS}ms`);
       await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
     }
   }

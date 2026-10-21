@@ -177,13 +177,13 @@ export async function getAvailableSlots(doctorId: string, date: string) {
       const endStr = new Date(l.endDate).toISOString().split('T')[0];
       return targetDateStr >= startStr && targetDateStr <= endStr;
     });
-    if (onLeave) return [];
+    if (onLeave) return { availableSlots: [] as string[], bookedSlots: [] as string[], allSlots: [] as string[] };
   }
 
   const dayOfWeek = getUtcDayOfWeek(date);
   const availabilityForDay = doctor.availability.find(a => a.day === dayOfWeek);
 
-  if (!availabilityForDay) return [];
+  if (!availabilityForDay) return { availableSlots: [] as string[], bookedSlots: [] as string[], allSlots: [] as string[] };
 
   const allSlots = generateTimeSlots(availabilityForDay.startTime, availabilityForDay.endTime);
 
@@ -195,7 +195,13 @@ export async function getAvailableSlots(doctorId: string, date: string) {
   }).select('timeSlot').lean();
 
   const bookedSlots = new Set(bookedAppointments.map(a => a.timeSlot));
-  return allSlots.filter(slot => !bookedSlots.has(slot));
+  const availableSlots = allSlots.filter(slot => !bookedSlots.has(slot));
+
+  return {
+    availableSlots,
+    bookedSlots: Array.from(bookedSlots),
+    allSlots,
+  };
 }
 
 export async function updateAppointmentStatus(
@@ -235,10 +241,11 @@ export async function updateAppointmentStatus(
 
   if (input.status === 'cancelled') {
     appointment.cancelledBy = new Types.ObjectId(requestingUserId);
-    appointment.cancelReason = input.cancelReason;
+    appointment.cancelReason = input.cancelReason || `Cancelled by ${requestingRole || 'user'}`;
   }
 
   await appointment.save();
+  await appointment.populate('cancelledBy', 'firstName lastName email role');
 
   // Emit Socket.io events to patient and doctor
   try {
@@ -290,6 +297,20 @@ export async function listAppointments(filters: {
       const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0, 0));
       const endOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 23, 59, 59, 999));
       query.date = { $gte: startOfDay, $lte: endOfDay };
+    } else if (lower === 'upcoming') {
+      const now = new Date();
+      const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+      query.date = { $gte: startOfDay };
+      if (!filters.status) {
+        query.status = { $nin: ['completed', 'cancelled'] };
+      }
+    } else if (lower === 'past') {
+      const now = new Date();
+      const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+      query.$or = [
+        { date: { $lt: startOfDay } },
+        { status: { $in: ['completed', 'cancelled', 'noShow'] } },
+      ];
     } else {
       const cleanDateStr = raw.includes('T') ? raw.split('T')[0] : raw;
       const parsed = new Date(`${cleanDateStr}T00:00:00.000Z`);
@@ -315,12 +336,18 @@ export async function listAppointments(filters: {
     query.department = new Types.ObjectId(filters.departmentId);
   }
 
+  const isPast = filters.date && String(filters.date).trim().toLowerCase() === 'past';
+  const sortOrder: Record<string, 1 | -1> = isPast
+    ? { date: -1, timeSlot: -1 }
+    : { date: 1, timeSlot: 1 };
+
   const [data, total] = await Promise.all([
     Appointment.find(query)
       .populate({ path: 'doctor', populate: { path: 'userId', select: '-password' } })
       .populate({ path: 'patient', populate: { path: 'userId', select: '-password' } })
       .populate('department')
-      .sort({ date: 1, timeSlot: 1 })
+      .populate('cancelledBy', 'firstName lastName email role')
+      .sort(sortOrder)
       .skip(skip)
       .limit(limit)
       .lean(),
@@ -335,6 +362,7 @@ export async function getAppointmentById(id: string) {
     .populate({ path: 'doctor', populate: { path: 'userId', select: '-password' } })
     .populate({ path: 'patient', populate: { path: 'userId', select: '-password' } })
     .populate('department')
+    .populate('cancelledBy', 'firstName lastName email role')
     .lean();
 
   if (!appointment) throw new NotFoundError('Appointment');
@@ -368,4 +396,85 @@ export async function cancelAppointment(
     requestingUserId,
     requestingRole
   );
+}
+
+export async function rescheduleAppointment(
+  appointmentId: string,
+  input: { date: string; timeSlot: string; reason?: string },
+  requestingUserId: string,
+  requestingRole?: string
+) {
+  const appointment = await Appointment.findById(appointmentId).populate('patient');
+  if (!appointment) throw new NotFoundError('Appointment');
+
+  if (appointment.status === 'completed' || appointment.status === 'cancelled') {
+    throw new ValidationError(`Cannot reschedule a ${appointment.status} appointment`);
+  }
+
+  // Patients can only reschedule their own appointments
+  if (requestingRole === 'patient') {
+    const patientUserId = (appointment.patient as any)?.userId?.toString() ?? appointment.patient?.toString();
+    if (patientUserId !== requestingUserId) {
+      throw new ForbiddenError('You can only reschedule your own appointments');
+    }
+  }
+
+  const newDate = parseUtcMidnight(input.date);
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  if (newDate < today) {
+    throw new ValidationError('Appointment date cannot be in the past');
+  }
+
+  const doctor = await Doctor.findById(appointment.doctor);
+  if (!doctor || !doctor.isActive) {
+    throw new ValidationError('Doctor is not available');
+  }
+
+  // Check doctor leaves
+  if (doctor.leaves && doctor.leaves.length > 0) {
+    const targetDateStr = newDate.toISOString().split('T')[0];
+    const onLeave = doctor.leaves.some((l) => {
+      const startStr = new Date(l.startDate).toISOString().split('T')[0];
+      const endStr = new Date(l.endDate).toISOString().split('T')[0];
+      return targetDateStr >= startStr && targetDateStr <= endStr;
+    });
+    if (onLeave) {
+      throw new ValidationError('Doctor is on leave on this date');
+    }
+  }
+
+  // Check doctor availability for day of week
+  const dayOfWeek = getUtcDayOfWeek(input.date);
+  const availabilityForDay = doctor.availability.find(a => a.day === dayOfWeek);
+  if (!availabilityForDay) {
+    throw new ValidationError(`Doctor is not available on ${dayOfWeek}`);
+  }
+
+  const allSlots = generateTimeSlots(availabilityForDay.startTime, availabilityForDay.endTime);
+  if (!allSlots.includes(input.timeSlot)) {
+    throw new ValidationError(`Time slot ${input.timeSlot} is not within doctor's availability`);
+  }
+
+  // Check collision with another appointment
+  const existing = await Appointment.findOne({
+    _id: { $ne: appointment._id },
+    doctor: doctor._id,
+    date: newDate,
+    timeSlot: input.timeSlot,
+    status: { $ne: 'cancelled' },
+  });
+  if (existing) {
+    throw new ConflictError('This time slot is already booked for this doctor');
+  }
+
+  appointment.date = newDate;
+  appointment.timeSlot = input.timeSlot;
+  if (input.reason) {
+    appointment.notes = appointment.notes ? `${appointment.notes}\nReschedule reason: ${input.reason}` : `Reschedule reason: ${input.reason}`;
+  }
+  appointment.status = 'scheduled';
+  await appointment.save();
+
+  return appointment;
 }

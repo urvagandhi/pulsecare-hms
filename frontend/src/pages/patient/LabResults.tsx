@@ -5,6 +5,7 @@ import api from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatusBadge } from '@/components/Shared/StatusBadge';
 import type { LabOrder, LabOrderStatus } from '@/types/lab';
+import { formatDate } from '@/lib/format';
 
 interface LabOrdersResponse {
   success: boolean;
@@ -127,7 +128,7 @@ export function PatientLabResults() {
                     </thead>
                     <tbody className="divide-y">
                       {filtered.map((order) => {
-                        const date = new Date(order.orderedAt ?? order.createdAt).toLocaleDateString();
+                        const date = formatDate(order.orderedAt ?? order.createdAt);
                         const testNames = order.tests.map((t) => t.name).join(', ');
                         return (
                           <tr key={order._id} className="hover:bg-muted/50 transition-colors">

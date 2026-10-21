@@ -28,21 +28,8 @@ import { PatientBilling } from '@/pages/patient/Billing';
 import { PatientInvoiceDetail } from '@/pages/patient/InvoiceDetail';
 import { AdminAnalytics } from '@/pages/admin/Analytics';
 
-// Unmounted page files preserved in codebase for reversible scope trimming:
-// import { PatientLabResults } from '@/pages/patient/LabResults';
-// import { PatientLabResultDetail } from '@/pages/patient/LabResultDetail';
-// import { DoctorLabOrders } from '@/pages/doctor/LabOrders';
-// import { AdminLabManagement } from '@/pages/admin/LabManagement';
-// import { DoctorPrescriptions } from '@/pages/doctor/Prescriptions';
-// import { NurseDispensingQueue } from '@/pages/nurse/DispensingQueue';
-// import { PatientPrescriptions } from '@/pages/patient/Prescriptions';
-// import { AdminPharmacyManagement } from '@/pages/admin/PharmacyManagement';
-// import { AdminInventoryManagement } from '@/pages/admin/InventoryManagement';
-// import { NurseInventoryView } from '@/pages/nurse/InventoryView';
-// import { AdminDocumentManagement } from '@/pages/admin/DocumentManagement';
-// import { DoctorDocuments } from '@/pages/doctor/Documents';
-// import { PatientDocuments } from '@/pages/patient/Documents';
-// import { AdminSettings } from '@/pages/admin/Settings';
+import { ComingSoon } from '@/pages/public/ComingSoon';
+
 
 function DashboardRouter() {
   const user = useAppSelector(s => s.auth.user);
@@ -123,6 +110,7 @@ export default function App() {
                 element={
                   <ProtectedRoute allowedRoles={['admin', 'receptionist']}>
                     <Routes>
+                      {/* Core 4 Outpatient Modules */}
                       <Route path="dashboard" element={<AdminDashboard />} />
                       <Route path="patients" element={<AdminPatients />} />
                       <Route path="staff" element={<AdminStaff />} />
@@ -130,6 +118,13 @@ export default function App() {
                       <Route path="billing" element={<AdminBilling />} />
                       <Route path="billing/:id" element={<AdminBilling />} />
                       <Route path="analytics" element={<AdminAnalytics />} />
+
+                      {/* Phase 2 Enterprise Roadmap Routes */}
+                      <Route path="pharmacy" element={<ComingSoon featureName="Pharmacy Management" />} />
+                      <Route path="inventory" element={<ComingSoon featureName="Inventory Management" />} />
+                      <Route path="lab" element={<ComingSoon featureName="Laboratory Management" />} />
+                      <Route path="documents" element={<ComingSoon featureName="Document Management" />} />
+                      <Route path="settings" element={<ComingSoon featureName="Hospital Settings" />} />
                     </Routes>
                   </ProtectedRoute>
                 }
@@ -140,11 +135,17 @@ export default function App() {
                 element={
                   <ProtectedRoute allowedRoles={['doctor']}>
                     <Routes>
+                      {/* Core 4 Outpatient Modules */}
                       <Route path="dashboard" element={<DoctorDashboard />} />
                       <Route path="schedule" element={<DoctorSchedule />} />
                       <Route path="appointments" element={<DoctorSchedule />} />
                       <Route path="patients" element={<AdminPatients />} />
                       <Route path="analytics" element={<AdminAnalytics />} />
+
+                      {/* Phase 2 Enterprise Roadmap Routes */}
+                      <Route path="prescriptions" element={<ComingSoon featureName="e-Prescriptions" />} />
+                      <Route path="lab" element={<ComingSoon featureName="Lab Orders" />} />
+                      <Route path="documents" element={<ComingSoon featureName="Clinical Documents" />} />
                     </Routes>
                   </ProtectedRoute>
                 }
@@ -155,8 +156,13 @@ export default function App() {
                 element={
                   <ProtectedRoute allowedRoles={['nurse']}>
                     <Routes>
+                      {/* Core 4 Outpatient Modules */}
                       <Route path="dashboard" element={<NurseDashboard />} />
                       <Route path="analytics" element={<AdminAnalytics />} />
+
+                      {/* Phase 2 Enterprise Roadmap Routes */}
+                      <Route path="dispensing" element={<ComingSoon featureName="Medication Dispensing" />} />
+                      <Route path="inventory" element={<ComingSoon featureName="Ward Inventory" />} />
                     </Routes>
                   </ProtectedRoute>
                 }
@@ -167,12 +173,19 @@ export default function App() {
                 element={
                   <ProtectedRoute allowedRoles={['patient']}>
                     <Routes>
+                      {/* Core 4 Outpatient Modules */}
                       <Route path="dashboard" element={<PatientDashboard />} />
                       <Route path="book-appointment" element={<BookAppointment />} />
                       <Route path="appointments" element={<PatientAppointments />} />
                       <Route path="billing" element={<PatientBilling />} />
                       <Route path="billing/:id" element={<PatientInvoiceDetail />} />
                       <Route path="analytics" element={<AdminAnalytics />} />
+
+                      {/* Phase 2 Enterprise Roadmap Routes */}
+                      <Route path="prescriptions" element={<ComingSoon featureName="My Prescriptions & Refills" />} />
+                      <Route path="lab" element={<ComingSoon featureName="Diagnostic Lab Results" />} />
+                      <Route path="lab/:id" element={<ComingSoon featureName="Diagnostic Lab Results" />} />
+                      <Route path="documents" element={<ComingSoon featureName="Medical Documents" />} />
                     </Routes>
                   </ProtectedRoute>
                 }

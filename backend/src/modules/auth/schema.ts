@@ -12,6 +12,15 @@ export const RegisterSchema = z.object({
   dob: z.string().datetime().optional(),
   gender: z.enum(['male', 'female', 'other']).optional(),
   role: z.string().optional(),
+  bloodGroup: z.enum(['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']).optional(),
+  allergies: z.union([z.array(z.string()), z.string()]).optional(),
+  emergencyContact: z
+    .object({
+      name: z.string().optional(),
+      relationship: z.string().optional(),
+      phone: z.string().optional(),
+    })
+    .optional(),
 }).refine((data) => !data.role || data.role === 'patient', {
   message: 'Privileged roles cannot be set via public registration',
   path: ['role'],

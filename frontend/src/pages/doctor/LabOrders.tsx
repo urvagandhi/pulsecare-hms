@@ -14,6 +14,7 @@ import { StatusBadge } from '@/components/Shared/StatusBadge';
 import { DataTable, ColumnDef } from '@/components/Shared/DataTable';
 import type { LabOrder, LabResult, LabOrderStatus, LabOrderPriority, ILabTestItem } from '@/types/lab';
 import toast from 'react-hot-toast';
+import { formatDate } from '@/lib/format';
 
 interface LabOrdersResponse {
   success: boolean;
@@ -198,7 +199,7 @@ export function DoctorLabOrders() {
     {
       header: 'Date',
       accessorKey: 'orderedAt',
-      cell: (row) => new Date(row.orderedAt ?? row.createdAt).toLocaleDateString(),
+      cell: (row) => formatDate(row.orderedAt ?? row.createdAt),
     },
     {
       header: 'Tests',
@@ -413,7 +414,7 @@ export function DoctorLabOrders() {
                   <div>
                     <p className="text-lg font-semibold">{detailOrder.orderId}</p>
                     <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
-                      <span>Date: {new Date(detailOrder.orderedAt ?? detailOrder.createdAt).toLocaleDateString()}</span>
+                      <span>Date: {formatDate(detailOrder.orderedAt ?? detailOrder.createdAt)}</span>
                       <span className="capitalize">Priority: {detailOrder.priority}</span>
                     </div>
                   </div>

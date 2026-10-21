@@ -1,6 +1,27 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { IDocument } from '../models/Document';
 
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function formatPdfDate(dateInput: any, fallback = '—'): string {
+  if (!dateInput) return fallback;
+  try {
+    if (typeof dateInput === 'string' && /^\d{4}-\d{2}-\d{2}/.test(dateInput)) {
+      const [year, month, day] = dateInput.substring(0, 10).split('-').map(Number);
+      const mName = MONTH_NAMES[month - 1] ?? month;
+      return `${String(day).padStart(2, '0')} ${mName} ${year}`;
+    }
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return String(dateInput);
+    const day = String(d.getDate()).padStart(2, '0');
+    const mName = MONTH_NAMES[d.getMonth()] ?? (d.getMonth() + 1);
+    const year = d.getFullYear();
+    return `${day} ${mName} ${year}`;
+  } catch {
+    return String(dateInput);
+  }
+}
+
 /**
  * Generates a simple A4 PDF document for the given HMS document record.
  * Returns a Buffer containing the PDF bytes.
@@ -136,9 +157,7 @@ export async function generateDocumentPdf(doc: IDocument): Promise<Buffer> {
   y -= 10;
 
   // Issue date
-  const issueDateStr = doc.issuedAt
-    ? doc.issuedAt.toISOString().split('T')[0]
-    : new Date().toISOString().split('T')[0];
+  const issueDateStr = formatPdfDate(doc.issuedAt, formatPdfDate(new Date()));
 
   page.drawText(`Issue Date: ${issueDateStr}`, {
     x: margin,
@@ -230,8 +249,8 @@ export async function generateInvoicePdf(invoice: any): Promise<Buffer> {
   });
 
   y -= 18;
-  const issuedDateStr = invoice.issuedDate ? new Date(invoice.issuedDate).toLocaleDateString() : '—';
-  const dueDateStr = invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : '—';
+  const issuedDateStr = formatPdfDate(invoice.issuedDate, '—');
+  const dueDateStr = formatPdfDate(invoice.dueDate, '—');
   page.drawText(`Issued: ${issuedDateStr}    Due: ${dueDateStr}`, {
     x: margin,
     y,
@@ -434,7 +453,7 @@ export async function generatePatientIdCardPdf(patient: any): Promise<Buffer> {
   });
 
   textY -= 25;
-  const dobStr = patient.dateOfBirth ? new Date(patient.dateOfBirth).toLocaleDateString() : 'N/A';
+  const dobStr = formatPdfDate(patient.dateOfBirth, 'N/A');
   page.drawText(`DOB: ${dobStr}     Gender: ${patient.gender || 'N/A'}     Blood Group: ${patient.bloodGroup || 'N/A'}`, {
     x: cardX + 20,
     y: textY,
@@ -574,7 +593,7 @@ export async function generateAppointmentSlipPdf(appointment: any): Promise<Buff
   const doctorName = `Dr. ${docUser.firstName || ''} ${docUser.lastName || ''}`.trim() || 'N/A';
   const departmentName = appointment.department?.name || appointment.doctor?.specialization || 'General';
 
-  const dateStr = appointment.date ? new Date(appointment.date).toISOString().split('T')[0] : 'N/A';
+  const dateStr = formatPdfDate(appointment.date, 'N/A');
   const timeSlot = appointment.timeSlot || 'N/A';
 
   page.drawText(`Appointment ID: ${appointment.appointmentId || 'N/A'}`, {

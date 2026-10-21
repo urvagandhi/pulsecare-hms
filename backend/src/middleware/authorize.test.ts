@@ -256,12 +256,23 @@ describe("authorize middleware", () => {
       expect(next).toHaveBeenCalledTimes(1);
     });
 
-    test("receptionist cannot issue billing", () => {
+    test("receptionist can issue billing", () => {
+      const req = makeReq(receptionist);
+      const { res, status } = makeRes();
+      const next = makeNext();
+
+      authorize("billing", "issue")(req as Request, res as Response, next);
+
+      expect(status).not.toHaveBeenCalled();
+      expect(next).toHaveBeenCalledTimes(1);
+    });
+
+    test("receptionist cannot void billing", () => {
       const req = makeReq(receptionist);
       const { res, status, json } = makeRes();
       const next = makeNext();
 
-      authorize("billing", "issue")(req as Request, res as Response, next);
+      authorize("billing", "void")(req as Request, res as Response, next);
 
       expect(status).toHaveBeenCalledWith(403);
       expect(json).toHaveBeenCalledWith(

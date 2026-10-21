@@ -11,6 +11,7 @@ import { StatusBadge } from '@/components/Shared/StatusBadge';
 import { DataTable, ColumnDef } from '@/components/Shared/DataTable';
 import type { InventoryItem, StockMovement, MovementType } from '@/types/inventory';
 import toast from 'react-hot-toast';
+import { formatDate, formatDateTime } from '@/lib/format';
 
 interface ItemsResponse {
   success: boolean;
@@ -238,7 +239,7 @@ export function AdminInventoryManagement() {
       header: 'Expiry Date',
       accessorKey: 'expiryDate',
       cell: (row) =>
-        row.expiryDate ? new Date(row.expiryDate).toLocaleDateString() : '—',
+        row.expiryDate ? formatDate(row.expiryDate) : '—',
     },
     {
       header: 'Actions',
@@ -268,7 +269,7 @@ export function AdminInventoryManagement() {
     {
       header: 'Date',
       accessorKey: 'createdAt',
-      cell: (row) => new Date(row.createdAt).toLocaleDateString(),
+      cell: (row) => formatDateTime(row.createdAt),
     },
     {
       header: 'Item Name',
@@ -304,7 +305,7 @@ export function AdminInventoryManagement() {
     {
       header: 'Date',
       accessorKey: 'createdAt',
-      cell: (row) => new Date(row.createdAt).toLocaleDateString(),
+      cell: (row) => formatDateTime(row.createdAt),
     },
     {
       header: 'Type',
